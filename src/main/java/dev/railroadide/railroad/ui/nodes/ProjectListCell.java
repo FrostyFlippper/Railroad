@@ -1,26 +1,35 @@
 package dev.railroadide.railroad.ui.nodes;
 
-import dev.railroadide.core.ui.RRButton;
-import dev.railroadide.core.ui.RRCard;
 import dev.railroadide.railroad.Railroad;
-import dev.railroadide.railroad.project.Project;
-import dev.railroadide.railroad.utility.StringUtils;
+import dev.railroadide.railroad.plugin.spi.dto.Project;
+import dev.railroadide.railroad.project.facet.Facet;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRCard;
+import dev.railroadide.railroad.ui.styling.ButtonSize;
+import dev.railroadide.railroad.ui.styling.ButtonVariant;
+import dev.railroadide.railroad.utility.TimeFormatter;
 import io.github.palexdev.mfxcore.builders.InsetsBuilder;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.beans.InvalidationListener;
+import javafx.beans.WeakInvalidationListener;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
 import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A modern list cell component for displaying project items in project lists.
@@ -28,14 +37,26 @@ import org.kordamp.ikonli.javafx.FontIcon;
  * Supports open and remove project functionality through a context menu.
  */
 public class ProjectListCell extends ListCell<Project> {
+    private static final LongProperty ELAPSED_TICK = new SimpleLongProperty();
+    private static final Timeline ELAPSED_TIMELINE = new Timeline(
+        new KeyFrame(Duration.seconds(1), $ -> ELAPSED_TICK.set(ELAPSED_TICK.get() + 1))
+    );
+    private static final AtomicInteger ATTACHED_CELLS = new AtomicInteger();
+
+    static {
+        ELAPSED_TIMELINE.setCycleCount(Timeline.INDEFINITE);
+    }
+
     private final RRCard card = new RRCard(14, new Insets(8, 32, 8, 32));
     private final HBox root = new HBox(16);
     private final ImageView icon = new ImageView();
-    private final VBox infoBox = new VBox(7);
+    private final VBox infoBox = new VBox(4);
     private final Label nameLabel = new Label();
     private final Label pathLabel = new Label();
     private final Label lastOpenedLabel = new Label();
     private final RRButton ellipsisButton = new RRButton();
+    private final HBox facetTagsBox = new HBox(5);
+    private final InvalidationListener elapsedTickListener = $ -> refreshElapsedText();
 
     /**
      * Constructs a new ProjectListCell with modern styling and context menu functionality.
@@ -60,18 +81,21 @@ public class ProjectListCell extends ListCell<Project> {
         icon.setEffect(new DropShadow(8, Color.rgb(0, 0, 0, 0.10)));
 
         infoBox.setAlignment(Pos.CENTER_LEFT);
-        infoBox.setSpacing(7);
         VBox.setVgrow(infoBox, Priority.ALWAYS);
         nameLabel.getStyleClass().add("project-list-name");
+
+        facetTagsBox.getStyleClass().add("project-list-facet-tags");
+        facetTagsBox.setAlignment(Pos.CENTER_LEFT);
+
         pathLabel.getStyleClass().add("project-list-path");
         lastOpenedLabel.getStyleClass().add("project-list-last-opened");
-        infoBox.getChildren().addAll(nameLabel, pathLabel, lastOpenedLabel);
 
+        infoBox.getChildren().addAll(nameLabel, facetTagsBox, pathLabel, lastOpenedLabel);
         var ellipsisIcon = new FontIcon(FontAwesomeSolid.ELLIPSIS_V);
         ellipsisIcon.setIconSize(16);
         ellipsisButton.setGraphic(ellipsisIcon);
-        ellipsisButton.setButtonSize(RRButton.ButtonSize.SMALL);
-        ellipsisButton.setVariant(RRButton.ButtonVariant.GHOST);
+        ellipsisButton.setButtonSize(ButtonSize.SMALL);
+        ellipsisButton.setVariant(ButtonVariant.GHOST);
         ellipsisButton.setPrefWidth(32);
         ellipsisButton.setPrefHeight(32);
         ellipsisButton.getStyleClass().add("project-list-ellipsis-button");
@@ -100,21 +124,66 @@ public class ProjectListCell extends ListCell<Project> {
 
         dropdown.getItems().addAll(openItem, removeItem);
         ellipsisButton.setOnAction($ -> dropdown.show(ellipsisButton, Side.BOTTOM, 0, 0));
+
+        ELAPSED_TICK.addListener(new WeakInvalidationListener(elapsedTickListener));
+        sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (oldScene == null && newScene != null) {
+                if (ATTACHED_CELLS.incrementAndGet() == 1) {
+                    ELAPSED_TIMELINE.play();
+                }
+            } else if (oldScene != null && newScene == null) {
+                if (ATTACHED_CELLS.decrementAndGet() <= 0) {
+                    ATTACHED_CELLS.set(0);
+                    ELAPSED_TIMELINE.stop();
+                }
+            }
+        });
     }
 
     @Override
     protected void updateItem(Project project, boolean empty) {
         super.updateItem(project, empty);
+
+        // Always clear old tags, as cells are reused
+        facetTagsBox.getChildren().clear();
+
         if (empty || project == null) {
             setText(null);
             setGraphic(null);
             setPadding(Insets.EMPTY);
+            lastOpenedLabel.setText(null);
         } else {
             icon.setImage(project.getIcon());
             nameLabel.setText(project.getAlias());
             pathLabel.setText(project.getPathString());
-            lastOpenedLabel.setText(StringUtils.formatElapsed(project.getLastOpened()));
+            refreshElapsedText();
+
+            // Populate Facet Tags
+            for (Facet<?> facet : project.getFacets()) {
+                if (facet != null && facet.getType() != null) {
+                    // Use the FacetType's name for the tag
+                    Label tagLabel = new Label(facet.getType().name());
+                    tagLabel.getStyleClass().add("project-list-facet-tag");
+                    tagLabel.getStyleClass().add("facet-" + facet.getType().id());
+                    String description = facet.getType().description();
+                    if (description != null && !description.isBlank()) {
+                        Tooltip.install(tagLabel, new Tooltip(description));
+                    }
+                    facetTagsBox.getChildren().add(tagLabel);
+                }
+            }
             setGraphic(card);
         }
     }
-} 
+
+    private void refreshElapsedText() {
+        Project project = getItem();
+        if (project == null || isEmpty()) {
+            lastOpenedLabel.setText(null);
+            return;
+        }
+
+        lastOpenedLabel.setText(TimeFormatter.formatElapsed(project.getLastOpened()));
+    }
+
+}

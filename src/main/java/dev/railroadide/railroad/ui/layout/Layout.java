@@ -4,10 +4,10 @@ import com.kodedu.terminalfx.TerminalBuilder;
 import com.panemu.tiwulfx.control.dock.DetachableTab;
 import com.panemu.tiwulfx.control.dock.DetachableTabPane;
 import com.spencerwi.either.Either;
-import dev.railroadide.core.ui.RRBorderPane;
-import dev.railroadide.core.ui.RRHBox;
-import dev.railroadide.core.ui.RRVBox;
 import dev.railroadide.railroad.Railroad;
+import dev.railroadide.railroad.ui.RRBorderPane;
+import dev.railroadide.railroad.ui.RRHBox;
+import dev.railroadide.railroad.ui.RRVBox;
 import dev.railroadide.railroad.utility.Tree;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
@@ -114,7 +114,7 @@ public record Layout(Tree<LayoutItem> tree) {
     }
 
     private void bindParentSize(Pane parent) {
-        parent.minHeightProperty().bind(Railroad.getWindow().heightProperty());
-        parent.minWidthProperty().bind(Railroad.getWindow().widthProperty());
+        parent.minHeightProperty().bind(Railroad.WINDOW_MANAGER.getPrimaryStage().heightProperty());
+        parent.minWidthProperty().bind(Railroad.WINDOW_MANAGER.getPrimaryStage().widthProperty());
     }
 }

@@ -1,11 +1,11 @@
 package dev.railroadide.railroad.ide;
 
 import dev.railroadide.railroad.Railroad;
-import dev.railroadide.railroadpluginapi.dto.Document;
-import dev.railroadide.railroadpluginapi.dto.Project;
-import dev.railroadide.railroadpluginapi.events.FileEvent;
-import dev.railroadide.railroadpluginapi.events.ProjectEvent;
-import dev.railroadide.railroadpluginapi.services.IDEStateService;
+import dev.railroadide.railroad.plugin.spi.dto.Document;
+import dev.railroadide.railroad.plugin.spi.dto.Project;
+import dev.railroadide.railroad.plugin.spi.events.DocumentEvent;
+import dev.railroadide.railroad.plugin.spi.events.ProjectEvent;
+import dev.railroadide.railroad.plugin.spi.services.IDEStateService;
 import lombok.Getter;
 
 import java.nio.file.Path;
@@ -18,9 +18,11 @@ public class DefaultIDEStateService implements IDEStateService {
     private static DefaultIDEStateService instance;
     private final Map<Document, Long> openDocuments = new HashMap<>();
     private final Map<Path, Long> recentFiles = new HashMap<>();
+
     private Project currentProject;
     private long openedProjectAtMillis = -1L;
     private Document activeDocument;
+
     private DefaultIDEStateService() {
         Railroad.EVENT_BUS.subscribe(ProjectEvent.class, event -> {
             if (event.isOpened()) {
@@ -30,13 +32,13 @@ public class DefaultIDEStateService implements IDEStateService {
             }
         });
 
-        Railroad.EVENT_BUS.subscribe(FileEvent.class, event -> {
+        Railroad.EVENT_BUS.subscribe(DocumentEvent.class, event -> {
             Document document = event.file();
-            if (event.isOpened()) {
+            if (event.isOpenedEvent()) {
                 openDocument_internal(document);
-            } else if (event.isClosed()) {
+            } else if (event.isClosedEvent()) {
                 closeDocument_internal(document);
-            } else if (event.isActivated()) {
+            } else if (event.isActivatedEvent()) {
                 setActiveDocument_internal(document);
             }
         });

@@ -1,7 +1,7 @@
 package dev.railroadide.railroad.plugin;
 
-import dev.railroadide.railroadpluginapi.Plugin;
-import dev.railroadide.railroadpluginapi.PluginDescriptor;
+import dev.railroadide.railroad.plugin.spi.Plugin;
+import dev.railroadide.railroad.plugin.spi.PluginDescriptor;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -78,10 +78,10 @@ public final class PluginLoadResult {
     @Override
     public String toString() {
         return "PluginLoadResult{" +
-                "pluginPath=" + pluginPath +
-                ", descriptor=" + descriptor +
-                ", pluginInstance=" + pluginInstance +
-                ", classLoader=" + classLoader +
-                '}';
+            "pluginPath=" + pluginPath +
+            ", descriptor=" + descriptor +
+            ", pluginInstance=" + pluginInstance +
+            ", classLoader=" + classLoader +
+            '}';
     }
 }

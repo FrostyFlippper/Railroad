@@ -4,10 +4,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.railroadide.railroad.Railroad;
 import dev.railroadide.railroad.plugin.defaults.DefaultPluginDescriptor;
-import dev.railroadide.railroadpluginapi.PluginDescriptor;
-import dev.railroadide.railroadpluginapi.deps.MavenDep;
-import dev.railroadide.railroadpluginapi.deps.MavenDeps;
-import dev.railroadide.railroadpluginapi.deps.MavenRepo;
+import dev.railroadide.railroad.plugin.spi.PluginDescriptor;
+import dev.railroadide.railroad.plugin.spi.deps.MavenDep;
+import dev.railroadide.railroad.plugin.spi.deps.MavenDeps;
+import dev.railroadide.railroad.plugin.spi.deps.MavenRepo;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -143,16 +143,16 @@ public class PluginLoader {
             }
 
             return DefaultPluginDescriptor.builder(id)
-                    .name(name)
-                    .version(version)
-                    .author(author)
-                    .description(description)
-                    .website(website)
-                    .license(license)
-                    .iconPath(iconPath)
-                    .mainClass(mainClass)
-                    .dependencies(new MavenDeps(repositories, artifacts))
-                    .build();
+                .name(name)
+                .version(version)
+                .author(author)
+                .description(description)
+                .website(website)
+                .license(license)
+                .iconPath(iconPath)
+                .mainClass(mainClass)
+                .dependencies(new MavenDeps(repositories, artifacts))
+                .build();
         }
     }
 

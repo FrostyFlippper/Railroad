@@ -1,13 +1,15 @@
+import org.gradle.internal.os.OperatingSystem
+
 plugins {
     id 'java'
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
-    id 'checkstyle'
+    id 'org.beryx.runtime' version '2.0.0'
 }
 
 group 'dev.railroadide'
-version '1.0.0'
+version '0.0.3'
 
 repositories {
     mavenLocal()
@@ -15,7 +17,7 @@ repositories {
     maven { url 'https://repo.gradle.org/gradle/libs-releases' }
     maven { url 'https://github.com/javaterminal/terminalfx/raw/master/releases' }
     maven { url 'https://packages.jetbrains.team/maven/p/ij/intellij-dependencies' }
-    maven { url "https://maven.railroadide.dev/releases" }
+    maven { url 'https://maven.railroadide.dev/releases' }
     maven { url 'https://jitpack.io' }
 }
 
@@ -29,7 +31,18 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 application {
-    mainClass = 'dev.railroadide.railroad.Railroad'
+    mainClass = 'dev.railroadide.railroad.RailroadLauncher'
+    applicationDefaultJvmArgs = [
+            '-Djavafx.preloader=dev.railroadide.railroad.RailroadPreloader',
+            '--add-exports=javafx.graphics/com.sun.javafx.iio=ALL-UNNAMED',
+            '--add-exports=javafx.graphics/com.sun.javafx.iio.common=ALL-UNNAMED'
+    ]
+}
+
+tasks.named("run") {
+    jvmArgs '-Djavafx.preloader=dev.railroadide.railroad.RailroadPreloader',
+            '--add-exports=javafx.graphics/com.sun.javafx.iio=ALL-UNNAMED',
+            '--add-exports=javafx.graphics/com.sun.javafx.iio.common=ALL-UNNAMED'
 }
 
 javafx {
@@ -37,80 +50,74 @@ javafx {
     modules = ['javafx.controls', 'javafx.swing', 'javafx.web', 'javafx.fxml', 'javafx.graphics', 'javafx.media']
 }
 
-checkstyle {
-    toolVersion = '10.0'
-    configFile = file('checkstyle.xml')
-}
-
-tasks.withType(Checkstyle).configureEach {
-    reports {
-        xml.required = false
-        html.required = true
-    }
-}
-
 dependencies {
     implementation 'org.kordamp.ikonli:ikonli-javafx:12.4.0'
     implementation 'org.kordamp.ikonli:ikonli-fontawesome6-pack:12.4.0'
-    implementation 'org.jetbrains:annotations:24.1.0'
-    implementation 'com.google.code.gson:gson:2.10'
-    implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.14'
-    implementation 'org.json:json:20240303'
+    implementation 'org.kordamp.ikonli:ikonli-devicons-pack:12.4.0'
+    implementation 'org.kordamp.jipsy:jipsy-processor:1.2.0'
+    annotationProcessor 'org.kordamp.jipsy:jipsy-annotations:1.2.0'
+    implementation 'org.jetbrains:annotations:26.0.2-1'
+    implementation 'com.google.code.gson:gson:2.13.2'
+    implementation 'com.squareup.okhttp3:okhttp:5.2.1'
+    implementation 'org.json:json:20250517'
     implementation 'io.github.palexdev:materialfx:11.17.0'
-    implementation 'ch.qos.logback:logback-classic:1.5.6'
-    implementation 'org.apache.groovy:groovy-all:5.0.0-alpha-9'
-    implementation 'org.gradle:gradle-tooling-api:8.9'
-    implementation 'com.panemu:tiwulfx-dock:0.3'
+    implementation 'ch.qos.logback:logback-classic:1.5.20'
+    implementation 'org.apache.groovy:groovy-all:5.0.2'
+    implementation 'org.gradle:gradle-tooling-api:9.0.0'
+    implementation 'com.panemu:tiwulfx-dock:0.5'
     implementation 'com.spencerwi:Either.java:2.9.0'
     implementation 'com.kodedu.terminalfx:terminalfx:1.2.0'
-    implementation 'org.fxmisc.richtext:richtextfx:0.11.3'
-    implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.26.1'
-    implementation 'io.github.bonede:tree-sitter:0.22.6a'
-    implementation 'io.github.bonede:tree-sitter-java:0.21.0a'
+    implementation 'org.fxmisc.richtext:richtextfx:0.11.6'
+    implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.27.1'
+    implementation 'io.github.bonede:tree-sitter:0.25.3'
+    implementation 'io.github.bonede:tree-sitter-java:0.23.4'
     implementation 'org.reflections:reflections:0.10.2'
-    implementation 'org.ow2.asm:asm:9.8'
-    implementation 'org.eclipse.jdt:org.eclipse.jdt.core:3.41.0'
+    implementation 'org.ow2.asm:asm:9.9'
+    implementation 'org.eclipse.jdt:org.eclipse.jdt.core:3.43.0'
     implementation 'com.github.erosb:everit-json-schema:1.14.6'
-    implementation 'org.apache.commons:commons-compress:1.27.1'
-    implementation("net.java.dev.jna:jna:5.16.0")
-
-    implementation 'com.google.guava:guava:33.4.8-jre'
-    implementation "org.apache.maven:maven-core:3.9.10"
-    implementation "org.apache.maven:maven-project:3.0-alpha-2"
-    implementation "org.apache.maven:maven-settings:3.9.10"
-    implementation "org.apache.maven:maven-settings-builder:3.9.10"
-    implementation "org.apache.maven:maven-repository-metadata:3.9.10"
-    implementation "org.codehaus.plexus:plexus-container-default:2.1.0"
-
-    implementation 'dev.railroadide:java-version-extractor-plugin:1.0.0'
-    implementation 'dev.railroadide:fabric-extractor-plugin:1.0.0'
+    implementation 'org.apache.commons:commons-compress:1.28.0'
+    implementation 'org.apache.commons:commons-text:1.14.0'
+    implementation 'net.java.dev.jna:jna:5.18.1'
+    implementation 'org.xerial:sqlite-jdbc:3.50.3.0'
+    implementation 'com.github.numind-tech:javafxsvg:ce188ef95d'
+    implementation 'io.github.raghul-tech:javafx-markdown-preview-all:1.0.3'
+    implementation 'org.joml:joml:1.10.8'
+    implementation 'com.google.guava:guava:33.5.0-jre'
+    implementation 'org.apache.maven:maven-core:4.0.0-rc-4'
+    implementation 'org.apache.maven:maven-settings:4.0.0-rc-4'
+    implementation 'org.apache.maven:maven-settings-builder:4.0.0-rc-4' // TODO: deprecated - look into this
+    implementation 'org.apache.maven:maven-repository-metadata:4.0.0-rc-4'
+    implementation 'org.codehaus.plexus:plexus-container-default:2.1.1'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.0'
+    implementation 'com.github.javakeyring:java-keyring:1.0.4'
 
     implementation 'io.get-coursier:interface:1.0.29-M1'
-    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.8.0.202311291450-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:7.4.0.202509020913-r'
 
-    implementation("dev.railroadide:nsmenufx:1.0.0") {
+    implementation('dev.railroadide:nsmenufx:1.0.0') {
         exclude group: 'net.java.dev.jna', module: 'jna'
     }
 
-    implementation 'dev.railroadide:RailroadLogger:1.0.2'
-    implementation 'dev.railroadide:RailroadPluginAPI:1.0.2'
-    implementation project(':railroad-core')
+    implementation 'dev.railroadide:RailroadGradlePlugin:1.0.1'
+    implementation 'dev.railroadide:RailroadLogger:1.0.4'
 
-    annotationProcessor 'org.projectlombok:lombok:1.18.32'
-    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.42'
+    compileOnly 'org.projectlombok:lombok:1.18.42'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:6.0.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:6.0.0'
 }
 
-run {
-    def loggingConfig = file("src/jpackage/logging.properties").absolutePath
-    jvmArgs += "-Djava.util.logging.config.file=$loggingConfig"
+test {
+    useJUnitPlatform()
 }
 
 jar {
     manifest {
         attributes(
-                "Implementation-Title": "Railroad",
-                "Implementation-Version": "1.0-alpha",
-                "Main-Class": "dev.railroadide.railroad.Railroad"
+                'Implementation-Title': 'Railroad',
+                'Implementation-Version': version,
+                'Main-Class': 'dev.railroadide.railroad.RailroadLauncher'
         )
     }
 }
@@ -118,62 +125,72 @@ jar {
 shadowJar {
     zip64 true
     mergeServiceFiles()
-    archiveClassifier = '' // This makes shadowJar the default jar
+    manifest {
+        attributes(
+                'Implementation-Title': 'Railroad',
+                'Implementation-Version': version,
+                'Main-Class': 'dev.railroadide.railroad.RailroadLauncher'
+        )
+    }
 }
 
-// Configure jpackage to use the shadow jar
-tasks.register('jpackageImage', Exec) {
-    dependsOn shadowJar
+// ---- Beryx Runtime ----
+runtime {
+    options = []
+    modules = ['ALL-MODULE-PATH']
 
-    def inputDir = file("${layout.buildDirectory.get()}/libs")
-    def outputDir = file("${layout.buildDirectory.get()}/jpackage")
-
-    if (outputDir.exists()) {
-        outputDir.deleteDir()
+    launcher {
+        jvmArgs = [
+                '-Djavafx.preloader=dev.railroadide.railroad.RailroadPreloader',
+                '--add-exports=javafx.graphics/com.sun.javafx.iio=ALL-UNNAMED',
+                '--add-exports=javafx.graphics/com.sun.javafx.iio.common=ALL-UNNAMED'
+        ]
     }
 
-    // Copy logging.properties to inputDir so jpackage sees it
-    doFirst {
-        copy {
-            from "src/jpackage/logging.properties"
-            into inputDir
+    jpackage {
+        imageName = 'Railroad'
+        installerName = 'Railroad'
+        description = 'Railroad IDE - A Modern Java IDE for Minecraft Modding'
+
+        def currentOs = OperatingSystem.current()
+        if (!currentOs.macOsX)
+            appVersion = project.version.toString()
+
+        def imgType = currentOs.windows ? 'ico' : currentOs.macOsX ? 'icns' : 'png'
+        def iconPath = file("src/main/resources/assets/railroad/images/logo.$imgType").absolutePath
+        imageOptions += ['--icon', iconPath]
+        installerOptions += ['--vendor', 'Railroad Team']
+        installerOptions += ['--copyright', 'GNU General Public License v3.0']
+        installerOptions += ['--about-url', 'https://railroadide.dev']
+
+        if (currentOs.windows) {
+            installerOptions += ['--win-per-user-install', '--win-dir-chooser', '--win-menu', '--win-shortcut-prompt']
+            installerOptions += ['--win-upgrade-uuid', '46af0894-7027-40b2-8772-40d5e3052c7e']
+            installerOptions += ['--win-help-url', 'https://discord.turtywurty.dev/']
+            installerOptions += ['--type', 'msi']
+        } else if (currentOs.linux) {
+            installerOptions += ['--linux-package-name', 'railroad']
+            installerOptions += ['--linux-shortcut']
+            installerOptions += ['--type', 'deb']
+        } else if (currentOs.macOsX) {
+            installerOptions += ['--mac-package-name', 'railroad']
+            installerOptions += ['--type', 'dmg']
+            appVersion = '1.0.3'
         }
     }
-
-    commandLine 'jpackage',
-            '--input', inputDir,
-            '--dest', outputDir,
-            '--name', 'Railroad',
-            '--main-jar', shadowJar.archiveFileName.get(),
-            '--main-class', 'dev.railroadide.railroad.RailroadLauncher',
-            '--type', 'app-image',
-            '--java-options', '-Xmx2048m',
-            '--java-options', '-Djava.util.logging.config.file=$APPDIR/logging.properties'
 }
 
-tasks.register('jpackageInstaller', Exec) {
-    dependsOn jpackageImage
-
-    def outputDir = file("${layout.buildDirectory.get()}/jpackage")
-    if(outputDir.exists()) {
-        outputDir.deleteDir()
-    }
-
-    commandLine 'jpackage',
-            '--app-image', "${outputDir}/Railroad",
-            '--dest', outputDir,
-            '--name', 'Railroad',
-            '--app-version', '1.0.0',
-            '--vendor', 'Railroad Team',
-            '--description', 'Railroad Application'
-
-    // Add platform-specific options
-    if (System.getProperty('os.name').toLowerCase().contains('windows')) {
-        args '--win-dir-chooser', '--win-menu', '--win-shortcut'
-    } else if (System.getProperty('os.name').toLowerCase().contains('mac')) {
-        args '--mac-package-name', 'Railroad'
+// Ensure the packaging tasks use the shaded jar
+['jre', 'runtime', 'createRuntimeImage', 'runtimeZip', 'jpackage'].each { taskName ->
+    tasks.matching { it.name == taskName }.configureEach {
+        dependsOn tasks.named('shadowJar')
     }
 }
 
-// Make build depend on shadowJar instead of jar
-build.dependsOn shadowJar
+tasks.matching { it.name == 'startShadowScripts' }.configureEach {
+    dependsOn tasks.named('jar')
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('shadowJar')
+}

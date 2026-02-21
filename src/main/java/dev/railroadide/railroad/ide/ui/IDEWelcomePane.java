@@ -1,11 +1,12 @@
 package dev.railroadide.railroad.ide.ui;
 
-import dev.railroadide.core.ui.RRButton;
-import dev.railroadide.core.ui.RRCard;
-import dev.railroadide.core.ui.RRHBox;
-import dev.railroadide.core.ui.RRVBox;
-import dev.railroadide.core.ui.localized.LocalizedText;
-import dev.railroadide.core.utility.DesktopUtils;
+import dev.railroadide.railroad.utility.DesktopUtils;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRCard;
+import dev.railroadide.railroad.ui.RRHBox;
+import dev.railroadide.railroad.ui.RRVBox;
+import dev.railroadide.railroad.ui.localized.LocalizedText;
+import dev.railroadide.railroad.ui.styling.ButtonVariant;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -84,11 +85,11 @@ public class IDEWelcomePane extends ScrollPane {
         featuresGrid.getStyleClass().add("features-grid");
 
         var features = new FeatureItem[]{
-                new FeatureItem(FontAwesomeSolid.CUBE, "railroad.ide.welcome.feature.model_viewer_editor"),
-                new FeatureItem(FontAwesomeSolid.BUILDING, "railroad.ide.welcome.feature.structure_viewer_editor"),
-                new FeatureItem(FontAwesomeSolid.IMAGE, "railroad.ide.welcome.feature.texture_viewer_editor"),
-                new FeatureItem(FontAwesomeSolid.VOLUME_UP, "railroad.ide.welcome.feature.sound_visualizer"),
-                new FeatureItem(FontAwesomeSolid.CODE, "railroad.ide.welcome.feature.mixin_support")
+            new FeatureItem(FontAwesomeSolid.CUBE, "railroad.ide.welcome.feature.model_viewer_editor"),
+            new FeatureItem(FontAwesomeSolid.BUILDING, "railroad.ide.welcome.feature.structure_viewer_editor"),
+            new FeatureItem(FontAwesomeSolid.IMAGE, "railroad.ide.welcome.feature.texture_viewer_editor"),
+            new FeatureItem(FontAwesomeSolid.VOLUME_UP, "railroad.ide.welcome.feature.sound_visualizer"),
+            new FeatureItem(FontAwesomeSolid.CODE, "railroad.ide.welcome.feature.mixin_support")
         };
 
         for (var feature : features) {
@@ -139,14 +140,14 @@ public class IDEWelcomePane extends ScrollPane {
         buttonsContainer.setSpacing(12);
 
         var wikiButton = new RRButton("railroad.ide.welcome.getting_started.wiki", FontAwesomeSolid.BOOK);
-        wikiButton.setVariant(RRButton.ButtonVariant.PRIMARY);
+        wikiButton.setVariant(ButtonVariant.PRIMARY);
         wikiButton.setOnAction(event -> {
             event.consume();
             DesktopUtils.openUrl("https://railroadide.dev");
         });
 
         var tutorialsButton = new RRButton("railroad.ide.welcome.getting_started.tutorials", FontAwesomeSolid.GRADUATION_CAP);
-        tutorialsButton.setVariant(RRButton.ButtonVariant.SECONDARY);
+        tutorialsButton.setVariant(ButtonVariant.SECONDARY);
         tutorialsButton.setOnAction(event -> {
             event.consume();
             DesktopUtils.openUrl("https://railroadide.dev/tutorials");
@@ -154,7 +155,7 @@ public class IDEWelcomePane extends ScrollPane {
 
         var discordButton = new RRButton("", FontAwesomeBrands.DISCORD);
         discordButton.setText("Discord");
-        discordButton.setVariant(RRButton.ButtonVariant.GHOST);
+        discordButton.setVariant(ButtonVariant.GHOST);
         discordButton.setOnAction(event -> {
             event.consume();
             DesktopUtils.openUrl("https://discord.turtywurty.dev/");

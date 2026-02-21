@@ -1,7 +1,7 @@
 package dev.railroadide.railroad.plugin.defaults;
 
-import dev.railroadide.railroadpluginapi.PluginDescriptor;
-import dev.railroadide.railroadpluginapi.deps.MavenDeps;
+import dev.railroadide.railroad.plugin.spi.PluginDescriptor;
+import dev.railroadide.railroad.plugin.spi.deps.MavenDeps;
 import lombok.Getter;
 
 /**
@@ -190,7 +190,7 @@ public class DefaultPluginDescriptor implements PluginDescriptor {
          */
         public DefaultPluginDescriptor build() {
             return new DefaultPluginDescriptor(id, name, version, author, description, website, license, iconPath,
-                    mainClass, dependencies);
+                mainClass, dependencies);
         }
     }
 }

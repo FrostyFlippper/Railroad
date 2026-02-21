@@ -1,11 +1,11 @@
 package dev.railroadide.railroad.ide.projectexplorer.dialog;
 
-import dev.railroadide.core.ui.RRGridPane;
-import dev.railroadide.core.ui.RRListView;
-import dev.railroadide.core.ui.localized.LocalizedButton;
-import dev.railroadide.core.ui.localized.LocalizedLabel;
 import dev.railroadide.railroad.Railroad;
 import dev.railroadide.railroad.ide.projectexplorer.FileCreateType;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRGridPane;
+import dev.railroadide.railroad.ui.RRListView;
+import dev.railroadide.railroad.ui.localized.LocalizedLabel;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.ListCell;
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+// TODO: Refactor this to use WindowBuilder(?)
 public class CreateFileDialog {
     public static void open(Window owner, Path path, FileCreateType type) {
         var dialog = new Stage(StageStyle.UTILITY);
@@ -67,7 +68,7 @@ public class CreateFileDialog {
 
         listView.getItems().addAll(switch (type) {
             case JAVA_CLASS ->
-                    new TypeSelection[]{TypeSelection.JAVA_CLASS, TypeSelection.JAVA_INTERFACE, TypeSelection.JAVA_ENUM, TypeSelection.JAVA_ANNOTATION};
+                new TypeSelection[]{TypeSelection.JAVA_CLASS, TypeSelection.JAVA_INTERFACE, TypeSelection.JAVA_ENUM, TypeSelection.JAVA_ANNOTATION};
             case JSON -> new TypeSelection[]{TypeSelection.JSON};
             case TXT -> new TypeSelection[]{TypeSelection.TXT};
             default -> new TypeSelection[0];
@@ -75,7 +76,7 @@ public class CreateFileDialog {
 
         listView.getSelectionModel().selectFirst();
 
-        var okButton = new LocalizedButton("railroad.generic.ok");
+        var okButton = new RRButton("railroad.generic.ok");
         okButton.setOnAction(event -> {
             dialog.hide();
 
@@ -85,8 +86,8 @@ public class CreateFileDialog {
                 var fileName = textField.getText();
                 var extension = selectedItem.getExtension();
                 var content = template
-                        .replace("<package_loc>", path.toString().replace("\\", ".").replace("/", "."))
-                        .replace("<class_name>", fileName);
+                    .replace("<package_loc>", path.toString().replace("\\", ".").replace("/", "."))
+                    .replace("<class_name>", fileName);
 
                 try {
                     Path file = path.resolve(fileName + "." + extension);
@@ -110,7 +111,7 @@ public class CreateFileDialog {
             }
         });
 
-        var cancelButton = new LocalizedButton("railroad.generic.cancel");
+        var cancelButton = new RRButton("railroad.generic.cancel");
         cancelButton.setOnAction(event -> dialog.hide());
 
         root.add(title, 0, 0, 2, 1);
@@ -123,46 +124,46 @@ public class CreateFileDialog {
         }
 
         dialog.setScene(new Scene(root));
-        dialog.show();
+        dialog.showAndWait();
     }
 
     @Getter
     public enum TypeSelection {
         JAVA_CLASS("Java Class", "java", null, """
-                package <package_loc>.<class_name>;
-                
-                public class <class_name> {
-                    public <class_name>() {
-                
-                    }
+            package <package_loc>.<class_name>;
+
+            public class <class_name> {
+                public <class_name>() {
+
                 }
-                """),
+            }
+            """),
         JAVA_INTERFACE("Java Interface", "java", null, """
-                package <package_loc>.<class_name>;
-                
-                public interface <class_name> {
-                
-                }
-                """),
+            package <package_loc>.<class_name>;
+
+            public interface <class_name> {
+
+            }
+            """),
         JAVA_ENUM("Java Enum", "java", null, """
-                package <package_loc>.<class_name>;
-                
-                public enum <class_name> {
-                
-                }
-                """),
+            package <package_loc>.<class_name>;
+
+            public enum <class_name> {
+
+            }
+            """),
         JAVA_ANNOTATION("Java Annotation", "java", null, """
-                package <package_loc>.<class_name>;
-                
-                public @interface <class_name> {
-                
-                }
-                """),
+            package <package_loc>.<class_name>;
+
+            public @interface <class_name> {
+
+            }
+            """),
         JSON("JSON File", "json", null, """
-                {
-                
-                }
-                """),
+            {
+
+            }
+            """),
         TXT("Text File", "txt", null, "");
 
 

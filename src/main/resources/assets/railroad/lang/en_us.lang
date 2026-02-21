@@ -26,12 +26,141 @@ railroad.generic.collapse_all=Collapse All
 railroad.generic.expand=Expand
 railroad.generic.expand_all=Expand All
 railroad.generic.browse=Browse
+railroad.generic.enable=Enable
+railroad.generic.disable=Disable
+railroad.generic.dismiss=Dismiss
+railroad.generic.unknown=Unknown
+railroad.generic.download=Download
 
 # =============================================================================
-# APPLICATION
+# RUN CONFIGURATIONS
 # =============================================================================
-railroad.app.name=Railroad
-railroad.app.version=1.0.0 (dev)
+railroad.ide.toolbar.edit_run_configurations=Edit Run/Debug Configurations
+railroad.ide.toolbar.run_configurations.tooltip=Select a run configuration
+railroad.ide.toolbar.run.tooltip=Run selected configuration
+railroad.ide.toolbar.debug.tooltip=Debug selected configuration
+railroad.ide.toolbar.debug.restart.tooltip=Restart running configuration in debug mode
+railroad.ide.toolbar.stop.tooltip=Stop running configuration
+railroad.ide.toolbar.stop.all=Stop All
+railroad.ide.toolbar.restart.tooltip=Restart running configuration
+railroad.ide.toolbar.run_configurations.more_actions.tooltip=Show more actions for the selected configuration
+railroad.ide.toolbar.no_run_configurations=No run configurations
+railroad.window.ide.toolbar.edit_run_configurations=Edit Run/Debug Configurations
+railroad.runconfig.tree.empty=No run configurations yet.
+railroad.runconfig.tree.empty_filtered=No matching run configurations.
+railroad.runconfig.tree.search_prompt=Search run configurations...
+railroad.runconfig.run.tooltip=Run configuration
+railroad.runconfig.debug.tooltip=Debug configuration
+railroad.runconfig.moreactions.tooltip=Show more actions for this configuration
+railroad.runconfig.action.run=Run
+railroad.runconfig.action.debug=Debug
+railroad.runconfig.details.empty.title=Create a run configuration
+railroad.runconfig.details.empty.description=Use the + button to add your first configuration.
+railroad.runconfig.gradle.configuration.task.invalid=Invalid Gradle task.
+railroad.run_configuration.edit=Edit configuration
+railroad.run_configuration.pin=Pin to toolbar
+railroad.run_configuration.delete=Delete configuration
+
+# Run configuration type names
+railroad.runconfig.shellscript=Shell Script
+railroad.runconfig.java_application=Java Application
+railroad.runconfig.jar_application=JAR Application
+railroad.runconfig.gradle=Gradle Task
+railroad.runconfig.compound=Compound
+
+# Generic configuration section
+railroad.runconfig.general.title=General Settings
+railroad.runconfig.general.name.label=Configuration name
+railroad.runconfig.general.name.prompt=Enter a unique configuration name
+railroad.runconfig.general.name.validation.required=A configuration name is required.
+railroad.runconfig.general.name.validation.duplicate=A configuration with this name already exists.
+railroad.runconfig.general.allowMultipleInstances.label=Allow multiple instances
+railroad.runconfig.general.showConsoleOnRun.label=Show console when running
+
+# Compound configurations
+railroad.runconfig.compound.configurations.title=Compound Settings
+railroad.runconfig.compound.configuration.runMode.label=Run mode
+railroad.runconfig.compound.runMode.=Compound run mode
+railroad.runconfig.compound.runMode.parallel=Parallel
+railroad.runconfig.compound.runMode.sequential=Sequential
+railroad.runconfig.compound.configuration.configurations.label=Included configurations
+railroad.runconfig.compound.configuration.configurations.combo.prompt=Select a configuration...
+railroad.runconfig.compound.configuration.configurations.add=Add
+railroad.runconfig.compound.configuration.configurations.remove=Remove
+railroad.runconfig.compound.configuration.configurations.move_up=Move up
+railroad.runconfig.compound.configuration.configurations.move_down=Move down
+railroad.runconfig.compound.configuration.configurations.empty=No configurations selected yet.
+railroad.runconfig.compound.configuration.configurations.validation.required=Select at least one configuration.
+railroad.runconfig.compound.configuration.configurations.entry_format=%s (%s)
+
+# Gradle configurations
+railroad.runconfig.gradle.configuration.title=Gradle Settings
+railroad.runconfig.gradle.configuration.task.label=Task
+railroad.runconfig.gradle.configuration.task.prompt=e.g. build
+railroad.runconfig.gradle.configuration.projectPath.label=Gradle project directory
+railroad.runconfig.gradle.configuration.envVariables.label=Environment variables
+railroad.runconfig.gradle.configuration.envVariables.prompt=KEY=VALUE;KEY2=VALUE2
+railroad.runconfig.gradle.configuration.envVariables.invalid=Environment variables must be KEY=VALUE pairs separated by semicolons.
+railroad.runconfig.gradle.configuration.vmOptions.label=VM options
+railroad.runconfig.gradle.configuration.vmOptions.prompt=e.g. -Xmx1G
+railroad.runconfig.gradle.configuration.javaHome.label=Java home (optional)
+
+# JAR application configurations
+railroad.runconfig.jar_application.configuration.section.title=JAR Settings
+railroad.runconfig.jar_application.configuration.jarPath.label=Executable JAR file
+railroad.runconfig.jar_application.configuration.vmOptions.label=VM options
+railroad.runconfig.jar_application.configuration.vmOptions.prompt=e.g. -Xmx1G
+railroad.runconfig.jar_application.configuration.programArguments.label=Program arguments
+railroad.runconfig.jar_application.configuration.programArguments.prompt=Arguments separated by spaces
+railroad.runconfig.jar_application.configuration.workingDirectory.label=Working directory
+railroad.runconfig.jar_application.configuration.envVariables.label=Environment variables
+railroad.runconfig.jar_application.configuration.envVariables.prompt=KEY=VALUE;KEY2=VALUE2
+railroad.runconfig.jar_application.configuration.envVariables.invalid=Environment variables must be KEY=VALUE pairs separated by semicolons.
+railroad.runconfig.jar_application.configuration.jre.label=Runtime (JRE/JDK)
+
+# Java application configurations
+railroad.runconfig.java_application.configuration.section.title=Java Application Settings
+railroad.runconfig.java_application.configuration.buildBeforeRun.label=Build before run
+railroad.runconfig.java_application.configuration.jdk.label=JDK
+railroad.runconfig.java_application.configuration.mainClass.label=Main class
+railroad.runconfig.java_application.configuration.mainClass.prompt=com.example.Main
+railroad.runconfig.java_application.configuration.classpathEntries.label=Classpath entries
+railroad.runconfig.java_application.configuration.classpathEntries.prompt=Path1;Path2;Path3
+railroad.runconfig.java_application.configuration.programArguments.label=Program arguments
+railroad.runconfig.java_application.configuration.programArguments.prompt=Arguments separated by spaces
+railroad.runconfig.java_application.configuration.vmOptions.label=VM options
+railroad.runconfig.java_application.configuration.vmOptions.prompt=e.g. -Xmx1G
+railroad.runconfig.java_application.configuration.envVariables.label=Environment variables
+railroad.runconfig.java_application.configuration.envVariables.prompt=KEY=VALUE;KEY2=VALUE2
+railroad.runconfig.java_application.configuration.envVariables.invalid=Environment variables must be KEY=VALUE pairs separated by semicolons.
+
+# Shell script configurations
+railroad.runconfig.shell_script.configuration.section.title=Shell Script Settings
+railroad.runconfig.shell_script.configuration.executeMode.label=Execution mode
+railroad.runconfig.shell_script.configuration.scriptPath.label=Script file
+railroad.runconfig.shell_script.configuration.scriptText.label=Inline script
+railroad.runconfig.shell_script.configuration.scriptText.prompt=Paste the script contents here
+railroad.runconfig.shell_script.configuration.scriptArgs.label=Script arguments
+railroad.runconfig.shell_script.configuration.scriptArgs.prompt=Arguments separated by spaces
+railroad.runconfig.shell_script.configuration.workingDirectory.label=Working directory
+railroad.runconfig.shell_script.configuration.envVariables.label=Environment variables
+railroad.runconfig.shell_script.configuration.envVariables.prompt=KEY=VALUE;KEY2=VALUE2
+railroad.runconfig.shell_script.configuration.envVariables.invalid=Environment variables must be KEY=VALUE pairs separated by semicolons.
+railroad.runconfig.shell_script.configuration.interpreterPath.label=Interpreter path
+railroad.runconfig.shell_script.configuration.interpreterArgs.label=Interpreter arguments
+railroad.runconfig.shell_script.configuration.interpreterArgs.prompt=Arguments separated by spaces
+railroad.runconfig.shell_script.configuration.executeInTerminal.label=Run in terminal
+
+# =============================================================================
+# Gradle Tools
+# =============================================================================
+railroad.gradle.tools.tasks=Tasks
+railroad.gradle.tools.dependencies=Dependencies
+railroad.gradle.tools.button.sync.tooltip=Sync Gradle Project
+railroad.gradle.tools.button.downloadsources.tooltip=Download Sources
+railroad.gradle.tools.button.toggleoffline.tooltip=Toggle Offline Mode
+railroad.gradle.tools.ctx_menu.open_gradle_config=Open Gradle Configuration
+railroad.gradle.tools.ctx_menu.sync=Sync Gradle Project
 
 # =============================================================================
 # HOME/WELCOME SCREEN
@@ -52,6 +181,14 @@ railroad.home.welcome.sort.none=None
 railroad.home.welcome.sort.name=Name
 railroad.home.welcome.sort.date=Date
 
+railroad.home.welcome.sort.none.description=Show projects in their natural order.
+railroad.home.welcome.sort.name.description=Arrange projects alphabetically.
+railroad.home.welcome.sort.date.description=Put the most recently opened projects first.
+railroad.home.welcome.sort.tooltip=Sorting projects by %s
+
+railroad.home.welcome.stats.projects=%d projects ready
+railroad.home.welcome.header.tip=Tip: Use search and sorting to jump back into work faster.
+
 # Project actions
 railroad.home.welcome.project.open=Open
 railroad.home.welcome.project.remove=Remove
@@ -60,6 +197,7 @@ railroad.home.welcome.project.searchtype=Search Project Types
 # =============================================================================
 # SETTINGS
 # =============================================================================
+railroad.window.settings.title=Settings
 railroad.home.settings.title=Settings
 railroad.home.settings.search=Search settings...
 
@@ -75,8 +213,46 @@ settings.tree.keybinds=Keybinds
 railroad.settings.general.language.title=Language
 railroad.settings.general.language.description=Select the language for the Railroad interface.
 
+railroad.settings.directories.empty=No directories configured yet.
+railroad.settings.directories.add.tooltip=Add a directory to this list.
+railroad.settings.directories.add.title=Choose a Directory
+railroad.settings.directories.remove.tooltip=Remove the selected directory from this list.
+
+railroad.settings.files.empty=No files selected yet.
+railroad.settings.files.add.tooltip=Add a file to this list.
+railroad.settings.files.add.title=Choose a File
+railroad.settings.files.remove.tooltip=Remove the selected file from this list.
+
+railroad.settings.ide.jdk_management.title=JDK Management
+railroad.settings.ide.jdk_management.description=Control how Railroad discovers and manages installed JDKs.
+railroad.settings.ide.jdk_management.additional_jdk_scan_paths.title=Additional Scan Paths
+railroad.settings.ide.jdk_management.additional_jdk_scan_paths.description=Scan these directories in addition to the default locations when searching for JDKs.
+railroad.settings.ide.jdk_management.excluded_jdk_scan_paths.title=Excluded Scan Paths
+railroad.settings.ide.jdk_management.excluded_jdk_scan_paths.description=Never scan these directories when looking for JDK installations.
+railroad.settings.ide.jdk_management.additional_jdks.title=Additional JDKs
+railroad.settings.ide.jdk_management.additional_jdks.description=Always include these specific JDK installations even if they are not discovered automatically.
+railroad.settings.ide.jdk_management.java_version_detection_timeout_ms.title=Version detection timeout
+railroad.settings.ide.jdk_management.java_version_detection_timeout_ms.description=Maximum time in milliseconds to wait for java version detection before aborting the scan.
+railroad.settings.ide.jdk_management.detected.title=Detected JDKs
+railroad.settings.ide.jdk_management.detected.refresh.tooltip=Rescan your system for installed JDKs
+railroad.settings.ide.jdk_management.detected.empty=No JDKs detected yet.
+railroad.settings.ide.jdk_management.detected.count=Detected JDKs: %d
+railroad.settings.ide.jdk_management.detected.unknown_version=Unknown Version
+railroad.settings.ide.jdk_management.detected.version=Java %s
+railroad.settings.ide.jdk_management.detected.name=Distribution: %s
+railroad.settings.ide.jdk_management.detected.path=Path: %s
+
 # Keybind settings
 railroad.settings.keybinds.title=Keybinds
+railroad.settings.keybinds.subtitle=Fine-tune shortcuts to match your workflow.
+railroad.settings.keybinds.search=Search keybinds...
+railroad.settings.keybinds.filter.all=All categories
+railroad.settings.keybinds.empty.title=No keybinds match your filters
+railroad.settings.keybinds.empty.subtitle=Try adjusting your search or category filters to see more shortcuts.
+railroad.settings.keybinds.add_binding=Add shortcut
+railroad.settings.keybinds.no_shortcuts=No shortcuts assigned yet
+railroad.settings.keybinds.click_to_record=Click to record
+railroad.settings.keybinds.recording=Recording...
 
 # Keybinds categories
 railroad.settings.keybinds.category.general=General
@@ -84,9 +260,34 @@ railroad.settings.keybinds.category.general=General
 # Keybinds
 railroad.settings.keybinds.copy=Copy
 railroad.settings.keybinds.paste=Paste
+railroad.settings.keybinds.fullscreen=Fullscreen
 
 # Plugin settings
+railroad.window.plugins.title=Plugins
 railroad.settings.plugins.title=Plugins
+railroad.plugins.search.placeholder=Search plugins...
+railroad.plugins.details.version=Version %s
+railroad.plugins.details.author=Author:
+railroad.plugins.details.website=Website:
+railroad.plugins.details.license=License:
+railroad.plugins.details.id=Plugin ID:
+railroad.plugins.details.main_class=Main Class:
+railroad.plugins.details.dependencies=Dependencies:
+railroad.plugins.placeholder.title=Select a plugin to view its details
+railroad.plugins.placeholder.subtitle=Choose a plugin from the list to learn more about what it provides.
+railroad.plugins.list.version=Version: %s
+railroad.plugins.list.author=Author: %s
+railroad.plugins.list.empty=No plugins available
+railroad.plugins.details.enable=Enable plugin
+railroad.plugins.details.no_description=No description provided.
+railroad.plugins.details.dependencies.none=No dependencies
+railroad.plugins.details.dependencies.count=%d repositories, %d artifacts
+railroad.plugins.details.label.identifier=Identifier
+railroad.plugins.details.label.version=Version
+railroad.plugins.details.label.author=Author
+railroad.plugins.details.label.license=License
+railroad.plugins.details.label.main_class=Main Class
+railroad.plugins.details.label.dependencies=Dependencies
 
 # Appearance settings
 railroad.settings.appearance.themes.title=Themes
@@ -97,6 +298,19 @@ railroad.settings.projects.import.title=Importing Projects
 railroad.settings.projects.import.description=Configure how projects are imported into Railroad. You can set up VCS profiles and other import options.
 railroad.settings.projects.import.switch_to_ide_after_import.title=Switch to IDE after import
 railroad.settings.projects.import.switch_to_ide_after_import.description=Automatically switch to the IDE after importing a project. This allows you to start working on your project immediately without additional steps.
+
+railroad.settings.projects.defaults.group_id.title=Default Group ID
+railroad.settings.projects.defaults.group_id.description=Manage the default Maven group identifier assigned to new projects.
+railroad.settings.projects.defaults.group_id.default_group_id.title=Override default group ID
+railroad.settings.projects.defaults.group_id.default_group_id.description=Set the Maven group ID that Railroad pre-fills during project onboarding. Leave blank to use the generated value.
+railroad.settings.projects.defaults.version.title=Default Project Version
+railroad.settings.projects.defaults.version.description=Control the default version string applied when creating projects.
+railroad.settings.projects.defaults.version.default_version.title=Override default project version
+railroad.settings.projects.defaults.version.default_version.description=Set the version number Railroad pre-fills during project onboarding. Leave blank to keep the standard value.
+railroad.settings.projects.defaults.author.title=Default Project Author
+railroad.settings.projects.defaults.author.description=Configure the default author shown for newly created projects.
+railroad.settings.projects.defaults.author.default_author.title=Override default project author
+railroad.settings.projects.defaults.author.default_author.description=Set the author name Railroad pre-fills during project onboarding. Leave blank to fall back to the system user name.
 
 # Theme management
 railroad.home.settings.appearance.theme=Select a Theme
@@ -116,12 +330,47 @@ railroad.home.settings.appearance.selecttheme=Select Theme
 # Theme preview
 railroad.home.settings.appearance.preview.title=Theme Preview
 railroad.home.settings.appearance.preview.subtitle=This preview shows how various UI components will look with the selected theme.
-railroad.home.settings.appearance.preview.form.components=Form Components
-railroad.home.settings.appearance.preview.list.components=List Components
-railroad.home.settings.appearance.preview.button.components=Button Components
 railroad.home.settings.appearance.preview.close=Close Preview
 railroad.home.settings.appearance.preview.apply=Apply Theme
 railroad.home.settings.appearance.preview.tooltip=Preview theme
+
+railroad.home.settings.appearance.preview.navigation.0=Home
+railroad.home.settings.appearance.preview.navigation.1=Projects
+railroad.home.settings.appearance.preview.navigation.2=Settings
+railroad.home.settings.appearance.preview.navigation.3=Help
+
+railroad.home.settings.appearance.preview.form.components=Form Components
+railroad.home.settings.appearance.preview.form.text_prompt=Enter text here...
+railroad.home.settings.appearance.preview.form.password_prompt=Password
+railroad.home.settings.appearance.preview.form.combo_box.items.0=Option 1
+railroad.home.settings.appearance.preview.form.combo_box.items.1=Option 2
+railroad.home.settings.appearance.preview.form.combo_box.items.2=Option 3
+railroad.home.settings.appearance.preview.form.check_box.label=Enable feature
+railroad.home.settings.appearance.preview.form.radio_button.label=Radio option
+railroad.home.settings.appearance.preview.form.toggle_button.label=Toggle things
+
+railroad.home.settings.appearance.preview.list.components=List Components
+railroad.home.settings.appearance.preview.list.items.0=Project 1 - Minecraft Mod
+railroad.home.settings.appearance.preview.list.items.1=Project 2 - Fabric Plugin
+railroad.home.settings.appearance.preview.list.items.2=Project 3 - Forge Extension
+railroad.home.settings.appearance.preview.list.items.3=Project 4 - Neoforge Addon
+railroad.home.settings.appearance.preview.list.items.4=Project 5 - Quilt Mod
+railroad.home.settings.appearance.preview.list.items.5=Project 6 - Bukkit Plugin
+railroad.home.settings.appearance.preview.list.items.6=Project 7 - Spigot Extension
+railroad.home.settings.appearance.preview.list.items.7=Project 8 - Paper Addon
+
+railroad.home.settings.appearance.preview.table.columns.0=Name
+railroad.home.settings.appearance.preview.table.columns.1=Type
+railroad.home.settings.appearance.preview.table.columns.2=Status
+
+railroad.home.settings.appearance.preview.button.components=Button Components
+railroad.home.settings.appearance.preview.button.primary=Primary Button
+railroad.home.settings.appearance.preview.button.secondary=Secondary Button
+railroad.home.settings.appearance.preview.button.danger=Danger Button
+railroad.home.settings.appearance.preview.button.success=Success Button
+railroad.home.settings.appearance.preview.button.ghost=Ghost Button
+railroad.home.settings.appearance.preview.button.small=Small Button
+railroad.home.settings.appearance.preview.button.large=Large Button
 
 # IDE settings
 railroad.settings.ide.code_style.title=Code Style
@@ -129,99 +378,15 @@ railroad.settings.ide.code_style.description=Configure the code style settings f
 railroad.settings.ide.code_style.auto_pair_inside_strings.title=Auto-pair inside strings
 railroad.settings.ide.code_style.auto_pair_inside_strings.description=Enable or disable automatic pairing of brackets, braces and parenthesis inside string literals.
 
-# =============================================================================
-# PROJECT CREATION
-# =============================================================================
-# Project basic info
-railroad.project.creation.name=Name
-railroad.project.creation.name.prompt=Enter project name
-railroad.project.creation.name.error.required=You must enter a project name
-
-railroad.project.creation.location=Location
-railroad.project.creation.location.warning.onedrive=It is not recommended to create projects in OneDrive as it has a tendency to cause problems.
-railroad.project.creation.location.warning.not_empty=The selected directory is not empty. Creating a project here may overwrite existing files.
-railroad.project.creation.location.info=This will be created at: %s
-
-railroad.project.creation.git=Create Git Repository
-
-railroad.project.creation.license=License
-railroad.project.creation.license.custom=Custom License
-railroad.project.creation.license.custom.prompt=Enter custom license text
-
-# Minecraft settings
-railroad.project.creation.minecraft_version=Minecraft Version
-railroad.project.creation.forge_version=Forge Version
-railroad.project.creation.neo_forge_version=NeoForge Version
-railroad.project.creation.fabric_loader_version=Fabric Loader Version
-
-# Mod settings
-railroad.project.creation.mod_id=Mod ID
-railroad.project.creation.mod_id.prompt=Enter mod ID
-railroad.project.creation.mod_id.error.required=You must enter a mod ID
-
-railroad.project.creation.mod_name=Mod Name
-railroad.project.creation.mod_name.prompt=Enter mod name
-railroad.project.creation.mod_name.error.required=You must enter a mod name
-
-railroad.project.creation.main_class=Main Class
-railroad.project.creation.main_class.prompt=Enter the name of the main class
-railroad.project.creation.main_class.error.required=You must enter the name of the main class
-
-# Project features
-railroad.project.creation.use_mixins=Use Mixins
-railroad.project.creation.use_access_transformer=Use Access Transformer
-railroad.project.creation.gen_run_folders=Generate Run Folders
-
-# Mappings
-railroad.project.creation.mapping_channel=Mapping Channel
-railroad.project.creation.mapping_version=Mapping Version
-
-# Project metadata
-railroad.project.creation.author=Author
-railroad.project.creation.author.prompt=Enter author name
-
-railroad.project.creation.credits=Credits
-railroad.project.creation.credits.prompt=Enter credits
-
-railroad.project.creation.description=Description
-railroad.project.creation.description.prompt=Enter description
-
-# URLs
-railroad.project.creation.issues=Issues URL
-railroad.project.creation.issues.prompt=Enter issues URL
-
-railroad.project.creation.update_json_url=Update JSON URL
-railroad.project.creation.update_json_url.prompt=Enter update JSON URL
-
-railroad.project.creation.display_url=Display URL
-railroad.project.creation.display_url.prompt=Enter the URL to display in the project
-
-# Maven settings
-railroad.project.creation.group_id=Group ID
-railroad.project.creation.group_id.prompt=Enter group ID
-railroad.project.creation.group_id.error.required=You must enter a group ID
-
-railroad.project.creation.artifact_id=Artifact ID
-railroad.project.creation.artifact_id.prompt=Enter artifact ID
-railroad.project.creation.artifact_id.error.required=You must enter an artifact ID
-
-railroad.project.creation.version=Version
-railroad.project.creation.version.prompt=Enter version
-railroad.project.creation.version.error.required=You must enter a version
-
-# Project creation sections
-railroad.project.creation.section.project=Project
-railroad.project.creation.section.minecraft=Minecraft
-railroad.project.creation.section.optional=Optional
-railroad.project.creation.section.mappings=Mappings
-railroad.project.creation.section.maven=Maven
-
-# Other creation options
-railroad.project.creation.display_test=Display Test
-railroad.project.creation.client_side_only=Client Side Only
-
-# Tooltips
-railroad.tooltip.project.location.info=The project will be created in this directory.
+# VCS Settings
+settings.tree.vcs=VCS
+railroad.settings.vcs.title=VCS
+railroad.settings.vcs.description=Settings relating to VCS (Version Control System) such as Git.
+railroad.settings.vcs.git_binary_command_search_timeout_ms.title=Git binary search command timeout(ms)
+railroad.settings.vcs.git_binary_command_search_timeout_ms.description=The time in milliseconds to wait when running the command that searches for the git binary executable.
+railroad.settings.vcs.git_executable_path.title=Git Executable Path
+railroad.settings.vcs.git_executable_path.placeholder=Path to your git executable binary
+railroad.settings.vcs.git_executable_path.description=The path to the Git executable binary file.
 
 # =============================================================================
 # IDE
@@ -267,55 +432,7 @@ railroad.theme.preview.text_field=Text Field:
 railroad.theme.preview.password=Password:
 railroad.theme.preview.dropdown=Dropdown:
 
-# Project Creation Status
-railroad.project.creation.status.creating=Creating Project...
-railroad.project.creation.status.creating_fabric=Creating Fabric Project
-railroad.project.creation.status.creating_fabric.subtitle=Setting up your new Fabric mod project: %s
-railroad.project.creation.status.creating_forge=Creating Forge Project
-railroad.project.creation.status.creating_forge.subtitle=Setting up your new Forge mod project: %s
-railroad.project.creation.status.time_elapsed=Time elapsed: %s
-railroad.project.creation.status.task=Current task: %s
-
-# Project creation tasks
-railroad.project.creation.task.creating_directory=Creating project directory
-railroad.project.creation.task.downloading_example_mod=Downloading example mod
-railroad.project.creation.task.extracting_example_mod=Extracting example mod
-railroad.project.creation.task.deleting_example_zip=Cleaning up temporary files
-railroad.project.creation.task.copying_project=Copying project files
-railroad.project.creation.task.updating_gradle=Updating Gradle configuration
-railroad.project.creation.task.renaming_packages=Renaming packages
-railroad.project.creation.task.updating_fabric_mod_json=Updating fabric.mod.json
-railroad.project.creation.task.renaming_mixins=Renaming mixin files
-railroad.project.creation.task.renaming_main_classes=Renaming main classes
-railroad.project.creation.task.refactoring_mixins=Refactoring mixins
-railroad.project.creation.task.updating_build_gradle=Updating build.gradle
-railroad.project.creation.task.creating_project=Creating project
-railroad.project.creation.task.running_gen_sources=Running genSources task
-railroad.project.creation.task.creating_git=Creating Git repository
-railroad.project.creation.task.fabric_completed=Fabric project created successfully!
-railroad.project.creation.task.project_created=Project created successfully!
-
-# Forge-specific tasks
-railroad.project.creation.task.updating_settings_gradle=Updating settings.gradle
-railroad.project.creation.task.refactoring_classes=Refactoring example classes
-railroad.project.creation.task.creating_mixins=Creating mixins configuration
-railroad.project.creation.task.creating_access_transformer=Creating access transformer
-railroad.project.creation.task.setup_gradle=Setting up Gradle
-
-# Project creation errors
-railroad.project.creation.error.title=Project Creation Error
-railroad.project.creation.error.fabric.header=Failed to create Fabric project
-railroad.project.creation.error.forge.header=Failed to create Forge project
-railroad.project.creation.error.content=An error occurred while creating your project. Please check the details below and try again.
-railroad.project.creation.error.open_ide.title=Failed to Open Project
-railroad.project.creation.error.open_ide.header=Project created but failed to open in IDE
-railroad.project.creation.error.open_ide.content=Your project was created successfully, but there was an error opening it in the IDE. You can manually open the project from the welcome screen.
-
-# Project creation cancel
-railroad.project.creation.cancel.title=Cancel Project Creation
-railroad.project.creation.cancel.header=Are you sure you want to cancel?
-railroad.project.creation.cancel.content=This will stop the project creation process and return you to the welcome screen. Any partially created files will remain on disk.
-
+# Not Implemented Dialog
 not_implemented.title=Not Implemented Yet
 not_implemented.subtitle=This feature is under construction. Stay tuned!
 
@@ -379,3 +496,496 @@ railroad.menu.help=Help
 railroad.menu.help.documentation=Documentation
 railroad.menu.help.issues=Report Issues
 railroad.menu.help.discord=Join the Discord
+
+# =============================================================================
+# PROJECT CREATION
+# =============================================================================
+railroad.project.creation.onboarding.start_button=Start Project Creation
+railroad.project.creation.onboarding.title=Create New Project
+railroad.onboarding.step_progress=Step %d of %d
+
+railroad.project.creation.project_details.title=Project Details
+railroad.project.creation.project_details.description=Enter the name and location for your project.
+railroad.project.creation.section.project=Project
+railroad.project.creation.name=Project Name
+railroad.project.creation.name.prompt=My Awesome Mod
+railroad.project.creation.name.info=Displayed title for your project used across generated metadata and UI.
+railroad.project.creation.location=Project Location
+railroad.project.creation.location.info=Destination folder where Railroad will create the project structure.
+
+railroad.project.creation.maven_coordinates.title=Maven Coordinates
+railroad.project.creation.maven_coordinates.description=Enter the Maven coordinates for your project.
+railroad.project.creation.section.maven_coordinates=Maven Coordinates
+railroad.project.creation.group_id=Group ID
+railroad.project.creation.group_id.prompt=com.example
+railroad.project.creation.group_id.info=Base package and Maven group id used for generated sources and publishing.
+railroad.project.creation.artifact_id=Artifact ID
+railroad.project.creation.artifact_id.prompt=my-awesome-mod
+railroad.project.creation.artifact_id.info=Artifact name applied to generated JARs and Gradle metadata.
+railroad.project.creation.version=Version
+railroad.project.creation.version.prompt=1.0.0
+railroad.project.creation.version.info=Initial project version inserted into build scripts and mod metadata.
+
+railroad.project.creation.minecraft_version.title=Minecraft Version
+railroad.project.creation.minecraft_version.description=Select the Minecraft version for your project.
+railroad.project.creation.section.minecraft_version=Minecraft Version
+railroad.project.creation.minecraft_version=Minecraft Version
+railroad.project.creation.minecraft_version.info=Minecraft release your mod targets; determines compatible mappings and dependencies.
+
+railroad.project.creation.mapping_channel.title=Mapping Channel
+railroad.project.creation.mapping_channel.description=Select the mapping channel for your project.
+railroad.project.creation.section.mapping_channel=Mapping Channel
+railroad.project.creation.mapping_channel=Mapping Channel
+railroad.project.creation.mapping_channel.info=Mapping distribution (Yarn, Mojmap, Parchment, etc.) providing readable game symbols.
+
+railroad.project.creation.mapping_version.title=Mapping Version
+railroad.project.creation.mapping_version.description=Select the mapping version for your project.
+railroad.project.creation.section.mapping_version=Mapping Version
+railroad.project.creation.mapping_version=Mapping Version
+railroad.project.creation.mapping_version.info=Specific mapping build that resolves class, method and field names.
+
+railroad.project.creation.forge_version.title=Forge Version
+railroad.project.creation.forge_version.description=Select the Forge version for your project.
+railroad.project.creation.section.forge_version=Forge Version
+railroad.project.creation.forge_version=Forge Version
+railroad.project.creation.forge_version.info=Forge loader build bundled with your generated project.
+
+railroad.project.creation.neoforge_version.title=Neoforge Version
+railroad.project.creation.neoforge_version.description=Select the Neoforge version for your project.
+railroad.project.creation.section.neoforge_version=Neoforge Version
+railroad.project.creation.neoforge_version=Neoforge Version
+railroad.project.creation.neoforge_version.info=Neoforge loader build bundled with your generated project.
+
+railroad.project.creation.fabric_loader.title=Fabric Loader
+railroad.project.creation.fabric_loader.description=Select the Fabric Loader version for your project.
+railroad.project.creation.section.fabric_loader=Fabric Loader
+railroad.project.creation.fabric_loader=Fabric Loader
+railroad.project.creation.fabric_loader.info=Fabric Loader version bundled with the generated project.
+
+railroad.project.creation.fabric_api.title=Fabric API
+railroad.project.creation.fabric_api.description=Select the Fabric API version for your project.
+railroad.project.creation.section.fabric_api=Fabric API
+railroad.project.creation.fabric_api=Fabric API
+railroad.project.creation.fabric_api.info=Fabric API dependency that Railroad adds to your Gradle build.
+
+railroad.project.creation.mod_details.title=Mod Details
+railroad.project.creation.mod_details.description=Enter the details for your mod.
+railroad.project.creation.section.mod_details=Mod Details
+railroad.project.creation.mod_id=Mod ID
+railroad.project.creation.mod_id.prompt=my-awesome-mod
+railroad.project.creation.mod_id.info=Unique identifier for your mod used in file names and runtime registration.
+railroad.project.creation.mod_name=Mod Name
+railroad.project.creation.mod_name.prompt=My Awesome Mod
+railroad.project.creation.mod_name.info=Human-readable name shown to players and in mod metadata.
+railroad.project.creation.main_class=Main Class
+railroad.project.creation.main_class.prompt=com.example.MyAwesomeMod
+railroad.project.creation.main_class.info=Entry point class generated for your mod's initializer.
+
+railroad.project.creation.section.forge_options=Forge Options
+railroad.project.creation.section.neoforge_options=Neoforge Options
+railroad.project.creation.use_mixins=Enable Mixins
+railroad.project.creation.use_mixins.info=Adds mixin support and configures (Neo)/Forge to apply your mixins.
+railroad.project.creation.use_access_transformer=Enable Access Transformer
+railroad.project.creation.use_access_transformer.info=Generates an access transformer file and registers it for the project.
+railroad.project.creation.gen_run_folders=Generate Run Folders
+railroad.project.creation.gen_run_folders.info=Creates dedicated run configurations and data directories for development.
+
+railroad.project.creation.license.title=License
+railroad.project.creation.license.description=Select the license for your project.
+railroad.project.creation.section.license=License
+railroad.project.creation.license=License
+railroad.project.creation.license.custom=Custom License
+railroad.project.creation.license.custom.prompt=https://example.com/LICENSE
+railroad.project.creation.license.info=License applied to generated source headers and packaged with your project.
+railroad.project.creation.license.custom.info=Provide a custom SPDX identifier or URL when using the custom license option.
+
+railroad.project.creation.git.title=Git
+railroad.project.creation.git.description=Initialize a Git repository for your project.
+railroad.project.creation.section.git=Git
+railroad.project.creation.init_git=Initialize Git Repository
+railroad.project.creation.init_git.info=Initializes a Git repository with an initial commit in the project folder.
+
+railroad.project.creation.access_widener.title=Access Widener
+railroad.project.creation.access_widener.description=Use an access widener to access parts of the game that are normally not accessible.
+railroad.project.creation.section.access_widener=Access Widener
+railroad.project.creation.use_access_widener=Use Access Widener
+railroad.project.creation.access_widener.path=Access Widener Path
+railroad.project.creation.access_widener.path.prompt=${modid}.accesswidener
+railroad.project.creation.access_widener.path.error.required=Access widener path is required when enabled.
+railroad.project.creation.use_access_widener.info=Generates an access widener file and configures Fabric Loader to apply it.
+railroad.project.creation.access_widener.path.info=Relative path for the access widener file; ${modid} is replaced with your mod id during creation.
+
+railroad.project.creation.split_sources.title=Split Sources
+railroad.project.creation.split_sources.description=Split the sources into client and main.
+railroad.project.creation.section.split_sources=Split Sources
+railroad.project.creation.split_sources=Split Sources
+railroad.project.creation.split_sources.info=Creates separate client and common source sets for environment-specific code.
+
+railroad.project.creation.optional_details.title=Optional Details
+railroad.project.creation.optional_details.description=Enter optional details for your project.
+railroad.project.creation.section.optional_details=Optional Details
+railroad.project.creation.author=Author
+railroad.project.creation.author.prompt=Your Name
+railroad.project.creation.author.info=Author credited in the generated mod metadata.
+railroad.project.creation.credits=Credits
+railroad.project.creation.credits.prompt=Additional acknowledgements
+railroad.project.creation.credits.info=Optional acknowledgements written to mods.toml metadata.
+railroad.project.creation.description=Description
+railroad.project.creation.description.prompt=A short description of your project.
+railroad.project.creation.description.info=Summary shown in launchers and metadata files.
+railroad.project.creation.issues_url=Issues URL
+railroad.project.creation.issues_url.prompt=https://example.com/issues
+railroad.project.creation.issues_url.info=Issue tracker link published in mod metadata.
+railroad.project.creation.update_json_url=Update JSON URL
+railroad.project.creation.update_json_url.prompt=https://example.com/updates.json
+railroad.project.creation.update_json_url.info=Remote JSON describing version updates for distribution platforms.
+railroad.project.creation.display_url=Display URL
+railroad.project.creation.display_url.prompt=https://example.com/promo
+railroad.project.creation.display_url.info=Promotional link shown in launchers such as CurseForge.
+railroad.project.creation.display_test=Display Test
+railroad.project.creation.display_test.info=Controls how the launcher warns players about version mismatches.
+railroad.project.creation.client_side_only=Client Side Only
+railroad.project.creation.client_side_only.info=Mark the mod as client-only in generated metadata.
+railroad.project.creation.homepage_url=Homepage URL
+railroad.project.creation.homepage_url.prompt=https://example.com
+railroad.project.creation.homepage_url.info=Project website presented to players in launcher UIs.
+railroad.project.creation.sources_url=Sources URL
+railroad.project.creation.sources_url.prompt=https://example.com/sources
+railroad.project.creation.sources_url.info=Source code repository URL advertised in mod metadata.
+
+# Validation Errors
+railroad.project.creation.location.error.required=Project location is required.
+railroad.project.creation.location.error.cannot_create=Could not create the project directory.
+railroad.project.creation.location.error.not_directory=The selected path is not a directory.
+railroad.project.creation.location.error.is_directory=The selected path is not a file.
+railroad.project.creation.location.warning.not_empty=The selected directory is not empty.
+railroad.project.creation.location.error.not_readable=The selected directory is not readable.
+railroad.project.creation.location.error.invalid_path=The selected path is invalid.
+railroad.project.creation.location.warning.onedrive=Using OneDrive for projects is not recommended.
+railroad.project.creation.location.error.invalid_extension=The selected file has an invalid extension.
+railroad.project.creation.location.error.invalid_jar=The selected JAR file is not valid.
+railroad.project.creation.location.warning.not_gradle_project=The selected directory does not appear to be a Gradle project.
+railroad.project.creation.name.error.required=Project name is required.
+railroad.project.creation.name.error.length_long=Project name is too long (maximum 256 characters).
+railroad.project.creation.name.error.length_short=Project name is too short (minimum 3 characters).
+railroad.project.creation.name.error.invalid_characters=Project name contains invalid characters.
+railroad.project.creation.license.custom.error.required=Custom license URL is required.
+railroad.project.creation.license.custom.error.length_long=Custom license URL is too long (maximum 2048 characters).
+railroad.project.creation.mod_id.error.required=Mod ID is required.
+railroad.project.creation.mod_id.error.length_short=Mod ID is too short (minimum 3 characters).
+railroad.project.creation.mod_id.error.length_long=Mod ID is too long (maximum 64 characters).
+railroad.project.creation.mod_id.error.invalid_characters=Mod ID contains invalid characters.
+railroad.project.creation.mod_name.error.required=Mod name is required.
+railroad.project.creation.mod_name.error.length_long=Mod name is too long (maximum 256 characters).
+railroad.project.creation.mod_name.error.length_short=Mod name is too short (minimum 5 characters).
+railroad.project.creation.main_class.error.required=Main class is required.
+railroad.project.creation.main_class.error.invalid_characters=Main class contains invalid characters.
+railroad.project.creation.qualified_main_class.error.required=Qualified main class is required.
+railroad.project.creation.qualified_main_class.error.invalid_characters=Qualified main class contains invalid characters
+railroad.project.creation.author.error.length_long=Author is too long (maximum 256 characters).
+railroad.project.creation.author.error.length_short=Author is too short (minimum 3 characters).
+railroad.project.creation.credits.error.length_long=Credits is too long (maximum 256 characters).
+railroad.project.creation.description.error.length_long=Description is too long (maximum 2048 characters).
+railroad.project.creation.description.error.length_short=Description is too short (minimum 10 characters).
+railroad.project.creation.issues.error.length_long=Issues URL is too long (maximum 256 characters).
+railroad.project.creation.issues.error.invalid_url=Issues URL is not a valid URL.
+railroad.project.creation.issues.error.no_issues=Issues URL does not point to an issues page.
+railroad.project.creation.update_json.error.length_long=Update JSON URL is too long (maximum 256 characters).
+railroad.project.creation.update_json.error.invalid_url=Update JSON URL is not a valid URL.
+railroad.project.creation.update_json.error.invalid_extension=Update JSON URL must end with .json.
+railroad.project.creation.display_url.error.length_long=Display URL is too long (maximum 256 characters).
+railroad.project.creation.display_url.error.invalid_url=Display URL is not a valid URL.
+railroad.project.creation.group_id.error.required=Group ID is required.
+railroad.project.creation.group_id.error.length_long=Group ID is too long (maximum 256 characters).
+railroad.project.creation.group_id.error.invalid_characters=Group ID contains invalid characters.
+railroad.project.creation.artifact_id.error.required=Artifact ID is required.
+railroad.project.creation.artifact_id.error.length_long=Artifact ID is too long (maximum 256 characters).
+railroad.project.creation.artifact_id.error.invalid_characters=Artifact ID contains invalid characters.
+railroad.project.creation.version.error.required=Version is required.
+railroad.project.creation.version.error.length_long=Version is too long (maximum 256 characters).
+railroad.project.creation.version.error.invalid_characters=Version contains invalid characters.
+railroad.project.creation.homepage.error.length_long=Homepage URL is too long (maximum 256 characters).
+railroad.project.creation.homepage.error.invalid_url=Homepage URL is not a valid URL.
+railroad.project.creation.sources.error.length_long=Sources URL is too long (maximum 256 characters).
+railroad.project.creation.sources.error.invalid_url=Sources URL is not a valid URL.
+
+railroad.project.creation.error.title=Project Creation Error
+railroad.project.creation.error.header=There was an error creating your project.
+
+railroad.mapping_channel.mcp=MCP
+railroad.mapping_channel.yarn=Yarn
+railroad.mapping_channel.official=Official (Mojmaps)
+railroad.mapping_channel.parchment=Parchment
+
+# =============================================================================
+# GIT COMMIT
+# =============================================================================
+git.commit.header.refresh.tooltip=Refresh changes
+git.commit.header.rollback.tooltip=Rollback changes
+git.commit.header.shelf.tooltip=Shelve changes
+git.commit.header.expand_all.tooltip=Expand all
+git.commit.header.collapse_all.tooltip=Collapse all
+git.commit.actions.amend.checkbox=Amend commit
+git.commit.actions.signoff.checkbox=Sign off
+git.commit.actions.message.placeholder=Commit message
+git.commit.actions.description.placeholder=Commit description
+git.commit.actions.commit.button=Commit
+git.commit.actions.commit_and_push.button=Commit and Push
+git.commit.changes.root.title=Changes
+git.commit.changes.empty=No changes
+git.commit.changes.directory.subtitle=%s files
+railroad.git.commit.overview.recent_commits.placeholder=No recent commits
+railroad.git.commit.list.placeholder.loading=Loading commits...
+railroad.git.commit.list.placeholder.empty=No commits
+railroad.git.overview.header.fetch.button=Fetch
+railroad.git.overview.header.pull.button=Pull
+railroad.git.overview.header.push.button=Push
+railroad.git.overview.header.repository.label=Repository
+railroad.git.overview.header.status.label=Status
+railroad.git.overview.header.head.label=HEAD
+railroad.git.overview.header.upstream.label=Upstream
+railroad.git.overview.header.upstream_status.label=Upstream Status
+railroad.git.overview.header.last_fetch.label=Last Fetch
+railroad.git.overview.header.remote.label=Remote
+railroad.git.overview.header.remote_url.label=Remote URL
+railroad.git.overview.header.local_changes.label=Local Changes
+railroad.git.overview.header.local_changes.staged.label=Staged
+railroad.git.overview.header.local_changes.unstaged.label=Unstaged
+railroad.git.overview.header.local_changes.untracked.label=Untracked
+railroad.git.overview.header.local_changes.conflicted.label=Conflicted
+railroad.git.overview.identity.user.label=User
+railroad.git.overview.identity.email.label=Email
+railroad.git.overview.identity.signing.label=Signing
+railroad.git.overview.identity.git_version.label=Git Version
+railroad.git.overview.recent_commits.placeholder=No recent commits
+railroad.git.remotes.list.fetched_time=fetched %s
+railroad.git.remotes.list.urls_count=%d URLs
+railroad.git.remotes.list.upstream=upstream
+railroad.git.remotes.actions.button.fetch_all=Fetch All
+railroad.git.remotes.actions.button.prune_all=Prune All
+railroad.git.remotes.actions.button.add_remote=Add Remote
+railroad.git.remotes.actions.button.edit_remote=Edit Remote
+railroad.git.remotes.actions.button.remove_remote=Remove Remote
+railroad.git.remotes.actions.button.fetch=Fetch
+railroad.git.remotes.actions.button.prune=Prune
+railroad.git.remotes.actions.button.open_in_browser=Open in Browser
+railroad.git.remotes.actions.add_dialog.title=Add Remote
+railroad.git.remotes.actions.add_dialog.subtitle=Create a new remote
+railroad.git.remotes.actions.add_dialog.name.label=Remote Name
+railroad.git.remotes.actions.add_dialog.name.placeholder=origin
+railroad.git.remotes.actions.add_dialog.fetch_url.label=Fetch URL
+railroad.git.remotes.actions.add_dialog.fetch_url.placeholder=https://github.com/org/repo.git
+railroad.git.remotes.actions.add_dialog.push_url.label=Push URL
+railroad.git.remotes.actions.add_dialog.push_url.placeholder=Leave blank to use fetch URL
+railroad.git.remotes.actions.edit_dialog.title=Edit Remote
+railroad.git.remotes.actions.edit_dialog.subtitle=Update selected remote
+railroad.git.remotes.actions.edit_dialog.current_remote=Editing remote %s
+railroad.git.remotes.actions.edit_dialog.name.label=Remote Name
+railroad.git.remotes.actions.edit_dialog.name.placeholder=origin
+railroad.git.remotes.actions.edit_dialog.fetch_url.label=Fetch URL
+railroad.git.remotes.actions.edit_dialog.fetch_url.placeholder=https://github.com/org/repo.git
+railroad.git.remotes.actions.edit_dialog.push_url.label=Push URL
+railroad.git.remotes.actions.edit_dialog.push_url.placeholder=https://github.com/org/repo.git
+railroad.git.remotes.actions.remove_dialog.title=Remove Remote
+railroad.git.remotes.actions.remove_dialog.subtitle=Confirm remote removal
+railroad.git.remotes.actions.remove_dialog.content=Type the remote name (%s) to confirm removal.
+railroad.git.remotes.actions.remove_dialog.confirmation_placeholder=Type remote name to confirm
+railroad.git.remotes.actions.remove_dialog.confirm=Remove Remote
+railroad.git.remotes.actions.remove_dialog.error_confirmation_mismatch=Confirmation does not match the remote name.
+railroad.git.remotes.actions.dialog.error_name_required=Remote name is required.
+railroad.git.remotes.actions.dialog.error_name_exists=A remote with this name already exists.
+railroad.git.remotes.actions.dialog.error_fetch_url_required=Fetch URL is required.
+railroad.git.remotes.actions.dialog.error_push_url_required=Push URL is required.
+railroad.git.remotes.details.no_remote_selected=No remote selected.
+railroad.git.remotes.details.name.label=Name
+railroad.git.remotes.details.fetch_url.label=Fetch URL
+railroad.git.remotes.details.push_url.label=Push URL
+railroad.git.remotes.details.default_branch.label=Default Branch
+railroad.git.remotes.details.last_fetched.label=Last Fetched
+railroad.git.remotes.details.pruning.label=Pruning
+railroad.git.remotes.details.pruning.enabled=Enabled
+railroad.git.remotes.details.default_suffix=default
+railroad.git.remotes.details.not_available=N/A
+railroad.git.remotes.details.never=Never
+railroad.git.remotes.details.unknown=Unknown
+railroad.git.diff.placeholder.no_file=Select a file to view its diff.
+railroad.git.diff.placeholder.no_repo=File is not in a Git repository.
+railroad.git.diff.placeholder.no_changes=No changes to show.
+railroad.git.diff.placeholder.loading=Loading diff...
+railroad.git.diff.placeholder.failed=Failed to load diff. See logs for details.
+railroad.git.commit.search.label=Search
+railroad.git.commit.search.placeholder=Search commits, authors, messages...
+railroad.git.commit.details.no_commit_selected=No commit selected.
+railroad.git.commit.details.author=Author %s
+railroad.git.commit.details.committed=Committed %s
+railroad.git.commit.details.hash=Hash %s
+railroad.git.commit.details.button.copy_hash=Copy Hash
+railroad.git.commit.details.button.checkout_commit=Checkout
+railroad.git.commit.details.button.create_branch=New branch
+railroad.git.commit.details.button.create_tag=Tag
+railroad.git.commit.details.button.cherry_pick=Cherry-pick
+railroad.git.commit.details.button.revert_commit=Revert
+railroad.git.commit.details.cherry_pick.error.title=Cherry-pick failed
+railroad.git.commit.details.cherry_pick.error.subtitle=Unable to cherry-pick commit
+railroad.git.commit.details.cherry_pick.error.content=Git could not complete this cherry-pick.
+railroad.git.commit.details.cherry_pick.error.already_cherry_picking_title=Cherry-pick in progress
+railroad.git.commit.details.cherry_pick.error.already_cherry_picking=A cherry-pick is already in progress. Continue or abort it before starting another cherry-pick.
+railroad.git.commit.details.cherry_pick.error.already_cherry_picking_continue=Continue
+railroad.git.commit.details.cherry_pick.error.already_cherry_picking_abort=Abort
+railroad.git.commit.details.cherry_pick.conflicts.title=Cherry-pick has conflicts
+railroad.git.commit.details.cherry_pick.conflicts.content=This cherry-pick stopped because of conflicts. Resolve conflicts and continue, or abort the cherry-pick.
+railroad.git.commit.details.cherry_pick.conflicts.continue=Continue cherry-pick
+railroad.git.commit.details.cherry_pick.conflicts.abort=Abort cherry-pick
+railroad.git.commit.details.cherry_pick.unresolved.title=Unresolved conflicts remain
+railroad.git.commit.details.cherry_pick.unresolved.subtitle=Finish resolving conflicts before continuing
+railroad.git.commit.details.cherry_pick.unresolved.content=Resolve all conflicted files and stage them, then continue the cherry-pick.
+railroad.git.commit.details.revert_dialog.title=Revert Commit
+railroad.git.commit.details.revert_dialog.subtitle=Create a new commit that reverts this change
+railroad.git.commit.details.revert_dialog.content=Are you sure you want to revert commit %s?
+railroad.git.commit.details.revert_dialog.confirm=Revert Commit
+railroad.git.commit.details.checkout_commit_dialog.title=Checkout Commit
+railroad.git.commit.details.checkout_commit_dialog.subtitle=Checkout this commit with local changes present
+railroad.git.commit.details.checkout_commit_dialog.uncommitted_changes_info=You have local changes. Choose how you want to proceed before checking out this commit.
+railroad.git.commit.details.checkout_commit_dialog.unstaged_changes=%d unstaged changes
+railroad.git.commit.details.checkout_commit_dialog.staged_changes=%d staged changes
+railroad.git.commit.details.checkout_commit_dialog.untracked_changes=%d untracked files
+railroad.git.commit.details.checkout_commit_dialog.stash_and_checkout=Stash and Checkout
+railroad.git.commit.details.checkout_commit_dialog.force_checkout=Force Checkout
+railroad.git.commit.details.checkout_commit_dialog.force_checkout_title=Confirm Force Checkout
+railroad.git.commit.details.checkout_commit_dialog.force_checkout_info=Force checkout will discard local changes and untracked files. Type FORCE to confirm.
+railroad.git.commit.details.checkout_commit_dialog.force_checkout.confirmation_placeholder=Type FORCE to continue
+railroad.git.commit.details.cherry_pick_dialog.title=Cherry-pick Commit
+railroad.git.commit.details.cherry_pick_dialog.subtitle=Cherry-pick with local changes present
+railroad.git.commit.details.cherry_pick_dialog.uncommitted_changes_info=You have local changes. Stash them before cherry-picking this commit.
+railroad.git.commit.details.cherry_pick_dialog.unstaged_changes=%d unstaged changes
+railroad.git.commit.details.cherry_pick_dialog.staged_changes=%d staged changes
+railroad.git.commit.details.cherry_pick_dialog.untracked_changes=%d untracked files
+railroad.git.commit.details.cherry_pick_dialog.stash_and_continue=Stash and Continue
+railroad.git.commit.details.new_branch_dialog.title=Create New Branch
+railroad.git.commit.details.new_branch_dialog.branch_name_label=Branch Name
+railroad.git.commit.details.new_branch_dialog.branch_name_placeholder=feature/my-branch
+railroad.git.commit.details.new_branch_dialog.checkout_branch_checkbox=Checkout branch after creation
+railroad.git.commit.details.new_branch_dialog.error_invalid_characters=Branch name contains invalid control characters.
+railroad.git.commit.details.new_branch_dialog.error_no_spaces=Branch name cannot contain spaces.
+railroad.git.commit.details.new_branch_dialog.error_invalid_ending=Branch name cannot end with '.' or '/'.
+railroad.git.commit.details.new_branch_dialog.error_double_dots=Branch name cannot contain '..'.
+railroad.git.commit.details.new_branch_dialog.error_invalid_sequences=Branch name cannot contain '//', '@{' or '\\'.
+railroad.git.commit.details.new_branch_dialog.error_head_reserved=Branch name 'HEAD' is reserved.
+railroad.git.commit.details.new_branch_dialog.error_invalid_branch_name=Branch name is invalid.
+railroad.git.commit.details.new_branch_dialog.error_invalid_branch_name_message=Please enter a valid branch name before creating a branch.
+railroad.git.commit.details.new_branch_dialog.uncommitted_changes_title=Uncommitted changes detected
+railroad.git.commit.details.new_branch_dialog.stash_and_continue=Stash and Continue
+railroad.git.commit.details.new_branch_dialog.bring_changes=Bring Changes
+railroad.git.commit.details.new_branch_dialog.cancel=Cancel
+railroad.git.commit.details.new_tag_dialog.title=Create Tag
+railroad.git.commit.details.new_tag_dialog.tag_name_label=Tag Name
+railroad.git.commit.details.new_tag_dialog.tag_name_placeholder=v1.0.0
+railroad.git.commit.details.new_tag_dialog.overwrite_tag_checkbox=Overwrite existing tag
+railroad.git.commit.details.new_tag_dialog.annotation_message=Annotation Message
+railroad.git.commit.details.new_tag_dialog.annotation_message_placeholder=Optional tag message
+railroad.git.commit.details.new_tag_dialog.error_no_spaces=Tag name cannot contain spaces.
+railroad.git.commit.details.new_tag_dialog.error_tag_exists=Tag already exists.
+railroad.git.commit.details.new_tag_dialog.error_invalid_tag_name=Tag name is invalid.
+railroad.git.commit.details.parents=Parents
+railroad.git.commit.details.committer=Committer
+railroad.git.commit.details.refs=Refs
+railroad.git.commit.details.message=Message
+railroad.git.commit.details.files_changed=%d files
+railroad.git.commit.details.message_content.placeholder=No commit message.
+railroad.git.branches.search.placeholder=Search branches...
+railroad.git.branches.local=Local Branches
+railroad.git.branches.remote=Remote Branches
+railroad.git.stash.message.placeholder=Stash message...
+railroad.git.stash.include_untracked=Include untracked files
+railroad.git.stash.actions.create=Create Stash
+railroad.git.stash.actions.refresh=Refresh
+railroad.git.stash.actions.apply=Apply
+railroad.git.stash.actions.pop=Pop
+railroad.git.stash.actions.drop=Drop
+railroad.git.stash.list.empty=No stashes found.
+railroad.git.stash.drop_dialog.title=Drop Stash
+railroad.git.stash.drop_dialog.subtitle=Delete selected stash
+railroad.git.stash.drop_dialog.content=Are you sure you want to permanently delete this stash?
+railroad.git.branches.head=HEAD
+railroad.git.branches.no_upstream=No upstream
+railroad.git.branches.no_commit_hash=--
+railroad.git.branches.last.never=never
+railroad.git.branches.local.last_summary=last: %s %s
+railroad.git.branches.local.last_summary_never=last: %s never
+railroad.git.branches.local.last_summary_unknown=last: -- never
+railroad.git.branches.remote.last_summary=last: %s
+railroad.git.branches.remote.last_summary_unknown=last: --
+railroad.git.branches.local.ahead=ahead %d
+railroad.git.branches.local.behind=behind %d
+railroad.git.branches.details.remote=Remote
+railroad.git.branches.details.upstream=Upstream
+railroad.git.branches.details.current=Current
+railroad.git.branches.details.current.yes=Yes
+railroad.git.branches.details.current.no=No
+railroad.git.branches.details.ahead=Ahead
+railroad.git.branches.details.behind=Behind
+railroad.git.branches.details.last_commit_hash=Last commit hash
+railroad.git.branches.details.last_commit_message=Last commit message
+railroad.git.branches.details.last_commit_author=Last commit author
+railroad.git.branches.details.last_commit_author_email=Last commit email
+railroad.git.branches.details.last_commit_time=Last commit time
+railroad.git.branches.details.last_commit_time_value=%s (%s)
+railroad.git.branches.actions.checkout=Checkout
+railroad.git.branches.actions.set_upstream=Set upstream
+railroad.git.branches.actions.unset_upstream=Unset upstream
+railroad.git.branches.actions.rename=Rename
+railroad.git.branches.actions.delete=Delete
+railroad.git.branches.set_upstream_dialog.title=Set Upstream Branch
+railroad.git.branches.set_upstream_dialog.local_branch=Local branch: %s
+railroad.git.branches.set_upstream_dialog.upstream_branch=Upstream branch
+railroad.git.branches.set_upstream_dialog.error_remote_branch_not_found=Select a valid remote branch.
+railroad.git.branches.unset_upstream_dialog.title=Unset Upstream Branch
+railroad.git.branches.unset_upstream_dialog.subtitle=Remove this branch upstream tracking?
+railroad.git.branches.unset_upstream_dialog.content=Remove upstream '%2$s' from local branch '%1$s'?
+railroad.git.branches.unset_upstream_dialog.confirm=Unset Upstream
+railroad.git.branches.rename_dialog.title=Rename Branch
+railroad.git.branches.rename_dialog.current_branch=Current branch: %s
+railroad.git.branches.rename_dialog.new_name_label=New branch name
+railroad.git.branches.rename_dialog.new_name_placeholder=feature/my-renamed-branch
+railroad.git.branches.rename_dialog.force_checkbox=Force rename if target exists
+railroad.git.branches.rename_dialog.error_same_name=New branch name must be different from current name.
+railroad.git.branches.delete_dialog.title=Delete Branch
+railroad.git.branches.delete_dialog.subtitle=Delete this local branch?
+railroad.git.branches.delete_dialog.content=This will delete local branch '%s'. Type CONFIRM to continue.
+railroad.git.branches.delete_dialog.confirmation_placeholder=Type CONFIRM to continue
+railroad.git.branches.delete_dialog.confirm=Delete Branch
+railroad.git.branches.delete_dialog.error_confirmation_mismatch=Type CONFIRM exactly to enable deletion.
+railroad.git.branch.status.dirty=Dirty
+railroad.git.branch.status.local=Local only
+railroad.git.branch.status.remote=Remote ahead
+railroad.git.branch.status.clean=Clean
+railroad.git.sync.controls.remote=Remote
+railroad.git.sync.controls.upstreamBranch=Upstream Branch
+railroad.git.sync.controls.fetch=Fetch
+railroad.git.sync.controls.pull=Pull
+railroad.git.sync.controls.push=Push
+railroad.git.sync.incoming_changes.title=Incoming Changes
+railroad.git.sync.incoming_changes.no_commits=No incoming commits
+railroad.git.sync.outgoing_changes.title=Outgoing Changes
+railroad.git.sync.outgoing_changes.no_commits=No outgoing commits
+railroad.git.sync.tracking.title=Tracking
+railroad.git.sync.tracking.branch=Branch
+railroad.git.sync.tracking.upstream=Upstream
+railroad.git.sync.tracking.upstream.none=None
+railroad.git.sync.aheadBehind.title=Ahead/Behind
+railroad.git.sync.aheadBehind.ahead=Ahead by %d commits
+railroad.git.sync.aheadBehind.behind=Behind by %d commits
+railroad.git.sync.aheadBehind.upToDate=Up to date with upstream
+railroad.git.sync.strategy.title=Sync Strategy
+railroad.git.sync.strategy.pull=Pull strategy
+railroad.git.sync.strategy.push=Push strategy
+railroad.git.pull.strategy.merge=Merge
+railroad.git.pull.strategy.rebase=Rebase
+railroad.git.pull.strategy.fast_forward_only=Fast-forward only
+railroad.git.push.strategy.simple=Simple
+railroad.git.push.strategy.current=Current
+railroad.git.push.strategy.upstream=Upstream
+railroad.git.push.strategy.matching=Matching
+railroad.git.push.strategy.nothing=Nothing
+railroad.git.sync.controls.remote.none=No remotes
+railroad.git.commit.details.unknown=Unknown

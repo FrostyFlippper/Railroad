@@ -18,7 +18,7 @@ public class TreeSitterJavaSyntaxHighlighting {
         long start = System.currentTimeMillis();
 
         var highlighter = new SyntaxHighlighter(text);
-        highlighter.traverseTree(null, highlighter.rootNode);
+        highlighter.traverseTree(new TSTreeCursor(highlighter.rootNode), highlighter.rootNode);
 
         var styles = highlighter.spansBuilder.create();
         Railroad.LOGGER.debug("Computed highlighting in {} ms", System.currentTimeMillis() - start);
@@ -65,7 +65,7 @@ public class TreeSitterJavaSyntaxHighlighting {
                     switch (type) {
                         case "line_comment" -> spansBuilder.add(Collections.singleton("comment"), end - start);
                         case "decimal_integer_literal", "decimal_floating_point_literal" ->
-                                spansBuilder.add(Collections.singleton("number"), end - start);
+                            spansBuilder.add(Collections.singleton("number"), end - start);
                         case "identifier" -> {
                             // check to see if the identifier is a class name
 

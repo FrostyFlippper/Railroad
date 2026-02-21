@@ -2,13 +2,8 @@ package dev.railroadide.railroad.ide.projectexplorer;
 
 import com.kodedu.terminalfx.Terminal;
 import com.panemu.tiwulfx.control.dock.DetachableTabPane;
-import dev.railroadide.core.settings.keybinds.KeybindContexts;
-import dev.railroadide.core.ui.RRBorderPane;
-import dev.railroadide.core.ui.RRButton;
-import dev.railroadide.core.ui.RRVBox;
-import dev.railroadide.core.ui.localized.LocalizedTextField;
-import dev.railroadide.core.ui.localized.LocalizedTooltip;
 import dev.railroadide.railroad.Railroad;
+import dev.railroadide.railroad.Services;
 import dev.railroadide.railroad.ide.IDESetup;
 import dev.railroadide.railroad.ide.projectexplorer.dialog.CopyModalDialog;
 import dev.railroadide.railroad.ide.projectexplorer.dialog.CreateFileDialog;
@@ -17,12 +12,21 @@ import dev.railroadide.railroad.ide.projectexplorer.task.FileCopyTask;
 import dev.railroadide.railroad.ide.projectexplorer.task.SearchTask;
 import dev.railroadide.railroad.ide.projectexplorer.task.WatchTask;
 import dev.railroadide.railroad.ide.ui.*;
-import dev.railroadide.railroad.plugin.defaults.DefaultDocument;
-import dev.railroadide.railroad.project.Project;
+import dev.railroadide.railroad.ide.ui.setup.TerminalFactory;
+import dev.railroadide.railroad.plugin.defaults.FileSystemDocument;
+import dev.railroadide.railroad.plugin.spi.dto.Project;
+import dev.railroadide.railroad.plugin.spi.events.DocumentEvent;
+import dev.railroadide.railroad.settings.keybinds.KeybindContexts;
 import dev.railroadide.railroad.settings.keybinds.KeybindHandler;
+import dev.railroadide.railroad.ui.RRBorderPane;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRTextField;
+import dev.railroadide.railroad.ui.RRVBox;
+import dev.railroadide.railroad.ui.localized.LocalizedTooltip;
+import dev.railroadide.railroad.ui.styling.ButtonSize;
+import dev.railroadide.railroad.ui.styling.ButtonVariant;
 import dev.railroadide.railroad.utility.FileUtils;
 import dev.railroadide.railroad.utility.ShutdownHooks;
-import dev.railroadide.railroadpluginapi.events.FileEvent;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -37,7 +41,6 @@ import javafx.scene.control.*;
 import javafx.scene.input.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.stage.Window;
 import org.jetbrains.annotations.NotNull;
 import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -64,12 +67,12 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
     private final List<String> searchList = new ArrayList<>();
 
     public ProjectExplorerPane(Project project, RRBorderPane mainPane) {
-        Path rootPath = Path.of(project.getPathString());
+        Path rootPath = project.getPath();
         setPadding(new Insets(0));
         setSpacing(0);
         getStyleClass().add("rr-project-explorer");
 
-        this.searchField = new LocalizedTextField("railroad.ide.project_explorer.search_field");
+        this.searchField = new RRTextField("railroad.ide.project_explorer.search_field");
         this.searchField.getStyleClass().add("rr-search-field");
 
         var header = createModernHeader(project);
@@ -106,7 +109,7 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
             if (event.getCode() == KeyCode.DELETE) {
                 event.consume();
 
-                DeleteDialog.open(getScene().getWindow(), item.getPath());
+                DeleteDialog.open(item.getPath());
                 return;
             }
 
@@ -206,7 +209,7 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
         clipboard.setContent(content);
     }
 
-    public static void paste(Window window, PathItem item) {
+    public static void paste(PathItem item) {
         var clipboard = Clipboard.getSystemClipboard();
         if (clipboard.hasFiles()) {
             var files = clipboard.getFiles();
@@ -215,7 +218,7 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
                 var targetPath = Path.of(item.getPath().toAbsolutePath().toString(), file.getName());
                 if (Files.exists(targetPath, LinkOption.NOFOLLOW_LINKS)) {
                     var replaceProperty = new SimpleBooleanProperty();
-                    CopyModalDialog.open(window, replaceProperty);
+                    CopyModalDialog.open(replaceProperty);
                     replaceProperty.addListener((observable, oldValue, newValue) -> {
                         if (newValue) {
                             new FileCopyTask(file.toPath(), targetPath).run();
@@ -251,17 +254,17 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
 
         Optional<DetachableTabPane> pane = IDESetup.findBestPaneForTerminal(mainPane);
         pane.ifPresent(detachableTabPane -> {
-            Terminal terminal = IDESetup.createTerminal(Files.isDirectory(path) ? path : path.getParent());
+            Terminal terminal = TerminalFactory.create(Files.isDirectory(path) ? path : path.getParent());
             if (!Files.isDirectory(path)) {
                 terminal.onTerminalFxReady(() -> terminal.command(path.getFileName().toString()));
             }
 
             Tab terminalTab = detachableTabPane.addTab("Terminal (" +
-                    detachableTabPane.getTabs()
-                            .stream()
-                            .filter(tab -> tab.getContent() instanceof Terminal)
-                            .count()
-                    + ")", terminal);
+                detachableTabPane.getTabs()
+                    .stream()
+                    .filter(tab -> tab.getContent() instanceof Terminal)
+                    .count()
+                + ")", terminal);
 
             detachableTabPane.getSelectionModel().select(terminalTab);
         });
@@ -280,11 +283,46 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
 
                 // Check if there's a welcome tab to replace
                 Tab welcomeTab = detachableTabPane.getTabs().stream()
-                        .filter(tab -> tab.getContent() instanceof IDEWelcomePane)
-                        .findFirst()
-                        .orElse(null);
+                    .filter(tab -> tab.getContent() instanceof IDEWelcomePane)
+                    .findFirst()
+                    .orElse(null);
 
-                Node editorContent;
+                if (fileName.endsWith(".md")) {
+                    Tab tab;
+                    var preview = new MarkdownPreviewPane(path);
+                    if (welcomeTab != null) {
+                        welcomeTab.setContent(preview);
+                        welcomeTab.setText(fileName);
+                        tab = welcomeTab;
+                    } else {
+                        tab = detachableTabPane.addTab(fileName, preview);
+                    }
+
+                    detachableTabPane.getSelectionModel().select(tab);
+
+                    var document = new FileSystemDocument(fileName, path);
+                    Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.OPENED));
+                    Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.ACTIVATED));
+
+                    tab.setOnClosed(event -> {
+                        Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.CLOSED));
+                        if (tab.isSelected()) {
+                            Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.DEACTIVATED));
+                        }
+                    });
+
+                    tab.setOnSelectionChanged(event -> {
+                        if (tab.isSelected()) {
+                            Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.ACTIVATED));
+                        } else {
+                            Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.DEACTIVATED));
+                            Services.DOCUMENT_EDITOR_STATE.setActiveEditorPane(null);
+                        }
+                    });
+                    return;
+                }
+
+                TextEditorPane editorContent;
                 if (fileName.endsWith(".java")) {
                     editorContent = new JavaCodeEditorPane(project, path);
                 } else if (fileName.endsWith(".json")) {
@@ -292,6 +330,8 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
                 } else {
                     editorContent = new TextEditorPane(path);
                 }
+
+                Services.DOCUMENT_EDITOR_STATE.setActiveEditorPane(editorContent);
 
                 Tab tab;
                 if (welcomeTab != null) {
@@ -304,22 +344,28 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
 
                 detachableTabPane.getSelectionModel().select(tab);
 
-                var document = new DefaultDocument(fileName, path);
-                Railroad.EVENT_BUS.publish(new FileEvent(document, FileEvent.EventType.OPENED));
-                Railroad.EVENT_BUS.publish(new FileEvent(document, FileEvent.EventType.ACTIVATED));
+                var document = new FileSystemDocument(fileName, path);
+                Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.OPENED));
+                Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.ACTIVATED));
 
                 tab.setOnClosed(event -> {
-                    Railroad.EVENT_BUS.publish(new FileEvent(document, FileEvent.EventType.CLOSED));
+                    Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.CLOSED));
                     if (tab.isSelected()) {
-                        Railroad.EVENT_BUS.publish(new FileEvent(document, FileEvent.EventType.DEACTIVATED));
+                        Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.DEACTIVATED));
                     }
                 });
 
                 tab.setOnSelectionChanged(event -> {
                     if (tab.isSelected()) {
-                        Railroad.EVENT_BUS.publish(new FileEvent(document, FileEvent.EventType.ACTIVATED));
+                        Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.ACTIVATED));
+                        if (tab.getContent() instanceof TextEditorPane textEditorPane) {
+                            Services.DOCUMENT_EDITOR_STATE.setActiveEditorPane(textEditorPane);
+                        } else {
+                            Services.DOCUMENT_EDITOR_STATE.setActiveEditorPane(null);
+                        }
                     } else {
-                        Railroad.EVENT_BUS.publish(new FileEvent(document, FileEvent.EventType.DEACTIVATED));
+                        Railroad.EVENT_BUS.publish(new DocumentEvent(document, DocumentEvent.EventType.DEACTIVATED));
+                        Services.DOCUMENT_EDITOR_STATE.setActiveEditorPane(null);
                     }
                 });
             });
@@ -331,9 +377,9 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
 
                     // Check if there's a welcome tab to replace
                     Tab welcomeTab = detachableTabPane.getTabs().stream()
-                            .filter(tab -> tab.getContent() instanceof IDEWelcomePane)
-                            .findFirst()
-                            .orElse(null);
+                        .filter(tab -> tab.getContent() instanceof IDEWelcomePane)
+                        .findFirst()
+                        .orElse(null);
 
                     if (welcomeTab != null) {
                         welcomeTab.setContent(new ImageViewerPane(path));
@@ -343,12 +389,12 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
                         detachableTabPane.addTab(fileName, new ImageViewerPane(path));
                     }
 
-                    Railroad.EVENT_BUS.publish(new FileEvent(new DefaultDocument(fileName, path), FileEvent.EventType.OPENED));
+                    Railroad.EVENT_BUS.publish(new DocumentEvent(new FileSystemDocument(fileName, path), DocumentEvent.EventType.OPENED));
                 });
             } else {
                 FileUtils.openInDefaultApplication(path);
 
-                Railroad.EVENT_BUS.publish(new FileEvent(new DefaultDocument(path.getFileName().toString(), path), FileEvent.EventType.OPENED));
+                Railroad.EVENT_BUS.publish(new DocumentEvent(new FileSystemDocument(path.getFileName().toString(), path), DocumentEvent.EventType.OPENED));
             }
         }
     }
@@ -395,22 +441,22 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
         actionButtons.setAlignment(Pos.CENTER_RIGHT);
 
         var refreshButton = new RRButton("", FontAwesomeSolid.SYNC_ALT);
-        refreshButton.setVariant(RRButton.ButtonVariant.GHOST);
-        refreshButton.setButtonSize(RRButton.ButtonSize.SMALL);
+        refreshButton.setVariant(ButtonVariant.GHOST);
+        refreshButton.setButtonSize(ButtonSize.SMALL);
         refreshButton.getStyleClass().add("project-explorer-button");
         refreshButton.setTooltip(new LocalizedTooltip("railroad.generic.refresh"));
         refreshButton.setOnAction(e -> refreshProjectExplorer());
 
         var collapseAllButton = new RRButton("", FontAwesomeSolid.COMPRESS_ALT);
-        collapseAllButton.setVariant(RRButton.ButtonVariant.GHOST);
-        collapseAllButton.setButtonSize(RRButton.ButtonSize.SMALL);
+        collapseAllButton.setVariant(ButtonVariant.GHOST);
+        collapseAllButton.setButtonSize(ButtonSize.SMALL);
         collapseAllButton.getStyleClass().add("project-explorer-button");
         collapseAllButton.setTooltip(new LocalizedTooltip("railroad.generic.collapse_all"));
         collapseAllButton.setOnAction(e -> ProjectExplorerPane.collapseAll(this.treeView.getRoot()));
 
         var expandAllButton = new RRButton("", FontAwesomeSolid.EXPAND_ALT);
-        expandAllButton.setVariant(RRButton.ButtonVariant.GHOST);
-        expandAllButton.setButtonSize(RRButton.ButtonSize.SMALL);
+        expandAllButton.setVariant(ButtonVariant.GHOST);
+        expandAllButton.setButtonSize(ButtonSize.SMALL);
         expandAllButton.getStyleClass().add("project-explorer-button");
         expandAllButton.setTooltip(new LocalizedTooltip("railroad.generic.expand_all"));
         expandAllButton.setOnAction(e -> ProjectExplorerPane.expandAll(this.treeView.getRoot()));
@@ -510,14 +556,14 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
             if (dragboard.hasFiles()) {
                 Path sourcePath = dragboard.getFiles().getFirst().toPath();
                 var targetPath = Path.of(
-                        cell.getTreeItem().getValue().getPath().toAbsolutePath().toString(),
-                        sourcePath.getFileName().toString()
+                    cell.getTreeItem().getValue().getPath().toAbsolutePath().toString(),
+                    sourcePath.getFileName().toString()
                 );
 
                 if (Files.exists(targetPath, LinkOption.NOFOLLOW_LINKS)) {
                     Platform.runLater(() -> {
                         var replaceProperty = new SimpleBooleanProperty();
-                        CopyModalDialog.open(getScene().getWindow(), replaceProperty);
+                        CopyModalDialog.open(replaceProperty);
                         replaceProperty.addListener((observable, oldValue, newValue) -> {
                             if (newValue) {
                                 this.executorService.submit(new FileCopyTask(sourcePath, targetPath));

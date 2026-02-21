@@ -9,10 +9,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -164,6 +165,19 @@ public final class FileUtils {
      * @throws RuntimeException if an error occurs during deletion
      */
     public static void deleteFolder(Path folder) throws RuntimeException {
+        if (Files.notExists(folder))
+            return;
+
+        if (!Files.isDirectory(folder)) {
+            try {
+                Files.deleteIfExists(folder);
+            } catch (IOException exception) {
+                throw new RuntimeException("Failed to delete file", exception);
+            }
+
+            return;
+        }
+
         try (Stream<Path> paths = Files.walk(folder)) {
             paths.sorted(Comparator.reverseOrder()).forEach(path -> {
                 try {
@@ -266,13 +280,13 @@ public final class FileUtils {
             case "mp3", "wav", "flac", "ogg", "m4a", "wma", "aac" -> new FontIcon(FontAwesomeRegular.FILE_AUDIO);
             case "zip", "rar", "7z", "tar", "gz", "xz", "bz2" -> new FontIcon(FontAwesomeRegular.FILE_ARCHIVE);
             case "csv", "tsv", "xls", "xlsx", "ods", "dbf", "sql", "json", "xml", "yaml", "yml" ->
-                    new FontIcon(FontAwesomeRegular.FILE_EXCEL);
+                new FontIcon(FontAwesomeRegular.FILE_EXCEL);
             case "pdf" -> new FontIcon(FontAwesomeRegular.FILE_PDF);
             case "doc", "docx", "odt", "rtf", "txt", "md" -> new FontIcon(FontAwesomeRegular.FILE_WORD);
             case "ppt", "pptx", "odp" -> new FontIcon(FontAwesomeRegular.FILE_POWERPOINT);
             case "html", "htm", "css", "js", "ts", "java", "py", "c", "cpp", "h", "hpp", "cs", "php", "rb", "go", "rs",
                  "kt", "swift", "dart", "groovy", "gradle", "kts", "sh", "bat", "cmd", "ps1" ->
-                    new FontIcon(FontAwesomeRegular.FILE_CODE);
+                new FontIcon(FontAwesomeRegular.FILE_CODE);
             default -> new FontIcon(FontAwesomeRegular.FILE_ALT);
         };
     }
@@ -380,5 +394,55 @@ public final class FileUtils {
         int exp = (int) (Math.log(size) / Math.log(unit));
         char pre = "KMGTPE".charAt(exp - 1);
         return String.format("%.1f %sB", size / Math.pow(unit, exp), pre);
+    }
+
+    public static void copyDirectoryContents(Path src, Path dst, CopyOption... options) {
+        try (Stream<Path> files = Files.walk(src)) {
+            files.forEach(source -> {
+                try {
+                    Path destination = dst.resolve(src.relativize(source));
+                    if (Files.isDirectory(source)) {
+                        Files.createDirectories(destination);
+                    } else {
+                        Files.copy(source, destination, options);
+                    }
+                } catch (IOException exception) {
+                    throw new RuntimeException("Failed to copy directory contents", exception);
+                }
+            });
+        } catch (IOException exception) {
+            throw new RuntimeException("Failed to copy directory contents", exception);
+        }
+    }
+
+    /**
+     * Normalizes a collection of paths by converting them to absolute paths and removing duplicates.
+     *
+     * @param paths the collection of paths to normalize
+     * @return a list of normalized paths
+     */
+    public static List<Path> normalizePaths(Collection<Path> paths) {
+        if (paths == null || paths.isEmpty())
+            return Collections.emptyList();
+
+        Set<Path> normalized = new LinkedHashSet<>();
+        for (Path path : paths) {
+            normalized.add(normalizePath(path));
+        }
+
+        return new ArrayList<>(normalized);
+    }
+
+    /**
+     * Normalizes a path by converting it to an absolute path.
+     *
+     * @param path the path to normalize
+     * @return the normalized path
+     */
+    public static Path normalizePath(Path path) {
+        if (path == null)
+            return null;
+
+        return path.toAbsolutePath().normalize();
     }
 }

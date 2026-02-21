@@ -1,0 +1,117 @@
+/* ===== PLUGINS PANE ===== */
+.plugins-pane {
+    -fx-background-color: transparent;
+}
+
+.plugins-pane-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -color-fg-emphasis;
+}
+
+.plugins-pane-placeholder {
+    -fx-text-fill: -color-fg-muted;
+    -fx-font-size: 14px;
+    -fx-padding: 32px;
+}
+
+/* ===== PLUGIN DETAIL VIEW ===== */
+.plugin-detail-scroll {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.plugin-detail-container {
+    -fx-background-color: -color-bg-elevated;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-border-color: -color-border-subtle;
+    -fx-border-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 12, 0, 0, 6);
+}
+
+.plugin-detail-icon {
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 50%;
+    -fx-padding: 16px;
+}
+
+.plugin-detail-name {
+    -fx-font-size: 22px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -color-fg-emphasis;
+}
+
+.plugin-detail-meta {
+    -fx-text-fill: -color-fg-muted;
+    -fx-font-size: 13px;
+}
+
+.plugin-detail-description {
+    -fx-text-fill: -color-fg-default;
+    -fx-line-spacing: 4px;
+}
+
+.plugin-detail-grid {
+    -fx-padding: 12px 0 0 0;
+}
+
+.plugin-detail-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-fg-muted;
+    -fx-font-weight: 600;
+    -fx-text-transform: uppercase;
+}
+
+.plugin-detail-value {
+    -fx-text-fill: -color-fg-default;
+    -fx-font-size: 13px;
+}
+
+.plugin-detail-value Hyperlink,
+.plugin-detail-container Hyperlink {
+    -fx-text-fill: -color-accent-fg;
+    -fx-font-weight: 500;
+}
+
+.plugin-detail-value Hyperlink:hover,
+.plugin-detail-container Hyperlink:hover {
+    -fx-text-fill: -color-accent-emphasis;
+}
+
+/* ===== PLUGIN LIST CELLS ===== */
+.plugin-cell-container {
+    -fx-background-color: transparent;
+    -fx-padding: 6px 10px;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-border-color: transparent;
+    -fx-border-width: 1px;
+    -fx-transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out,
+        -fx-effect 0.15s ease-in-out;
+}
+
+.plugin-cell-container:hover {
+    -fx-background-color: -color-bg-subtle;
+}
+
+.plugin-cell-container.plugin-cell-selected {
+    -fx-background-color: -color-accent-subtle;
+    -fx-border-color: -color-accent-emphasis;
+    -fx-effect: dropshadow(gaussian, rgba(94, 129, 172, 0.18), 8, 0, 0, 2);
+}
+
+.plugin-cell-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -color-fg-default;
+}
+
+.plugin-cell-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.plugin-cell-icon {
+    -mfx-color: -color-fg-muted;
+}
