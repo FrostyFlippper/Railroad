@@ -7,7 +7,7 @@ import dev.railroadide.railroad.ide.completion.CompletionResult;
 import dev.railroadide.railroad.ide.completion.JdtCompletionProvider;
 import dev.railroadide.railroad.ide.diagnostics.DiagnosticsProvider;
 import dev.railroadide.railroad.ide.diagnostics.EditorDiagnostic;
-import dev.railroadide.railroad.ide.diagnostics.JdtDiagnosticsProvider;
+import dev.railroadide.railroad.ide.diagnostics.SemanticDiagnosticsProvider;
 import dev.railroadide.railroad.ide.signature.JdtSignatureHelpProvider;
 import dev.railroadide.railroad.ide.signature.SignatureHelp;
 import dev.railroadide.railroad.ide.signature.SignatureHelp.ParameterInfo;
@@ -101,7 +101,7 @@ public class JavaCodeEditorPane extends TextEditorPane {
         super(item);
         this.project = Objects.requireNonNull(project, "project");
         this.completionProvider = new JdtCompletionProvider(filePath, SYSTEM_MODULE_PATHS);
-        this.diagnosticsProvider = new JdtDiagnosticsProvider(filePath);
+        this.diagnosticsProvider = new SemanticDiagnosticsProvider(filePath);
         this.signatureHelpProvider = new JdtSignatureHelpProvider(filePath, SYSTEM_MODULE_PATHS);
 
         diagnosticPopup.setAutoHide(true);

@@ -1,0 +1,124 @@
+package dev.railroadide.railroad.ide.sst.semantic.api;
+
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Public semantic type contract used by type resolution/checking.
+ */
+public sealed interface Type
+        permits Type.UnknownType, Type.VoidType, Type.PrimitiveType, Type.DeclaredType, Type.ArrayType, Type.TypeVariableType, Type.WildcardType {
+
+    Kind kind();
+
+    String displayName();
+
+    enum Kind {
+        UNKNOWN,
+        VOID,
+        PRIMITIVE,
+        DECLARED,
+        ARRAY,
+        TYPE_VARIABLE,
+        WILDCARD
+    }
+
+    record UnknownType(String displayName) implements Type {
+        public UnknownType {
+            displayName = normalizeDisplayName(displayName, "<unknown>");
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.UNKNOWN;
+        }
+    }
+
+    record VoidType() implements Type {
+        @Override
+        public Kind kind() {
+            return Kind.VOID;
+        }
+
+        @Override
+        public String displayName() {
+            return "void";
+        }
+    }
+
+    record PrimitiveType(String displayName) implements Type {
+        public PrimitiveType {
+            displayName = normalizeDisplayName(displayName, "primitive");
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.PRIMITIVE;
+        }
+    }
+
+    record DeclaredType(String displayName, List<Type> typeArguments) implements Type {
+        public DeclaredType {
+            displayName = normalizeDisplayName(displayName, "declared");
+            typeArguments = List.copyOf(Objects.requireNonNull(typeArguments, "typeArguments"));
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.DECLARED;
+        }
+    }
+
+    record ArrayType(Type componentType) implements Type {
+        public ArrayType {
+            componentType = Objects.requireNonNull(componentType, "componentType");
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.ARRAY;
+        }
+
+        @Override
+        public String displayName() {
+            return componentType.displayName() + "[]";
+        }
+    }
+
+    record TypeVariableType(String displayName) implements Type {
+        public TypeVariableType {
+            displayName = normalizeDisplayName(displayName, "type variable");
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.TYPE_VARIABLE;
+        }
+    }
+
+    record WildcardType(Type upperBound, Type lowerBound) implements Type {
+        public WildcardType {
+            if (upperBound == null && lowerBound == null)
+                throw new IllegalArgumentException("wildcard bound cannot be fully unbounded");
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.WILDCARD;
+        }
+
+        @Override
+        public String displayName() {
+            if (upperBound != null)
+                return "? extends " + upperBound.displayName();
+            return "? super " + lowerBound.displayName();
+        }
+    }
+
+    private static String normalizeDisplayName(String value, String name) {
+        value = Objects.requireNonNull(value, "displayName");
+        if (value.isBlank())
+            throw new IllegalArgumentException(name + " type displayName cannot be blank");
+        return value;
+    }
+}

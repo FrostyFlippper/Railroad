@@ -1,0 +1,197 @@
+package dev.railroadide.railroad.ide.diagnostics.rules.java;
+
+import dev.railroadide.railroad.ide.sst.semantic.api.SemanticDiagnostic;
+
+/**
+ * Built-in Java semantic rule catalog.
+ */
+public final class JavaSemanticRules {
+    public static final JavaSemanticRule DUPLICATE_DECLARATION = new JavaSemanticRule(
+        "SEM_DUPLICATE_DECLARATION",
+        SemanticDiagnostic.Severity.ERROR,
+        "Duplicate declaration for '%s'"
+    );
+    public static final JavaSemanticRule UNRESOLVED_NAME = new JavaSemanticRule(
+        "SEM_UNRESOLVED_NAME",
+        SemanticDiagnostic.Severity.ERROR,
+        "Cannot resolve name '%s'"
+    );
+    public static final JavaSemanticRule UNRESOLVED_IMPORT = new JavaSemanticRule(
+        "SEM_UNRESOLVED_IMPORT",
+        SemanticDiagnostic.Severity.ERROR,
+        "Cannot resolve import '%s'"
+    );
+    public static final JavaSemanticRule DUPLICATE_IMPORT = new JavaSemanticRule(
+        "SEM_DUPLICATE_IMPORT",
+        SemanticDiagnostic.Severity.WARNING,
+        "Duplicate import '%s'"
+    );
+    public static final JavaSemanticRule AMBIGUOUS_IMPORT = new JavaSemanticRule(
+        "SEM_AMBIGUOUS_IMPORT",
+        SemanticDiagnostic.Severity.ERROR,
+        "Ambiguous import for '%s' between '%s' and '%s'"
+    );
+    public static final JavaSemanticRule AMBIGUOUS_NAME = new JavaSemanticRule(
+        "SEM_AMBIGUOUS_NAME",
+        SemanticDiagnostic.Severity.ERROR,
+        "Ambiguous name '%s' resolved to multiple candidates"
+    );
+    public static final JavaSemanticRule UNRESOLVED_TYPE = new JavaSemanticRule(
+        "SEM_UNRESOLVED_TYPE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Cannot resolve type '%s'"
+    );
+    public static final JavaSemanticRule UNRESOLVED_MEMBER = new JavaSemanticRule(
+        "SEM_UNRESOLVED_MEMBER",
+        SemanticDiagnostic.Severity.ERROR,
+        "Cannot resolve member '%s'"
+    );
+    public static final JavaSemanticRule UNRESOLVED_CALL = new JavaSemanticRule(
+        "SEM_UNRESOLVED_CALL",
+        SemanticDiagnostic.Severity.ERROR,
+        "Cannot resolve call '%s'"
+    );
+    public static final JavaSemanticRule INACCESSIBLE_TYPE = new JavaSemanticRule(
+        "SEM_INACCESSIBLE_TYPE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Type '%s' is not accessible from here"
+    );
+    public static final JavaSemanticRule INACCESSIBLE_MEMBER = new JavaSemanticRule(
+        "SEM_INACCESSIBLE_MEMBER",
+        SemanticDiagnostic.Severity.ERROR,
+        "Member '%s' is not accessible from here"
+    );
+    public static final JavaSemanticRule INACCESSIBLE_CALL = new JavaSemanticRule(
+        "SEM_INACCESSIBLE_CALL",
+        SemanticDiagnostic.Severity.ERROR,
+        "Call '%s' is not accessible from here"
+    );
+    public static final JavaSemanticRule INVALID_INHERITANCE = new JavaSemanticRule(
+        "SEM_INVALID_INHERITANCE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Invalid inheritance: %s"
+    );
+    public static final JavaSemanticRule MISSING_IMPLEMENTATION = new JavaSemanticRule(
+        "SEM_MISSING_IMPLEMENTATION",
+        SemanticDiagnostic.Severity.ERROR,
+        "Type is missing implementation for '%s'"
+    );
+    public static final JavaSemanticRule INVALID_OVERRIDE = new JavaSemanticRule(
+        "SEM_INVALID_OVERRIDE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Invalid override for '%s'"
+    );
+    public static final JavaSemanticRule ILLEGAL_MODIFIER = new JavaSemanticRule(
+        "SEM_ILLEGAL_MODIFIER",
+        SemanticDiagnostic.Severity.ERROR,
+        "Illegal modifier usage: %s"
+    );
+    public static final JavaSemanticRule INVALID_CONTROL_FLOW = new JavaSemanticRule(
+        "SEM_INVALID_CONTROL_FLOW",
+        SemanticDiagnostic.Severity.ERROR,
+        "Invalid control flow: %s"
+    );
+    public static final JavaSemanticRule MISSING_RETURN = new JavaSemanticRule(
+        "SEM_MISSING_RETURN",
+        SemanticDiagnostic.Severity.ERROR,
+        "Missing return: %s"
+    );
+    public static final JavaSemanticRule INCOMPATIBLE_ASSIGNMENT = new JavaSemanticRule(
+        "SEM_INCOMPATIBLE_ASSIGNMENT",
+        SemanticDiagnostic.Severity.ERROR,
+        "Cannot assign '%s' to '%s'"
+    );
+    public static final JavaSemanticRule UNCAUGHT_CHECKED_EXCEPTION = new JavaSemanticRule(
+        "SEM_UNCAUGHT_CHECKED_EXCEPTION",
+        SemanticDiagnostic.Severity.ERROR,
+        "Unhandled checked exception '%s'"
+    );
+    public static final JavaSemanticRule UNREACHABLE_CATCH = new JavaSemanticRule(
+        "SEM_UNREACHABLE_CATCH",
+        SemanticDiagnostic.Severity.ERROR,
+        "Unreachable catch for '%s'"
+    );
+    public static final JavaSemanticRule INVALID_EXCEPTION_TYPE = new JavaSemanticRule(
+        "SEM_INVALID_EXCEPTION_TYPE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Invalid exception type '%s'"
+    );
+    public static final JavaSemanticRule UNASSIGNED_VARIABLE = new JavaSemanticRule(
+        "SEM_UNASSIGNED_VARIABLE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Variable '%s' might not have been initialized"
+    );
+    public static final JavaSemanticRule ILLEGAL_FINAL_ASSIGNMENT = new JavaSemanticRule(
+        "SEM_ILLEGAL_FINAL_ASSIGNMENT",
+        SemanticDiagnostic.Severity.ERROR,
+        "Final variable '%s' cannot be assigned here"
+    );
+    public static final JavaSemanticRule UNINITIALIZED_FINAL_FIELD = new JavaSemanticRule(
+        "SEM_UNINITIALIZED_FINAL_FIELD",
+        SemanticDiagnostic.Severity.ERROR,
+        "Final field '%s' might not be initialized"
+    );
+    public static final JavaSemanticRule WILDCARD_IMPORT = new JavaSemanticRule(
+        "SEM_WILDCARD_IMPORT",
+        SemanticDiagnostic.Severity.INFO,
+        "Avoid wildcard import '%s'"
+    );
+    public static final JavaSemanticRule EMPTY_CATCH = new JavaSemanticRule(
+        "SEM_EMPTY_CATCH",
+        SemanticDiagnostic.Severity.WARNING,
+        "Empty 'catch' block"
+    );
+    public static final JavaSemanticRule PUBLIC_CLASS_NOT_NAMED_AFTER_FILE = new JavaSemanticRule(
+        "SEM_PUBLIC_CLASS_NOT_NAMED_AFTER_FILE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Public class '%s' must be declared in a file named '%s.java'"
+    );
+    public static final JavaSemanticRule LOWERCASE_CLASS_NAME = new JavaSemanticRule(
+        "SEM_LOWERCASE_CLASS_NAME",
+        SemanticDiagnostic.Severity.INFO,
+        "Class '%s' should be named in PascalCase"
+    );
+    public static final JavaSemanticRule METHOD_NAMED_TODO = new JavaSemanticRule(
+        "SEM_METHOD_NAMED_TODO",
+        SemanticDiagnostic.Severity.INFO,
+        "Method is named 'TODO', consider giving it a meaningful name"
+    );
+    public static final JavaSemanticRule METHOD_NAMED_UNDERSCORE = new JavaSemanticRule(
+        "SEM_METHOD_NAMED_UNDERSCORE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Method is named '_', which is not allowed"
+    );
+    public static final JavaSemanticRule EMPTY_SYNCHRONIZED = new JavaSemanticRule(
+        "SEM_EMPTY_SYNCHRONIZED",
+        SemanticDiagnostic.Severity.WARNING,
+        "Empty 'synchronized' block"
+    );
+    public static final JavaSemanticRule EMPTY_SWITCH = new JavaSemanticRule(
+        "SEM_EMPTY_SWITCH",
+        SemanticDiagnostic.Severity.WARNING,
+        "Empty 'switch' statement"
+    );
+    public static final JavaSemanticRule USELESS_DEFAULT_IN_SWITCH = new JavaSemanticRule(
+        "SEM_USELESS_DEFAULT_IN_SWITCH",
+        SemanticDiagnostic.Severity.WARNING,
+        "'switch' statement has only a 'default' case, making it redundant"
+    );
+    public static final JavaSemanticRule SINGLE_LETTER_FIELD_NAME = new JavaSemanticRule(
+        "SEM_SINGLE_LETTER_FIELD_NAME",
+        SemanticDiagnostic.Severity.INFO,
+        "Field '%s' has a single-letter name, consider giving it a more descriptive name"
+    );
+    public static final JavaSemanticRule FIELD_NAME_SAME_AS_CLASS_NAME = new JavaSemanticRule(
+        "SEM_FIELD_NAME_SAME_AS_CLASS_NAME",
+        SemanticDiagnostic.Severity.WARNING,
+        "Field '%s' has the same name as its containing class '%s', which can be confusing"
+    );
+    public static final JavaSemanticRule PARAMETER_NAME_UNDERSCORE = new JavaSemanticRule(
+        "SEM_PARAMETER_NAME_UNDERSCORE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Parameter is named '_', which is not allowed"
+    );
+
+    private JavaSemanticRules() {
+    }
+}

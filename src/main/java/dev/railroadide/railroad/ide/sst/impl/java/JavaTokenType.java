@@ -203,6 +203,9 @@ public enum JavaTokenType {
         put('!', List.of(
                 Map.entry("!=", NOT_EQUALS))
         );
+        put('.', List.of(
+                Map.entry("...", ELLIPSIS))
+        );
         put(':', List.of(
                 Map.entry("::", DOUBLE_COLON))
         );

@@ -180,6 +180,10 @@ public class JavaLexer implements Lexer<JavaTokenType> {
                     popMode();
                     return unterminated(startOffset, startLine, startCol, "Invalid escape sequence in string literal");
                 }
+
+                // The escaped codepoint has already been consumed; do not treat
+                // the next character as escaped as well.
+                escapeNext = false;
             } else {
                 escapeNext = false;
                 consume();
@@ -210,6 +214,9 @@ public class JavaLexer implements Lexer<JavaTokenType> {
                     popMode();
                     return unterminated(startOffset, startLine, startCol, "Invalid escape sequence in text block");
                 }
+
+                // Escape handling is complete for this iteration.
+                escapeNext = false;
             } else {
                 escapeNext = false;
             }
@@ -357,9 +364,10 @@ public class JavaLexer implements Lexer<JavaTokenType> {
                         return token(isJavadoc ? JavaTokenType.JAVADOC_COMMENT : JavaTokenType.BLOCK_COMMENT, startOffset, startLine, startCol, TokenChannel.TRIVIA);
                     }
 
-                    if (nextChar == '\n')
+                    if (nextChar == '\n') {
+                        consume();
                         newline();
-                    else if (nextChar == '\r' && peek(1) == '\n') {
+                    } else if (nextChar == '\r' && peek(1) == '\n') {
                         consume(2);
                         newline();
                     } else {
