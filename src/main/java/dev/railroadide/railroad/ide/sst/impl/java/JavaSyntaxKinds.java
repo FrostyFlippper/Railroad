@@ -5,7 +5,7 @@ import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxKind;
 import java.util.EnumMap;
 import java.util.Map;
 
-final class JavaSyntaxKinds {
+public final class JavaSyntaxKinds {
     static final SyntaxKind COMPILATION_UNIT = SyntaxKind.of("JAVA_COMPILATION_UNIT");
     static final SyntaxKind PACKAGE_DECLARATION = SyntaxKind.of("JAVA_PACKAGE_DECLARATION");
     static final SyntaxKind IMPORT_DECLARATION = SyntaxKind.of("JAVA_IMPORT_DECLARATION");
@@ -126,7 +126,7 @@ final class JavaSyntaxKinds {
     private JavaSyntaxKinds() {
     }
 
-    static SyntaxKind tokenKind(JavaTokenType tokenType) {
+    public static SyntaxKind tokenKind(JavaTokenType tokenType) {
         return TOKEN_KINDS.get(tokenType);
     }
 
