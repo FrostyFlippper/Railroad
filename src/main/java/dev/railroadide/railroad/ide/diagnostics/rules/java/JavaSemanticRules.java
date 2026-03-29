@@ -191,6 +191,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.ERROR,
         "Parameter is named '_', which is not allowed"
     );
+    public static final JavaSemanticRule UNREACHABLE_CODE = new JavaSemanticRule(
+        "SEM_UNREACHABLE_CODE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Unreachable statement"
+    );
 
     private JavaSemanticRules() {
     }

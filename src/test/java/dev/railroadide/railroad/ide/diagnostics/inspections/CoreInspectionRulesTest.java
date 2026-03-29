@@ -6,6 +6,7 @@ import dev.railroadide.railroad.ide.sst.impl.java.JavaSemanticAnalyzer;
 import dev.railroadide.railroad.ide.sst.semantic.api.SemanticDiagnostic;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionContext;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionReporter;
+import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRule;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRuleProvider;
 import org.junit.jupiter.api.Test;
 
@@ -46,6 +47,7 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreSingleLetterFieldNameInspection(), Set.of("SEM_SINGLE_LETTER_FIELD_NAME"));
         assertRuleIds(new CoreFieldNameSameAsClassInspection(), Set.of("SEM_FIELD_NAME_SAME_AS_CLASS_NAME"));
         assertRuleIds(new CoreParameterNamedUnderscoreInspection(), Set.of("SEM_PARAMETER_NAME_UNDERSCORE"));
+        assertRuleIds(new CoreUnreachableCodeInspection(), Set.of("SEM_UNREACHABLE_CODE"));
     }
 
     @Test
@@ -218,6 +220,138 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d -> "SEM_PARAMETER_NAME_UNDERSCORE".equals(d.code())));
+    }
+
+    @Test
+    void coreUnreachableCodeRuleEmitsDiagnosticAfterReturn() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreUnreachableCodeInspection(), """
+            class Example {
+                void run() {
+                    return;
+                    int value = 1;
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_UNREACHABLE_CODE".equals(d.code())));
+    }
+
+    @Test
+    void coreUnreachableCodeRuleEmitsDiagnosticAfterThrow() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreUnreachableCodeInspection(), """
+            class Example {
+                void run() {
+                    throw new RuntimeException();
+                    int value = 1;
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_UNREACHABLE_CODE".equals(d.code())));
+    }
+
+    @Test
+    void coreUnreachableCodeRuleEmitsDiagnosticWhenBothIfBranchesExit() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreUnreachableCodeInspection(), """
+            class Example {
+                void run(boolean flag) {
+                    if (flag) {
+                        return;
+                    } else {
+                        throw new RuntimeException();
+                    }
+                    int value = 1;
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_UNREACHABLE_CODE".equals(d.code())));
+    }
+
+    @Test
+    void coreUnreachableCodeRuleDoesNotEmitDiagnosticWhenOnlyOneIfBranchExits() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreUnreachableCodeInspection(), """
+            class Example {
+                void run(boolean flag) {
+                    if (flag) {
+                        return;
+                    }
+                    int value = 1;
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_UNREACHABLE_CODE".equals(d.code())));
+    }
+
+    @Test
+    void coreUnreachableCodeRuleDoesNotEmitDiagnosticAfterWhileLoopThatMayNotRun() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreUnreachableCodeInspection(), """
+            class Example {
+                void run(boolean flag) {
+                    while (flag) {
+                        return;
+                    }
+                    int value = 1;
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_UNREACHABLE_CODE".equals(d.code())));
+    }
+
+    @Test
+    void coreUnreachableCodeRuleDoesNotEmitDiagnosticAfterForLoopThatMayNotRun() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreUnreachableCodeInspection(), """
+            class Example {
+                void run(boolean flag) {
+                    for (; flag;) {
+                        return;
+                    }
+                    int value = 1;
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_UNREACHABLE_CODE".equals(d.code())));
+    }
+
+    @Test
+    void coreUnreachableCodeRuleEmitsDiagnosticAfterBreakInsideSwitchRule() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreUnreachableCodeInspection(), """
+            class Example {
+                void run(int value) {
+                    switch (value) {
+                        case 1:
+                            break;
+                            int dead = 1;
+                        default:
+                            break;
+                    }
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_UNREACHABLE_CODE".equals(d.code())));
+    }
+
+    @Test
+    void coreUnreachableCodeRuleDoesNotEmitDiagnosticAfterSwitchStatement() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreUnreachableCodeInspection(), """
+            class Example {
+                void run(int value) {
+                    switch (value) {
+                        case 1:
+                            return;
+                        default:
+                            break;
+                    }
+                    int reachable = 1;
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_UNREACHABLE_CODE".equals(d.code())));
     }
 
     @Test
@@ -907,7 +1041,7 @@ class CoreInspectionRulesTest {
     }
 
     private static void assertRuleIds(JavaInspectionRuleProvider provider, Set<String> expectedIds) {
-        Set<String> actual = provider.rules().stream().map(rule -> rule.id()).collect(Collectors.toSet());
+        Set<String> actual = provider.rules().stream().map(JavaInspectionRule::id).collect(Collectors.toSet());
         assertEquals(expectedIds, actual);
     }
 }
