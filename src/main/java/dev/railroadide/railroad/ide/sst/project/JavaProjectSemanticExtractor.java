@@ -6,6 +6,7 @@ import dev.railroadide.railroad.ide.sst.impl.java.JavaTokenType;
 import dev.railroadide.railroad.ide.sst.semantic.api.SemanticModel;
 import dev.railroadide.railroad.ide.sst.semantic.api.Symbol;
 import dev.railroadide.railroad.ide.sst.semantic.api.SymbolKind;
+import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxKind;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxNode;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxToken;
 import org.jetbrains.annotations.Nullable;
@@ -76,30 +77,31 @@ public final class JavaProjectSemanticExtractor {
         if (kind != SymbolKind.METHOD && kind != SymbolKind.CONSTRUCTOR)
             return null;
 
-        SyntaxNode parameterList = directChild(node, "JAVA_PARAMETER_LIST");
+        SyntaxNode parameterList = directChild(node, JavaSyntaxKinds.PARAMETER_LIST.id());
         if (parameterList == null)
             return "()";
 
         List<String> parameterTypes = new ArrayList<>();
         for (SyntaxNode child : parameterList.children()) {
             String kindId = child.kind().id();
-            if (!"JAVA_PARAMETER".equals(kindId) && !"JAVA_RECEIVER_PARAMETER".equals(kindId))
+
+            if (!JavaSyntaxKinds.PARAMETER.id().equals(kindId))
                 continue;
 
-            SyntaxNode typeRef = directChild(child, "JAVA_TYPE_REFERENCE");
+            SyntaxNode typeRef = directChild(child, JavaSyntaxKinds.TYPE_REFERENCE.id());
             if (typeRef != null) {
-                String text = flattenQualifiedName(typeRef);
+                String text = JavaSemanticAnalyzer.canonicalTypeText(typeRef);
                 if (text != null && !text.isBlank()) {
                     parameterTypes.add(text);
                 }
             }
         }
 
-        return "(" + String.join(", ", parameterTypes) + ")";
+        return "(" + String.join(",", parameterTypes) + ")";
     }
 
     private SyntaxNode declarationContainer(SyntaxNode node) {
-        if ("VARIABLE_DECLARATOR".equals(node.kind().id()))
+        if (JavaSyntaxKinds.VARIABLE_DECLARATOR.id().equals(node.kind().id()))
             return node.parent().orElse(node);
 
         return node;
@@ -149,7 +151,7 @@ public final class JavaProjectSemanticExtractor {
             case "JAVA_CLASS_DECLARATION",
                  "JAVA_INTERFACE_DECLARATION",
                  "JAVA_ENUM_DECLARATION",
-                 "JAVA_ANNOTATION_DECLARATION",
+                 "JAVA_ANNOTATION_TYPE_DECLARATION",
                  "JAVA_RECORD_DECLARATION" -> true;
             default -> false;
         };
@@ -159,10 +161,10 @@ public final class JavaProjectSemanticExtractor {
         List<ProjectSemanticIndex.ImportDescriptor> imports = new ArrayList<>();
 
         for (SyntaxNode child : root.children()) {
-            if (!"JAVA_IMPORT_DECLARATION".equals(child.kind().id()))
+            if (!JavaSyntaxKinds.IMPORT_DECLARATION.id().equals(child.kind().id()))
                 continue;
 
-            SyntaxNode importTarget = directChild(child, "JAVA_IMPORT_TARGET");
+            SyntaxNode importTarget = directChild(child, JavaSyntaxKinds.IMPORT_TARGET.id());
             if (importTarget == null)
                 continue;
 
@@ -202,10 +204,10 @@ public final class JavaProjectSemanticExtractor {
 
     private String extractPackageName(SyntaxNode root) {
         for (SyntaxNode child : root.children()) {
-            if (!"JAVA_PACKAGE_DECLARATION".equals(child.kind().id()))
+            if (!JavaSyntaxKinds.PACKAGE_DECLARATION.id().equals(child.kind().id()))
                 continue;
 
-            SyntaxNode qualifiedName = directChild(child, "JAVA_QUALIFIED_NAME");
+            SyntaxNode qualifiedName = directChild(child, JavaSyntaxKinds.QUALIFIED_NAME.id());
             if (qualifiedName == null)
                 return null;
 
@@ -234,7 +236,7 @@ public final class JavaProjectSemanticExtractor {
     }
 
     private void appendQualifiedName(SyntaxNode node, StringBuilder builder) {
-        if (node instanceof SyntaxToken token) {
+        if (node instanceof SyntaxToken token && isQualifiedNameToken(token)) {
             builder.append(token.text());
             return;
         }
@@ -242,5 +244,32 @@ public final class JavaProjectSemanticExtractor {
         for (SyntaxNode child : node.children()) {
             appendQualifiedName(child, builder);
         }
+    }
+
+    private boolean isQualifiedNameToken(SyntaxToken token) {
+        String kindId = token.kind().id();
+        return isIdentifierLikeToken(kindId)
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.DOT).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.STAR).id());
+    }
+
+    private boolean isIdentifierLikeToken(String kindId) {
+        return kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.IDENTIFIER).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.UNDERSCORE_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.EXPORTS_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.MODULE_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.OPEN_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.OPENS_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.PERMITS_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.PROVIDES_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.RECORD_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.REQUIRES_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.SEALED_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.TO_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.TRANSITIVE_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.USES_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.VAR_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.WITH_KEYWORD).id())
+            || kindId.equals(JavaSyntaxKinds.tokenKind(JavaTokenType.WHEN_KEYWORD).id());
     }
 }

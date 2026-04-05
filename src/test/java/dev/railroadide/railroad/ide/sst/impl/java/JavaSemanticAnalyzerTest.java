@@ -1,14 +1,20 @@
 package dev.railroadide.railroad.ide.sst.impl.java;
 
+import dev.railroadide.railroad.ide.sst.project.JavaProjectSemanticIndexer;
+import dev.railroadide.railroad.ide.sst.project.ProjectSemanticIndex;
 import dev.railroadide.railroad.ide.sst.semantic.api.SemanticModel;
 import dev.railroadide.railroad.ide.sst.semantic.api.Symbol;
 import dev.railroadide.railroad.ide.sst.semantic.api.SymbolKind;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxNode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -16,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JavaSemanticAnalyzerTest {
+    @TempDir
+    Path tempDir;
 
     @Test
     void collectsTopLevelAndMemberDeclarations() {
@@ -366,6 +374,186 @@ class JavaSemanticAnalyzerTest {
     }
 
     @Test
+    void resolvesTypeNamesFromProjectIndexInSamePackage() throws IOException {
+        ProjectSemanticIndex index = buildProjectIndex(
+                "src/main/java/demo/Shared.java", """
+                        package demo;
+
+                        class Shared {
+                        }
+                        """
+        );
+
+        String source = """
+                package demo;
+
+                class UsesShared {
+                    Shared value;
+                }
+                """;
+
+        SemanticModel model = JavaSemanticAnalyzer.analyze(source, index);
+        SyntaxNode sharedTypeRef = findTypeReference(model.syntaxTree().root(), "Shared");
+        assertEquals("demo.Shared", model.inferredType(sharedTypeRef).orElseThrow().displayName());
+    }
+
+    @Test
+    void resolvesTypeNamesFromProjectIndexViaExplicitImport() throws IOException {
+        ProjectSemanticIndex index = buildProjectIndex(
+                "src/main/java/lib/Shared.java", """
+                        package lib;
+
+                        class Shared {
+                        }
+                        """
+        );
+
+        String source = """
+                package app;
+                import lib.Shared;
+
+                class UsesShared {
+                    Shared value;
+                }
+                """;
+
+        SemanticModel model = JavaSemanticAnalyzer.analyze(source, index);
+        SyntaxNode sharedTypeRef = findTypeReference(model.syntaxTree().root(), "Shared");
+        assertEquals("lib.Shared", model.inferredType(sharedTypeRef).orElseThrow().displayName());
+    }
+
+    @Test
+    void resolvesTypeNamesFromProjectIndexViaWildcardImport() throws IOException {
+        ProjectSemanticIndex index = buildProjectIndex(
+                "src/main/java/lib/Shared.java", """
+                        package lib;
+
+                        class Shared {
+                        }
+                        """
+        );
+
+        String source = """
+                package app;
+                import lib.*;
+
+                class UsesShared {
+                    Shared value;
+                }
+                """;
+
+        SemanticModel model = JavaSemanticAnalyzer.analyze(source, index);
+        SyntaxNode sharedTypeRef = findTypeReference(model.syntaxTree().root(), "Shared");
+        assertEquals("lib.Shared", model.inferredType(sharedTypeRef).orElseThrow().displayName());
+    }
+
+    @Test
+    void resolvesStaticImportsFromProjectIndex() throws IOException {
+        ProjectSemanticIndex index = buildProjectIndex(
+                "src/main/java/lib/Util.java", """
+                        package lib;
+
+                        class Util {
+                            static int VALUE = 1;
+
+                            static int twice(int value) {
+                                return value * 2;
+                            }
+                        }
+                        """
+        );
+
+        String source = """
+                package app;
+                import static lib.Util.VALUE;
+                import static lib.Util.twice;
+
+                class UsesUtil {
+                    int use() {
+                        return twice(VALUE);
+                    }
+                }
+                """;
+
+        SemanticModel model = JavaSemanticAnalyzer.analyze(source, index);
+        List<SyntaxNode> nameExpressions = nodesOfKind(model.syntaxTree().root(), JavaSyntaxKinds.NAME_EXPRESSION.id());
+        SyntaxNode valueRef = findNameExpression(nameExpressions, "VALUE");
+        assertEquals(SymbolKind.FIELD, model.resolvedSymbol(valueRef).orElseThrow().kind());
+
+        List<SyntaxNode> invocations = nodesOfKind(model.syntaxTree().root(), JavaSyntaxKinds.METHOD_INVOCATION_EXPRESSION.id());
+        SyntaxNode twiceInvocation = invocations.stream()
+                .filter(node -> syntaxText(node).contains("twice(VALUE)"))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(twiceInvocation);
+        assertEquals(SymbolKind.METHOD, model.resolvedSymbol(twiceInvocation).orElseThrow().kind());
+    }
+
+    @Test
+    void resolvesDirectProjectMemberAccessAndConstructors() throws IOException {
+        ProjectSemanticIndex index = buildProjectIndex(
+                "src/main/java/lib/Util.java", """
+                        package lib;
+
+                        class Util {
+                            static int VALUE = 1;
+
+                            static int twice(int value) {
+                                return value * 2;
+                            }
+                        }
+                        """,
+                "src/main/java/lib/Box.java", """
+                        package lib;
+
+                        class Box {
+                            Box(int value) {
+                            }
+                        }
+                        """
+        );
+
+        String source = """
+                package app;
+                import lib.Util;
+                import lib.Box;
+
+                class UsesMembers {
+                    int use() {
+                        new Box(1);
+                        return Util.twice(Util.VALUE);
+                    }
+                }
+                """;
+
+        SemanticModel model = JavaSemanticAnalyzer.analyze(source, index);
+
+        List<SyntaxNode> fieldAccesses = nodesOfKind(model.syntaxTree().root(), JavaSyntaxKinds.FIELD_ACCESS_EXPRESSION.id());
+        SyntaxNode utilValue = fieldAccesses.stream()
+                .filter(node -> syntaxText(node).contains("Util.VALUE"))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(utilValue);
+        assertEquals(SymbolKind.FIELD, model.resolvedSymbol(utilValue).orElseThrow().kind());
+
+        List<SyntaxNode> invocations = nodesOfKind(model.syntaxTree().root(), JavaSyntaxKinds.METHOD_INVOCATION_EXPRESSION.id());
+        SyntaxNode utilTwice = invocations.stream()
+                .filter(node -> syntaxText(node).contains("Util.twice(Util.VALUE)"))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(utilTwice);
+        assertEquals(SymbolKind.METHOD, model.resolvedSymbol(utilTwice).orElseThrow().kind());
+
+        List<SyntaxNode> creations = nodesOfKind(model.syntaxTree().root(), JavaSyntaxKinds.CLASS_INSTANCE_CREATION_EXPRESSION.id());
+        SyntaxNode boxCreation = creations.stream()
+                .filter(node -> syntaxText(node).contains("new Box(1)"))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(boxCreation);
+        assertEquals(SymbolKind.CONSTRUCTOR, model.resolvedSymbol(boxCreation).orElseThrow().kind());
+    }
+
+    @Test
     void resolvesExplicitMemberAccessAndMethodCalls() {
         String source = """
                 class Members {
@@ -492,6 +680,16 @@ class JavaSemanticAnalyzerTest {
         return match;
     }
 
+    private static SyntaxNode findTypeReference(SyntaxNode root, String typeText) {
+        List<SyntaxNode> typeReferences = nodesOfKind(root, JavaSyntaxKinds.TYPE_REFERENCE.id());
+        SyntaxNode match = typeReferences.stream()
+                .filter(node -> typeText.equals(syntaxText(node).trim()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(match);
+        return match;
+    }
+
     private static String syntaxText(SyntaxNode node) {
         if (node instanceof dev.railroadide.railroad.ide.sst.syntax.api.SyntaxToken token)
             return token.text();
@@ -500,5 +698,19 @@ class JavaSemanticAnalyzerTest {
         for (SyntaxNode child : node.children())
             builder.append(syntaxText(child));
         return builder.toString();
+    }
+
+    private ProjectSemanticIndex buildProjectIndex(String relativePath, String source, String... additionalPathAndSourcePairs) throws IOException {
+        writeProjectSource(relativePath, source);
+        for (int index = 0; index < additionalPathAndSourcePairs.length; index += 2) {
+            writeProjectSource(additionalPathAndSourcePairs[index], additionalPathAndSourcePairs[index + 1]);
+        }
+        return new JavaProjectSemanticIndexer().build(tempDir);
+    }
+
+    private void writeProjectSource(String relativePath, String source) throws IOException {
+        Path file = tempDir.resolve(relativePath);
+        Files.createDirectories(file.getParent());
+        Files.writeString(file, source);
     }
 }

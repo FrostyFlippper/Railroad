@@ -1,9 +1,13 @@
 package dev.railroadide.railroad.ide.diagnostics;
 
 import dev.railroadide.railroad.Railroad;
+import dev.railroadide.railroad.Services;
 import dev.railroadide.railroad.ide.sst.impl.java.JavaSemanticAnalyzer;
+import dev.railroadide.railroad.ide.sst.project.ProjectSemanticIndex;
+import dev.railroadide.railroad.ide.sst.project.ProjectSemanticService;
 import dev.railroadide.railroad.ide.sst.semantic.api.SemanticDiagnostic;
 import dev.railroadide.railroad.ide.sst.semantic.api.SemanticModel;
+import dev.railroadide.railroad.plugin.spi.dto.Project;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspection;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionContext;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionReporter;
@@ -22,13 +26,27 @@ import java.util.stream.Collectors;
 /**
  * Diagnostics provider backed by the SST semantic analyzer.
  */
-public record SemanticDiagnosticsProvider(Path filePath) implements DiagnosticsProvider {
+public record SemanticDiagnosticsProvider(Project project, Path filePath) implements DiagnosticsProvider {
+    public SemanticDiagnosticsProvider(Path filePath) {
+        this(null, filePath);
+    }
+
     @Override
     public @NotNull List<EditorDiagnostic> compute(String document) {
         if (document == null || document.isEmpty())
             return List.of();
 
-        var semanticModel = JavaSemanticAnalyzer.analyzeFacts(document);
+        SemanticModel semanticModel;
+        if (project != null) {
+            ProjectSemanticService semanticService = Services.PROJECT_SEMANTIC_SERVICE;
+            semanticService.index(project);
+            semanticService.updateFile(project, filePath);
+            ProjectSemanticIndex projectIndex = semanticService.index(project);
+            semanticModel = JavaSemanticAnalyzer.analyzeFacts(document, projectIndex);
+        } else {
+            semanticModel = JavaSemanticAnalyzer.analyzeFacts(document);
+        }
+
         List<SemanticDiagnostic> semanticDiagnostics = runRegisteredInspections(document, semanticModel);
         char[] source = document.toCharArray();
         JavaFileObject sourceFile = new SimpleJavaFileObject(filePath.toUri(), JavaFileObject.Kind.SOURCE) {

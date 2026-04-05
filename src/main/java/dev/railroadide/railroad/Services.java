@@ -5,6 +5,7 @@ import dev.railroadide.logger.Logger;
 import dev.railroadide.railroad.ide.diagnostics.JavaInspectionRegistries;
 import dev.railroadide.railroad.ide.DefaultDocumentEditorStateService;
 import dev.railroadide.railroad.ide.DefaultIDEStateService;
+import dev.railroadide.railroad.ide.sst.project.ProjectSemanticService;
 import dev.railroadide.railroad.localization.L18n;
 import dev.railroadide.railroad.localization.Language;
 import dev.railroadide.railroad.localization.LocalizationService;
@@ -78,6 +79,7 @@ public class Services {
     }};
 
     public static final DefaultProjectCreationPipelineService PROJECT_CREATION_PIPELINE = new DefaultProjectCreationPipelineService();
+    public static final ProjectSemanticService PROJECT_SEMANTIC_SERVICE = new ProjectSemanticService();
     public static final Registry<JavaInspection> JAVA_INSPECTION_REGISTRY = JavaInspectionRegistries.JAVA_INSPECTION_REGISTRY;
     public static final Registry<JavaInspectionRuleProvider> JAVA_INSPECTION_RULE_PROVIDER_REGISTRY =
             JavaInspectionRegistries.JAVA_INSPECTION_RULE_PROVIDER_REGISTRY;
@@ -114,6 +116,8 @@ public class Services {
             return (T) PROJECT_SERVICE_REGISTRY;
         } else if (serviceClass == ProjectCreationPipelineService.class) {
             return (T) PROJECT_CREATION_PIPELINE;
+        } else if (serviceClass == ProjectSemanticService.class) {
+            return (T) PROJECT_SEMANTIC_SERVICE;
         }
 
         throw new IllegalArgumentException("Service " + serviceClass.getName() + " is not available.");

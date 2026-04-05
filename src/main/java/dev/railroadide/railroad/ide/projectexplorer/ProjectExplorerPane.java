@@ -11,6 +11,7 @@ import dev.railroadide.railroad.ide.projectexplorer.dialog.DeleteDialog;
 import dev.railroadide.railroad.ide.projectexplorer.task.FileCopyTask;
 import dev.railroadide.railroad.ide.projectexplorer.task.SearchTask;
 import dev.railroadide.railroad.ide.projectexplorer.task.WatchTask;
+import dev.railroadide.railroad.ide.sst.project.ProjectSemanticService;
 import dev.railroadide.railroad.ide.ui.*;
 import dev.railroadide.railroad.ide.ui.setup.TerminalFactory;
 import dev.railroadide.railroad.plugin.defaults.FileSystemDocument;
@@ -58,6 +59,7 @@ import java.util.concurrent.Executors;
 
 public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeListener {
     private static boolean fileChangeListenerEnabled = true;
+    private final Project project;
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
     private final StringProperty messageProperty = new SimpleStringProperty();
     private final TreeView<PathItem> treeView = new TreeView<>();
@@ -67,6 +69,7 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
     private final List<String> searchList = new ArrayList<>();
 
     public ProjectExplorerPane(Project project, RRBorderPane mainPane) {
+        this.project = project;
         Path rootPath = project.getPath();
         setPadding(new Insets(0));
         setSpacing(0);
@@ -484,6 +487,8 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
         if (!fileChangeListenerEnabled)
             return;
 
+        updateProjectSemanticIndex(path, kind);
+
         Platform.runLater(() -> {
             // Refresh the tree view based on the kind of event
             if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
@@ -501,6 +506,39 @@ public class ProjectExplorerPane extends RRVBox implements WatchTask.FileChangeL
                 executorService.submit(searchTask);
             }
         });
+    }
+
+    private void updateProjectSemanticIndex(Path path, WatchEvent.Kind<?> kind) {
+        if (!isJavaSourcePath(path, kind))
+            return;
+
+        ProjectSemanticService semanticService = Services.PROJECT_SEMANTIC_SERVICE;
+        try {
+            if (kind == StandardWatchEventKinds.ENTRY_DELETE) {
+                semanticService.removeFile(project, path);
+            } else if (kind == StandardWatchEventKinds.ENTRY_CREATE || kind == StandardWatchEventKinds.ENTRY_MODIFY) {
+                if (Files.isDirectory(path))
+                    return;
+
+                semanticService.updateFile(project, path);
+            }
+        } catch (RuntimeException exception) {
+            Railroad.LOGGER.warn("Failed to update project semantic index for {}", path, exception);
+        }
+    }
+
+    private static boolean isJavaSourcePath(Path path, WatchEvent.Kind<?> kind) {
+        if (path == null || kind == null)
+            return false;
+
+        String fileName = path.getFileName() == null ? "" : path.getFileName().toString();
+        if (!fileName.endsWith(".java"))
+            return false;
+
+        if (kind == StandardWatchEventKinds.ENTRY_DELETE)
+            return true;
+
+        return Files.exists(path);
     }
 
     private void handleDragDrop(PathTreeCell cell) {

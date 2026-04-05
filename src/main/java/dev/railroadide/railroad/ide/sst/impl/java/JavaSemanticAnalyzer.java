@@ -7,6 +7,7 @@ import dev.railroadide.railroad.ide.classparser.stub.MethodStub;
 import dev.railroadide.railroad.ide.diagnostics.JavaInspectionRegistries;
 import dev.railroadide.railroad.ide.diagnostics.JavaInspectionRuleEngine;
 import dev.railroadide.railroad.ide.indexing.Indexes;
+import dev.railroadide.railroad.ide.sst.project.ProjectSemanticIndex;
 import dev.railroadide.railroad.ide.sst.semantic.api.*;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxNode;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxToken;
@@ -105,9 +106,19 @@ public final class JavaSemanticAnalyzer {
         return analyze(JavaSyntaxParser.parse(source));
     }
 
+    public static SemanticModel analyze(CharSequence source, ProjectSemanticIndex projectIndex) {
+        Objects.requireNonNull(source, "source");
+        return analyze(JavaSyntaxParser.parse(source), projectIndex);
+    }
+
     public static SemanticModel analyze(SyntaxTree syntaxTree) {
         Objects.requireNonNull(syntaxTree, "syntaxTree");
         return withCoreDiagnostics(analyzeFacts(syntaxTree));
+    }
+
+    public static SemanticModel analyze(SyntaxTree syntaxTree, ProjectSemanticIndex projectIndex) {
+        Objects.requireNonNull(syntaxTree, "syntaxTree");
+        return withCoreDiagnostics(analyzeFacts(syntaxTree, projectIndex));
     }
 
     public static SemanticModel analyzeFacts(CharSequence source) {
@@ -115,9 +126,20 @@ public final class JavaSemanticAnalyzer {
         return analyzeFacts(JavaSyntaxParser.parse(source));
     }
 
+    public static SemanticModel analyzeFacts(CharSequence source, ProjectSemanticIndex projectIndex) {
+        Objects.requireNonNull(source, "source");
+        return analyzeFacts(JavaSyntaxParser.parse(source), projectIndex);
+    }
+
     public static SemanticModel analyzeFacts(SyntaxTree syntaxTree) {
         Objects.requireNonNull(syntaxTree, "syntaxTree");
         return performAnalysis(syntaxTree, true);
+    }
+
+    public static SemanticModel analyzeFacts(SyntaxTree syntaxTree, ProjectSemanticIndex projectIndex) {
+        Objects.requireNonNull(syntaxTree, "syntaxTree");
+        Objects.requireNonNull(projectIndex, "projectIndex");
+        return performAnalysis(syntaxTree, true, projectIndex);
     }
 
     public static SemanticModel analyzeDeclarations(CharSequence source) {
@@ -141,7 +163,7 @@ public final class JavaSemanticAnalyzer {
     }
 
     private static SemanticModel withCoreDiagnostics(SemanticModel facts) {
-        JavaInspectionContext context = new JavaInspectionContext(Path.of("<memory>.java"), "", facts);
+        JavaInspectionContext context = new JavaInspectionContext(Path.of("memory.java"), "", facts);
         List<SemanticDiagnostic> diagnostics = new ArrayList<>();
         for (var provider : JavaInspectionRegistries.coreRuleProviders())
             diagnostics.addAll(JavaInspectionRuleEngine.collectDiagnostics(provider, context));
@@ -149,10 +171,18 @@ public final class JavaSemanticAnalyzer {
     }
 
     private static SemanticModel performAnalysis(SyntaxTree syntaxTree, boolean includeResolutionAndTypes) {
+        return performAnalysis(syntaxTree, includeResolutionAndTypes, null);
+    }
+
+    private static SemanticModel performAnalysis(
+            SyntaxTree syntaxTree,
+            boolean includeResolutionAndTypes,
+            @Nullable ProjectSemanticIndex projectIndex
+    ) {
         Scope rootScope = Scope.root();
         SemanticModel.Builder builder = SemanticModel.builder(syntaxTree, rootScope);
 
-        AnalysisContext context = new AnalysisContext(rootScope, builder);
+        AnalysisContext context = new AnalysisContext(rootScope, builder, projectIndex);
         new DeclarationCollector(context).visitCompilationUnit(syntaxTree.root());
 
         if (includeResolutionAndTypes) {
@@ -169,11 +199,13 @@ public final class JavaSemanticAnalyzer {
         private final Map<SyntaxNode, Scope> scopeByNode = new IdentityHashMap<>();
         private final Map<SyntaxNode, Symbol> declaredSymbolByNode = new IdentityHashMap<>();
         private final Map<SyntaxNode, Symbol> resolvedSymbolByNode = new IdentityHashMap<>();
+        private final @Nullable ProjectSemanticIndex projectIndex;
         private @Nullable String currentPackageName;
 
-        private AnalysisContext(Scope rootScope, SemanticModel.Builder builder) {
+        private AnalysisContext(Scope rootScope, SemanticModel.Builder builder, @Nullable ProjectSemanticIndex projectIndex) {
             this.rootScope = rootScope;
             this.builder = builder;
+            this.projectIndex = projectIndex;
         }
 
         private void attachScope(SyntaxNode node, Scope scope) {
@@ -494,6 +526,7 @@ public final class JavaSemanticAnalyzer {
 
     private static final class NameResolver {
         private final AnalysisContext context;
+        private final @Nullable ProjectSemanticIndex projectIndex;
         private final Set<String> localQualifiedTypeNames;
         private final Set<String> availableQualifiedTypeNames;
         private final Map<String, ClassStub> jdkClassStubsByQualifiedName;
@@ -511,6 +544,7 @@ public final class JavaSemanticAnalyzer {
 
         private NameResolver(AnalysisContext context) {
             this.context = context;
+            this.projectIndex = context.projectIndex;
             Set<String> qualified = new HashSet<>();
             for (Symbol symbol : context.allTypeSymbols()) {
                 symbol.qualifiedName().ifPresent(qualified::add);
@@ -518,6 +552,11 @@ public final class JavaSemanticAnalyzer {
 
             this.localQualifiedTypeNames = Set.copyOf(qualified);
             Set<String> available = new HashSet<>(localQualifiedTypeNames);
+            if (projectIndex != null) {
+                for (ProjectSemanticIndex.SourceFileIndex file : projectIndex.files().values()) {
+                    available.addAll(file.declaredQualifiedNames());
+                }
+            }
             available.addAll(loadJdkQualifiedTypeNames());
             this.availableQualifiedTypeNames = Set.copyOf(available);
             this.jdkClassStubsByQualifiedName = loadJdkClassStubsByQualifiedName();
@@ -771,46 +810,26 @@ public final class JavaSemanticAnalyzer {
             if (singleTypeImportsBySimpleName.containsKey(simpleName)) {
                 ImportSpec importSpec = singleTypeImportsBySimpleName.get(simpleName);
                 if (isResolvableType(importSpec.qualifiedTarget())) {
-                    candidates.add(new SimpleSymbol(
-                            SymbolKind.CLASS,
-                            simpleName,
-                            importSpec.qualifiedTarget(),
-                            importSpec.targetNode()
-                    ));
+                    candidates.add(typeSymbolForQualifiedName(simpleName, importSpec.qualifiedTarget(), importSpec.targetNode()));
                 }
             }
 
             if (context.currentPackageName != null && !context.currentPackageName.isBlank()) {
                 String packageType = context.currentPackageName + "." + simpleName;
                 if (isResolvableType(packageType)) {
-                    candidates.add(new SimpleSymbol(
-                            SymbolKind.CLASS,
-                            simpleName,
-                            packageType,
-                            referenceNode
-                    ));
+                    candidates.add(typeSymbolForQualifiedName(simpleName, packageType, referenceNode));
                 }
             }
 
             String javaLangType = "java.lang." + simpleName;
             if (isResolvableType(javaLangType)) {
-                candidates.add(new SimpleSymbol(
-                        SymbolKind.CLASS,
-                        simpleName,
-                        javaLangType,
-                        referenceNode
-                ));
+                candidates.add(typeSymbolForQualifiedName(simpleName, javaLangType, referenceNode));
             }
 
             for (ImportSpec onDemandImport : onDemandTypeImports) {
                 String qualified = onDemandImport.ownerName() + "." + simpleName;
                 if (isResolvableType(qualified)) {
-                    candidates.add(new SimpleSymbol(
-                            SymbolKind.CLASS,
-                            simpleName,
-                            qualified,
-                            onDemandImport.targetNode()
-                    ));
+                    candidates.add(typeSymbolForQualifiedName(simpleName, qualified, onDemandImport.targetNode()));
                 }
             }
 
@@ -1141,6 +1160,7 @@ public final class JavaSemanticAnalyzer {
         private List<MemberCandidate> findFieldCandidates(String ownerQualifiedName, String fieldName, boolean staticAccess) {
             List<MemberCandidate> candidates = new ArrayList<>();
             collectSourceFieldCandidates(ownerQualifiedName, fieldName, staticAccess, candidates, new HashSet<>());
+            collectProjectFieldCandidates(ownerQualifiedName, fieldName, staticAccess, candidates, new HashSet<>());
             collectJdkFieldCandidates(ownerQualifiedName, fieldName, staticAccess, candidates, new HashSet<>());
             return List.copyOf(candidates);
         }
@@ -1148,6 +1168,7 @@ public final class JavaSemanticAnalyzer {
         private List<MemberCandidate> findMethodCandidates(String ownerQualifiedName, String methodName, boolean staticAccess) {
             List<MemberCandidate> candidates = new ArrayList<>();
             collectSourceMethodCandidates(ownerQualifiedName, methodName, staticAccess, candidates, new HashSet<>());
+            collectProjectMethodCandidates(ownerQualifiedName, methodName, staticAccess, candidates, new HashSet<>());
             collectJdkMethodCandidates(ownerQualifiedName, methodName, staticAccess, candidates, new HashSet<>());
             return dedupeCallableCandidates(candidates);
         }
@@ -1174,6 +1195,7 @@ public final class JavaSemanticAnalyzer {
                         List.of()
                 ));
             }
+            collectProjectConstructorCandidates(ownerQualifiedName, candidates);
 
             ClassStub stub = jdkClassStubsByQualifiedName.get(ownerQualifiedName);
             if (stub != null) {
@@ -1236,6 +1258,75 @@ public final class JavaSemanticAnalyzer {
             for (MemberCandidate candidate : methods.getOrDefault(methodName, List.of())) {
                 if (candidate.staticMember() == staticAccess)
                     out.add(candidate);
+            }
+        }
+
+        private void collectProjectFieldCandidates(
+                String ownerQualifiedName,
+                String fieldName,
+                boolean staticAccess,
+                List<MemberCandidate> out,
+                Set<String> visitedOwners
+        ) {
+            if (projectIndex == null || !visitedOwners.add(ownerQualifiedName))
+                return;
+
+            for (ProjectSemanticIndex.SymbolDescriptor symbol : projectIndex.lookupMember(ownerQualifiedName, fieldName)) {
+                if (symbol.kind() != SymbolKind.FIELD || symbol.isStatic() != staticAccess)
+                    continue;
+
+                out.add(new MemberCandidate(
+                        syntheticProjectMemberSymbol(symbol, new Type.UnknownType("<unknown>"), List.of()),
+                        ownerQualifiedName,
+                        staticAccess,
+                        new Type.UnknownType("<unknown>"),
+                        List.of()
+                ));
+            }
+        }
+
+        private void collectProjectMethodCandidates(
+                String ownerQualifiedName,
+                String methodName,
+                boolean staticAccess,
+                List<MemberCandidate> out,
+                Set<String> visitedOwners
+        ) {
+            if (projectIndex == null || !visitedOwners.add(ownerQualifiedName))
+                return;
+
+            for (ProjectSemanticIndex.SymbolDescriptor symbol : projectIndex.lookupMember(ownerQualifiedName, methodName)) {
+                if (symbol.kind() != SymbolKind.METHOD || symbol.isStatic() != staticAccess)
+                    continue;
+
+                List<Type> parameterTypes = parameterTypesFromProjectSignature(symbol.signature());
+                out.add(new MemberCandidate(
+                        syntheticProjectMemberSymbol(symbol, new Type.UnknownType("<unknown>"), parameterTypes),
+                        ownerQualifiedName,
+                        staticAccess,
+                        new Type.UnknownType("<unknown>"),
+                        parameterTypes
+                ));
+            }
+        }
+
+        private void collectProjectConstructorCandidates(String ownerQualifiedName, List<MemberCandidate> out) {
+            if (projectIndex == null)
+                return;
+
+            for (ProjectSemanticIndex.SymbolDescriptor symbol : projectIndex.lookupMembers(ownerQualifiedName)) {
+                if (symbol.kind() != SymbolKind.CONSTRUCTOR)
+                    continue;
+
+                List<Type> parameterTypes = parameterTypesFromProjectSignature(symbol.signature());
+                Type constructedType = new Type.DeclaredType(ownerQualifiedName, List.of());
+                out.add(new MemberCandidate(
+                        syntheticProjectMemberSymbol(symbol, constructedType, parameterTypes),
+                        ownerQualifiedName,
+                        false,
+                        constructedType,
+                        parameterTypes
+                ));
             }
         }
 
@@ -1601,6 +1692,12 @@ public final class JavaSemanticAnalyzer {
             Set<String> localFields = localStaticFieldsByOwner.get(ownerQualifiedName);
             if (localFields != null && localFields.contains(fieldName))
                 return true;
+            if (projectIndex != null) {
+                boolean projectMatch = projectIndex.lookupMember(ownerQualifiedName, fieldName).stream()
+                        .anyMatch(symbol -> symbol.kind() == SymbolKind.FIELD && symbol.isStatic());
+                if (projectMatch)
+                    return true;
+            }
 
             ClassStub jdkStub = jdkClassStubsByQualifiedName.get(ownerQualifiedName);
             if (jdkStub == null)
@@ -1618,6 +1715,14 @@ public final class JavaSemanticAnalyzer {
                     if (argumentCountOrUnknown < 0 || arities.contains(argumentCountOrUnknown))
                         return true;
                 }
+            }
+            if (projectIndex != null) {
+                boolean projectMatch = projectIndex.lookupMember(ownerQualifiedName, methodName).stream()
+                        .filter(symbol -> symbol.kind() == SymbolKind.METHOD && symbol.isStatic())
+                        .anyMatch(symbol -> argumentCountOrUnknown < 0
+                                || parameterTypesFromProjectSignature(symbol.signature()).size() == argumentCountOrUnknown);
+                if (projectMatch)
+                    return true;
             }
 
             ClassStub jdkStub = jdkClassStubsByQualifiedName.get(ownerQualifiedName);
@@ -1744,6 +1849,8 @@ public final class JavaSemanticAnalyzer {
                 return false;
             if (localQualifiedTypeNames.contains(qualifiedTypeName))
                 return true;
+            if (projectIndex != null && !projectIndex.lookupQualifiedName(qualifiedTypeName).isEmpty())
+                return true;
             return availableQualifiedTypeNames.contains(qualifiedTypeName);
         }
 
@@ -1751,11 +1858,96 @@ public final class JavaSemanticAnalyzer {
             if (packagePrefix == null || packagePrefix.isBlank())
                 return false;
 
+            if (projectIndex != null && !projectIndex.getFilesByPackage(packagePrefix).isEmpty())
+                return true;
             for (String qualifiedType : availableQualifiedTypeNames) {
                 if (qualifiedType.startsWith(packagePrefix + "."))
                     return true;
             }
             return false;
+        }
+
+        private Symbol typeSymbolForQualifiedName(String simpleName, String qualifiedName, SyntaxNode declarationOrUsageSite) {
+            if (projectIndex != null) {
+                List<ProjectSemanticIndex.SymbolDescriptor> projectMatches = projectIndex.lookupQualifiedName(qualifiedName).stream()
+                        .filter(symbol -> isTypeSymbol(symbol.kind()))
+                        .toList();
+                if (!projectMatches.isEmpty()) {
+                    ProjectSemanticIndex.SymbolDescriptor match = projectMatches.getFirst();
+                    return new SimpleSymbol(match.kind(), match.simpleName(), match.qualifiedName(), declarationOrUsageSite);
+                }
+            }
+            return new SimpleSymbol(SymbolKind.CLASS, simpleName, qualifiedName, declarationOrUsageSite);
+        }
+
+        private SyntheticMemberSymbol syntheticProjectMemberSymbol(
+                ProjectSemanticIndex.SymbolDescriptor symbol,
+                Type valueType,
+                List<Type> parameterTypes
+        ) {
+            String qualifiedName = symbol.qualifiedName();
+            if (qualifiedName != null && symbol.signature() != null && !qualifiedName.endsWith(symbol.signature()))
+                qualifiedName = qualifiedName + symbol.signature();
+
+            return new SyntheticMemberSymbol(
+                    symbol.kind(),
+                    symbol.simpleName(),
+                    qualifiedName,
+                    null,
+                    valueType,
+                    parameterTypes,
+                    symbol.isStatic()
+            );
+        }
+
+        private List<Type> parameterTypesFromProjectSignature(@Nullable String signature) {
+            if (signature == null || signature.isBlank() || "()".equals(signature))
+                return List.of();
+
+            if (!signature.startsWith("(") || !signature.endsWith(")"))
+                return List.of();
+
+            String content = signature.substring(1, signature.length() - 1).trim();
+            if (content.isEmpty())
+                return List.of();
+
+            List<Type> result = new ArrayList<>();
+            for (String part : splitSignatureTypes(content)) {
+                String text = part.trim();
+                if (text.isEmpty())
+                    continue;
+                result.add(typeFromSignatureText(text));
+            }
+            return List.copyOf(result);
+        }
+
+        private List<String> splitSignatureTypes(String content) {
+            List<String> parts = new ArrayList<>();
+            StringBuilder current = new StringBuilder();
+            int genericDepth = 0;
+            for (int index = 0; index < content.length(); index++) {
+                char ch = content.charAt(index);
+                if (ch == '<') {
+                    genericDepth++;
+                } else if (ch == '>') {
+                    genericDepth = Math.max(0, genericDepth - 1);
+                } else if (ch == ',' && genericDepth == 0) {
+                    parts.add(current.toString());
+                    current.setLength(0);
+                    continue;
+                }
+                current.append(ch);
+            }
+            parts.add(current.toString());
+            return List.copyOf(parts);
+        }
+
+        private Type typeFromSignatureText(String text) {
+            if (Set.of("boolean", "byte", "short", "char", "int", "long", "float", "double").contains(text))
+                return new Type.PrimitiveType(text);
+            if (text.endsWith("[]"))
+                return new Type.ArrayType(typeFromSignatureText(text.substring(0, text.length() - 2)));
+            return new Type.DeclaredType(text, List.of());
         }
 
         private static boolean isSelectorNameExpression(SyntaxNode node) {
@@ -1862,10 +2054,32 @@ public final class JavaSemanticAnalyzer {
         private static final Set<String> NUMERIC_PRIMITIVES = Set.of("byte", "short", "char", "int", "long", "float", "double");
 
         private final AnalysisContext context;
+        private final @Nullable ProjectSemanticIndex projectIndex;
+        private final Set<String> localQualifiedTypeNames;
+        private final Set<String> availableQualifiedTypeNames;
+        private final Map<String, ImportSpec> singleTypeImportsBySimpleName = new LinkedHashMap<>();
+        private final List<ImportSpec> onDemandTypeImports = new ArrayList<>();
         private final Map<SyntaxNode, Type> cache = new IdentityHashMap<>();
 
         private TypeResolver(AnalysisContext context) {
             this.context = context;
+            this.projectIndex = context.projectIndex;
+
+            Set<String> qualified = new HashSet<>();
+            for (Symbol symbol : context.allTypeSymbols()) {
+                symbol.qualifiedName().ifPresent(qualified::add);
+            }
+            this.localQualifiedTypeNames = Set.copyOf(qualified);
+
+            Set<String> available = new HashSet<>(localQualifiedTypeNames);
+            if (projectIndex != null) {
+                for (ProjectSemanticIndex.SourceFileIndex file : projectIndex.files().values()) {
+                    available.addAll(file.declaredQualifiedNames());
+                }
+            }
+            available.addAll(loadJdkQualifiedTypeNames());
+            this.availableQualifiedTypeNames = Set.copyOf(available);
+            collectImportsFromRootScope();
         }
 
         private void resolveCompilationUnit(SyntaxNode root) {
@@ -2094,7 +2308,8 @@ public final class JavaSemanticAnalyzer {
                 return new Type.ArrayType(componentType);
             }
 
-            return new Type.DeclaredType(simpleTypeName(text), List.of());
+            String qualified = resolveQualifiedTypeName(text);
+            return new Type.DeclaredType(qualified == null ? simpleTypeName(text) : qualified, List.of());
         }
 
         private Type typeFromTypeReferenceText(String text) {
@@ -2104,7 +2319,97 @@ public final class JavaSemanticAnalyzer {
                 return new Type.VoidType();
             if (NUMERIC_PRIMITIVES.contains(text) || "boolean".equals(text))
                 return new Type.PrimitiveType(text);
-            return new Type.DeclaredType(simpleTypeName(text), List.of());
+            String qualified = resolveQualifiedTypeName(text);
+            return new Type.DeclaredType(qualified == null ? simpleTypeName(text) : qualified, List.of());
+        }
+
+        private void collectImportsFromRootScope() {
+            Map<String, List<Symbol>> rootDeclarations = context.rootScope.snapshotDeclarations();
+            for (List<Symbol> symbols : rootDeclarations.values()) {
+                for (Symbol symbol : symbols) {
+                    if (symbol.kind() != SymbolKind.IMPORT)
+                        continue;
+
+                    SyntaxNode declarationNode = symbol.declaration().orElse(null);
+                    if (declarationNode == null)
+                        continue;
+
+                    SyntaxNode targetNode = directChild(declarationNode, JavaSyntaxKinds.IMPORT_TARGET.id());
+                    if (targetNode == null)
+                        continue;
+
+                    String qualifiedTarget = canonicalQualifiedName(targetNode);
+                    if (qualifiedTarget == null || qualifiedTarget.isBlank())
+                        continue;
+
+                    boolean isStatic = hasTokenKind(declarationNode, JavaTokenType.STATIC_KEYWORD);
+                    boolean isWildcard = qualifiedTarget.endsWith(".*");
+                    if (isStatic)
+                        continue;
+
+                    String ownerName = isWildcard ? qualifiedTarget.substring(0, qualifiedTarget.length() - 2) : packagePrefix(qualifiedTarget);
+                    String importedName = isWildcard ? "*" : lastSegment(qualifiedTarget);
+                    ImportSpec importSpec = new ImportSpec(
+                            declarationNode,
+                            targetNode,
+                            qualifiedTarget,
+                            ownerName,
+                            importedName,
+                            false,
+                            isWildcard
+                    );
+
+                    if (isWildcard) {
+                        onDemandTypeImports.add(importSpec);
+                    } else {
+                        singleTypeImportsBySimpleName.putIfAbsent(importSpec.importedName(), importSpec);
+                    }
+                }
+            }
+        }
+
+        private @Nullable String resolveQualifiedTypeName(@Nullable String text) {
+            if (text == null || text.isBlank())
+                return null;
+
+            while (text.endsWith("[]"))
+                text = text.substring(0, text.length() - 2);
+            if ("void".equals(text) || Set.of("boolean", "byte", "short", "char", "int", "long", "float", "double").contains(text))
+                return text;
+            if (text.indexOf('.') > 0 && isResolvableType(text))
+                return text;
+
+            String simpleName = simpleTypeName(text);
+            for (String localQualifiedTypeName : localQualifiedTypeNames) {
+                if (simpleTypeName(localQualifiedTypeName).equals(simpleName))
+                    return localQualifiedTypeName;
+            }
+            if (singleTypeImportsBySimpleName.containsKey(simpleName))
+                return singleTypeImportsBySimpleName.get(simpleName).qualifiedTarget();
+            if (context.currentPackageName != null && !context.currentPackageName.isBlank()) {
+                String inCurrentPackage = context.currentPackageName + "." + simpleName;
+                if (isResolvableType(inCurrentPackage))
+                    return inCurrentPackage;
+            }
+            String javaLangType = "java.lang." + simpleName;
+            if (isResolvableType(javaLangType))
+                return javaLangType;
+            for (ImportSpec onDemandImport : onDemandTypeImports) {
+                String imported = onDemandImport.ownerName() + "." + simpleName;
+                if (isResolvableType(imported))
+                    return imported;
+            }
+            return null;
+        }
+
+        private boolean isResolvableType(String qualifiedTypeName) {
+            if (qualifiedTypeName == null || qualifiedTypeName.isBlank())
+                return false;
+            if (localQualifiedTypeNames.contains(qualifiedTypeName))
+                return true;
+            if (projectIndex != null && !projectIndex.lookupQualifiedName(qualifiedTypeName).isEmpty())
+                return true;
+            return availableQualifiedTypeNames.contains(qualifiedTypeName);
         }
 
         private static List<SyntaxNode> directExpressionChildren(SyntaxNode node) {

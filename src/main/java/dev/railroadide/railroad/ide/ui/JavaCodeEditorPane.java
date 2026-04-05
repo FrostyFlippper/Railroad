@@ -101,7 +101,7 @@ public class JavaCodeEditorPane extends TextEditorPane {
         super(item);
         this.project = Objects.requireNonNull(project, "project");
         this.completionProvider = new JdtCompletionProvider(filePath, SYSTEM_MODULE_PATHS);
-        this.diagnosticsProvider = new SemanticDiagnosticsProvider(filePath);
+        this.diagnosticsProvider = new SemanticDiagnosticsProvider(project, filePath);
         this.signatureHelpProvider = new JdtSignatureHelpProvider(filePath, SYSTEM_MODULE_PATHS);
 
         diagnosticPopup.setAutoHide(true);
