@@ -39,6 +39,7 @@ public final class JavaInspectionRegistries {
     public static final CoreParameterNamedUnderscoreInspection CORE_PARAMETER_NAMED_UNDERSCORE_INSPECTION = new CoreParameterNamedUnderscoreInspection();
     public static final CoreUnreachableCodeInspection CORE_UNREACHABLE_CODE_INSPECTION = new CoreUnreachableCodeInspection();
     public static final CoreOverlyStrongTypeCastInspection CORE_OVERLY_STRONG_TYPE_CAST_INSPECTION = new CoreOverlyStrongTypeCastInspection();
+    public static final CoreCastConflictingWithInstanceofInspection CORE_CAST_CONFLICTING_WITH_INSTANCEOF_INSPECTION = new CoreCastConflictingWithInstanceofInspection();
 
     public static final Registry<JavaInspection> JAVA_INSPECTION_REGISTRY =
         RegistryManager.createRegistry("railroad:java_inspection", JavaInspection.class);
@@ -73,6 +74,7 @@ public final class JavaInspectionRegistries {
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreParameterNamedUnderscoreInspection.ID, CORE_PARAMETER_NAMED_UNDERSCORE_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreUnreachableCodeInspection.ID, CORE_UNREACHABLE_CODE_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreOverlyStrongTypeCastInspection.ID, CORE_OVERLY_STRONG_TYPE_CAST_INSPECTION);
+        JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreCastConflictingWithInstanceofInspection.ID, CORE_CAST_CONFLICTING_WITH_INSTANCEOF_INSPECTION);
     }
 
     private JavaInspectionRegistries() {
@@ -106,7 +108,8 @@ public final class JavaInspectionRegistries {
             CORE_FIELD_NAME_SAME_AS_CLASS_INSPECTION,
             CORE_PARAMETER_NAMED_UNDERSCORE_INSPECTION,
             CORE_UNREACHABLE_CODE_INSPECTION,
-            CORE_OVERLY_STRONG_TYPE_CAST_INSPECTION
+            CORE_OVERLY_STRONG_TYPE_CAST_INSPECTION,
+            CORE_CAST_CONFLICTING_WITH_INSTANCEOF_INSPECTION
         );
     }
 }

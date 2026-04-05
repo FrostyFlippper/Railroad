@@ -1,7 +1,6 @@
 package dev.railroadide.railroad.ide.diagnostics.inspections;
 
 import dev.railroadide.railroad.ide.diagnostics.rules.java.JavaSemanticRules;
-import dev.railroadide.railroad.ide.sst.impl.java.JavaSemanticAnalyzer;
 import dev.railroadide.railroad.ide.sst.impl.java.JavaSyntaxKinds;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxNode;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRule;
@@ -35,7 +34,7 @@ public class CoreOverlyStrongTypeCastInspection implements JavaInspectionRulePro
 
     private static void reportOverlyStrongTypeCasts(JavaRuleContext context, JavaInspectionRuleReporter reporter) {
         for (SyntaxNode invocationNode : context.nodesOfKind(JavaSyntaxKinds.METHOD_INVOCATION_EXPRESSION.id())) {
-            SyntaxNode castNode = unwrapTransparentExpression(context.explicitReceiver(invocationNode));
+            SyntaxNode castNode = context.unwrapTransparentExpression(context.explicitReceiver(invocationNode));
             if (castNode == null || !JavaSyntaxKinds.CAST_EXPRESSION.id().equals(castNode.kind().id()))
                 continue;
 
@@ -51,7 +50,7 @@ public class CoreOverlyStrongTypeCastInspection implements JavaInspectionRulePro
         }
 
         for (SyntaxNode fieldAccessNode : context.nodesOfKind(JavaSyntaxKinds.FIELD_ACCESS_EXPRESSION.id())) {
-            SyntaxNode castNode = unwrapTransparentExpression(context.explicitReceiver(fieldAccessNode));
+            SyntaxNode castNode = context.unwrapTransparentExpression(context.explicitReceiver(fieldAccessNode));
             if (castNode == null || !JavaSyntaxKinds.CAST_EXPRESSION.id().equals(castNode.kind().id()))
                 continue;
 
@@ -178,27 +177,5 @@ public class CoreOverlyStrongTypeCastInspection implements JavaInspectionRulePro
         }
 
         return false;
-    }
-
-    private static @Nullable SyntaxNode unwrapTransparentExpression(@Nullable SyntaxNode node) {
-        SyntaxNode current = node;
-        while (current != null) {
-            String kindId = current.kind().id();
-            if (JavaSyntaxKinds.PARENTHESIZED_EXPRESSION.id().equals(kindId)
-                    || JavaSyntaxKinds.PRIMARY_EXPRESSION.id().equals(kindId)) {
-                current = firstExpressionChild(current);
-                continue;
-            }
-            return current;
-        }
-        return null;
-    }
-
-    private static @Nullable SyntaxNode firstExpressionChild(SyntaxNode node) {
-        for (SyntaxNode child : node.children()) {
-            if (JavaSemanticAnalyzer.isExpressionNode(child))
-                return child;
-        }
-        return null;
     }
 }

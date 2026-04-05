@@ -41,6 +41,7 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreDefiniteAssignmentInspection(), Set.of("SEM_UNASSIGNED_VARIABLE", "SEM_ILLEGAL_FINAL_ASSIGNMENT", "SEM_UNINITIALIZED_FINAL_FIELD"));
         assertRuleIds(new CoreAssignmentInspection(), Set.of("SEM_INCOMPATIBLE_ASSIGNMENT"));
         assertRuleIds(new CoreOverlyStrongTypeCastInspection(), Set.of("SEM_OVERLY_STRONG_TYPE_CAST"));
+        assertRuleIds(new CoreCastConflictingWithInstanceofInspection(), Set.of("SEM_CAST_CONFLICTING_WITH_INSTANCEOF"));
         assertRuleIds(new CoreWildcardImportInspection(), Set.of("SEM_WILDCARD_IMPORT"));
         assertRuleIds(new CoreEmptyCatchInspection(), Set.of("SEM_EMPTY_CATCH"));
         assertRuleIds(new CorePublicClassNotNamedAfterFileInspection(), Set.of("SEM_PUBLIC_CLASS_NOT_NAMED_AFTER_FILE"));
@@ -674,6 +675,56 @@ class CoreInspectionRulesTest {
 
         assertFalse(diagnostics.stream().anyMatch(d ->
                 "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE".equals(d.code())));
+    }
+
+    @Test
+    void coreCastConflictingWithInstanceofRuleEmitsDiagnosticForIncompatibleCastInPositiveBranch() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreCastConflictingWithInstanceofInspection(), """
+            class Example {
+                void run(Object obj) {
+                    if (obj instanceof String) {
+                        Integer value = (Integer) obj;
+                    }
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                        && d.message().contains("Integer")
+                        && d.message().contains("String")));
+    }
+
+    @Test
+    void coreCastConflictingWithInstanceofRuleDoesNotEmitDiagnosticForCompatibleSubtypeCast() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreCastConflictingWithInstanceofInspection(), """
+            class Example {
+                void run(Object obj) {
+                    if (obj instanceof CharSequence) {
+                        String value = (String) obj;
+                    }
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+    }
+
+    @Test
+    void coreCastConflictingWithInstanceofRuleDoesNotEmitDiagnosticForNegatedInstanceofBranchInCurrentMvp() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreCastConflictingWithInstanceofInspection(), """
+            class Example {
+                void run(Object obj) {
+                    if (!(obj instanceof String)) {
+                        Integer value = (Integer) obj;
+                    }
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test

@@ -9,6 +9,7 @@ import dev.railroadide.railroad.ide.classparser.stub.ConstructorStub;
 import dev.railroadide.railroad.ide.classparser.stub.FieldStub;
 import dev.railroadide.railroad.ide.classparser.stub.MethodStub;
 import dev.railroadide.railroad.ide.sst.impl.java.JavaSemanticAnalyzer;
+import dev.railroadide.railroad.ide.sst.impl.java.JavaSyntaxKinds;
 import dev.railroadide.railroad.ide.sst.impl.java.JavaTokenType;
 import dev.railroadide.railroad.ide.sst.semantic.api.*;
 import dev.railroadide.railroad.ide.sst.semantic.api.Type.*;
@@ -1000,6 +1001,29 @@ public final class JavaRuleContext {
         List<String> typeNames = new ArrayList<>();
         collectTopLevelReferencedTypeNames(node, typeNames);
         return List.copyOf(typeNames);
+    }
+
+    public @Nullable SyntaxNode unwrapTransparentExpression(@Nullable SyntaxNode node) {
+        SyntaxNode current = node;
+        while (current != null) {
+            String kindId = current.kind().id();
+            if (JavaSyntaxKinds.PARENTHESIZED_EXPRESSION.id().equals(kindId)
+                || JavaSyntaxKinds.PRIMARY_EXPRESSION.id().equals(kindId)) {
+                current = firstExpressionChild(current);
+                continue;
+            }
+            return current;
+        }
+        return null;
+    }
+
+    public @Nullable SyntaxNode firstExpressionChild(SyntaxNode node) {
+        for (SyntaxNode child : node.children()) {
+            if (JavaSemanticAnalyzer.isExpressionNode(child))
+                return child;
+        }
+
+        return null;
     }
 
     private Map<String, Symbol> localTypeSymbolsByQualifiedName() {

@@ -578,7 +578,7 @@ Inspectopedia label in the sections below.
 - [ ] [easy] `'Throwable' not thrown` - Flag exception objects created and then ignored.
 - [ ] [easy] `Array comparison using '==', instead of 'Arrays.equals()'` - Replace reference comparison for arrays.
 - [ ] [easy] `Call to 'toString()' on array` - Replace array `toString` misuse with proper array formatting helpers.
-- [ ] [medium] `Cast conflicts with 'instanceof'` - Detect casts incompatible with an earlier type test.
+- [-] [medium] `Cast conflicts with 'instanceof'` - Detect casts incompatible with an earlier type test. (if statements completed).
 - [ ] [medium] `Cast to incompatible type` - Flag impossible casts.
 - [ ] [starter] `Collection added to itself` - Detect self-add/self-put container bugs.
 - [ ] [easy] `Confusing 'main()' method` - Flag methods named `main` that are not actual entry points.

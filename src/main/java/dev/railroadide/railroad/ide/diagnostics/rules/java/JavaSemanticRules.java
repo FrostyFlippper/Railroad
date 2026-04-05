@@ -211,6 +211,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Public method '%s' is not exposed through any implemented interface"
     );
+    public static final JavaSemanticRule CAST_CONFLICTING_WITH_INSTANCEOF = new JavaSemanticRule(
+        "SEM_CAST_CONFLICTING_WITH_INSTANCEOF",
+        SemanticDiagnostic.Severity.WARNING,
+        "Cast to '%s' conflicts with previous 'instanceof' check for '%s'"
+    );
 
     private JavaSemanticRules() {
     }
