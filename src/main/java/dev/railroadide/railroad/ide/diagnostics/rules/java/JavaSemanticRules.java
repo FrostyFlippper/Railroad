@@ -196,6 +196,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.ERROR,
         "Unreachable statement"
     );
+    public static final JavaSemanticRule INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD = new JavaSemanticRule(
+        "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD",
+        SemanticDiagnostic.Severity.ERROR,
+        "Interface method '%s' clashes with method in 'java.lang.Object'"
+    );
 
     private JavaSemanticRules() {
     }

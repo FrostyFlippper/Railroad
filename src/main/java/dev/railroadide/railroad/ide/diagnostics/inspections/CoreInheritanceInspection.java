@@ -2,7 +2,6 @@ package dev.railroadide.railroad.ide.diagnostics.inspections;
 
 import dev.railroadide.railroad.ide.diagnostics.rules.java.JavaSemanticRules;
 import dev.railroadide.railroad.ide.sst.semantic.api.Symbol;
-import dev.railroadide.railroad.ide.sst.semantic.api.SymbolKind;
 import dev.railroadide.railroad.ide.sst.semantic.api.Type;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxNode;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRule;
@@ -10,13 +9,8 @@ import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRuleProvider
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRuleReporter;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaRuleContext;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.lang.reflect.Modifier;
+import java.util.*;
 
 public final class CoreInheritanceInspection implements JavaInspectionRuleProvider {
     public static final String ID = "railroad:core-inheritance";
@@ -31,27 +25,34 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
     private static final String JAVA_IMPLEMENTS_CLAUSE = "JAVA_IMPLEMENTS_CLAUSE";
 
     private static final List<JavaInspectionRule> RULES = List.of(
-            new SimpleJavaInspectionRule(
-                    JavaSemanticRules.INVALID_INHERITANCE.id(),
-                    JavaSemanticRules.INVALID_INHERITANCE.defaultSeverity(),
-                    JavaSemanticRules.INVALID_INHERITANCE.messageTemplate(),
-                    Set.of("core", "inheritance"),
-                    CoreInheritanceInspection::reportInvalidInheritance
-            ),
-            new SimpleJavaInspectionRule(
-                    JavaSemanticRules.MISSING_IMPLEMENTATION.id(),
-                    JavaSemanticRules.MISSING_IMPLEMENTATION.defaultSeverity(),
-                    JavaSemanticRules.MISSING_IMPLEMENTATION.messageTemplate(),
-                    Set.of("core", "inheritance", "implementation"),
-                    CoreInheritanceInspection::reportMissingImplementation
-            ),
-            new SimpleJavaInspectionRule(
-                    JavaSemanticRules.INVALID_OVERRIDE.id(),
-                    JavaSemanticRules.INVALID_OVERRIDE.defaultSeverity(),
-                    JavaSemanticRules.INVALID_OVERRIDE.messageTemplate(),
-                    Set.of("core", "inheritance", "override"),
-                    CoreInheritanceInspection::reportInvalidOverrides
-            )
+        new SimpleJavaInspectionRule(
+            JavaSemanticRules.INVALID_INHERITANCE.id(),
+            JavaSemanticRules.INVALID_INHERITANCE.defaultSeverity(),
+            JavaSemanticRules.INVALID_INHERITANCE.messageTemplate(),
+            Set.of("core", "inheritance"),
+            CoreInheritanceInspection::reportInvalidInheritance
+        ),
+        new SimpleJavaInspectionRule(
+            JavaSemanticRules.MISSING_IMPLEMENTATION.id(),
+            JavaSemanticRules.MISSING_IMPLEMENTATION.defaultSeverity(),
+            JavaSemanticRules.MISSING_IMPLEMENTATION.messageTemplate(),
+            Set.of("core", "inheritance", "implementation"),
+            CoreInheritanceInspection::reportMissingImplementation
+        ),
+        new SimpleJavaInspectionRule(
+            JavaSemanticRules.INVALID_OVERRIDE.id(),
+            JavaSemanticRules.INVALID_OVERRIDE.defaultSeverity(),
+            JavaSemanticRules.INVALID_OVERRIDE.messageTemplate(),
+            Set.of("core", "inheritance", "override"),
+            CoreInheritanceInspection::reportInvalidOverrides
+        ),
+        new SimpleJavaInspectionRule(
+            JavaSemanticRules.INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD.id(),
+            JavaSemanticRules.INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD.defaultSeverity(),
+            JavaSemanticRules.INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD.messageTemplate(),
+            Set.of("core", "interface", "method-clash"),
+            CoreInheritanceInspection::reportInterfaceMethodClashesWithObject
+        )
     );
 
     @Override
@@ -78,11 +79,11 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
                         continue;
 
                     if (JAVA_CLASS_DECLARATION.equals(declarationNode.kind().id())
-                            && context.isInterfaceType(inheritedType)) {
+                        && context.isInterfaceType(inheritedType)) {
                         reporter.report(typeRef, "class cannot extend interface '%s'".formatted(context.simpleTypeName(inheritedType)));
                     } else if ((JAVA_INTERFACE_DECLARATION.equals(declarationNode.kind().id())
-                            || JAVA_ANNOTATION_TYPE_DECLARATION.equals(declarationNode.kind().id()))
-                            && !context.isInterfaceType(inheritedType)) {
+                        || JAVA_ANNOTATION_TYPE_DECLARATION.equals(declarationNode.kind().id()))
+                        && !context.isInterfaceType(inheritedType)) {
                         reporter.report(typeRef, "interface cannot extend non-interface '%s'".formatted(context.simpleTypeName(inheritedType)));
                     } else if (context.isFinalType(inheritedType)) {
                         reporter.report(typeRef, "cannot extend final type '%s'".formatted(context.simpleTypeName(inheritedType)));
@@ -117,8 +118,8 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
             Map<String, JavaRuleContext.MethodDescriptor> required = new LinkedHashMap<>();
             for (JavaRuleContext.MethodDescriptor inherited : context.inheritedMethodDescriptors(ownerQualifiedName)) {
                 if (inherited.isAbstract()
-                        && !java.lang.reflect.Modifier.isStatic(inherited.modifiers())
-                        && !java.lang.reflect.Modifier.isPrivate(inherited.modifiers())) {
+                    && !Modifier.isStatic(inherited.modifiers())
+                    && !Modifier.isPrivate(inherited.modifiers())) {
                     required.putIfAbsent(inherited.signatureKey(), inherited);
                 }
             }
@@ -128,11 +129,11 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
 
             Set<String> implemented = new LinkedHashSet<>();
             for (JavaRuleContext.MethodDescriptor declaredMethod : context.declaredMethodDescriptors(ownerQualifiedName)) {
-                if (!declaredMethod.isAbstract() && !java.lang.reflect.Modifier.isStatic(declaredMethod.modifiers()))
+                if (!declaredMethod.isAbstract() && !Modifier.isStatic(declaredMethod.modifiers()))
                     implemented.add(declaredMethod.signatureKey());
             }
             for (JavaRuleContext.MethodDescriptor inheritedMethod : context.inheritedMethodDescriptors(ownerQualifiedName)) {
-                if (!inheritedMethod.isAbstract() && !java.lang.reflect.Modifier.isStatic(inheritedMethod.modifiers()))
+                if (!inheritedMethod.isAbstract() && !Modifier.isStatic(inheritedMethod.modifiers()))
                     implemented.add(inheritedMethod.signatureKey());
             }
 
@@ -155,7 +156,7 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
 
             Map<String, List<JavaRuleContext.MethodDescriptor>> inheritedBySignature = new LinkedHashMap<>();
             for (JavaRuleContext.MethodDescriptor inherited : context.inheritedMethodDescriptors(ownerQualifiedName)) {
-                if (java.lang.reflect.Modifier.isPrivate(inherited.modifiers()))
+                if (Modifier.isPrivate(inherited.modifiers()))
                     continue;
                 inheritedBySignature.computeIfAbsent(inherited.signatureKey(), ignored -> new ArrayList<>()).add(inherited);
             }
@@ -171,26 +172,61 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
                     continue;
 
                 for (JavaRuleContext.MethodDescriptor inherited : overridden) {
-                    if (java.lang.reflect.Modifier.isFinal(inherited.modifiers())) {
+                    if (Modifier.isFinal(inherited.modifiers())) {
                         reporter.report(nodeFor(declaredMethod, declarationNode), declaredMethod.name());
                         break;
                     }
-                    if (java.lang.reflect.Modifier.isStatic(declaredMethod.modifiers()) != java.lang.reflect.Modifier.isStatic(inherited.modifiers())) {
+
+                    if (Modifier.isStatic(declaredMethod.modifiers()) != Modifier.isStatic(inherited.modifiers())) {
                         reporter.report(nodeFor(declaredMethod, declarationNode), declaredMethod.name());
                         break;
                     }
+
                     if (accessRank(declaredMethod.modifiers()) < accessRank(inherited.modifiers())) {
                         reporter.report(nodeFor(declaredMethod, declarationNode), declaredMethod.name());
                         break;
                     }
+
                     if (!isReturnTypeCompatible(context, inherited.returnType(), declaredMethod.returnType())) {
                         reporter.report(nodeFor(declaredMethod, declarationNode), declaredMethod.name());
                         break;
                     }
+
                     if (!areThrownTypesCompatible(context, inherited, declaredMethod)) {
                         reporter.report(nodeFor(declaredMethod, declarationNode), declaredMethod.name());
                         break;
                     }
+                }
+            }
+        }
+    }
+
+    private static void reportInterfaceMethodClashesWithObject(JavaRuleContext context, JavaInspectionRuleReporter reporter) {
+        for (SyntaxNode declarationNode : localTypeDeclarationNodes(context)) {
+            if (!JAVA_INTERFACE_DECLARATION.equals(declarationNode.kind().id()))
+                continue;
+
+            Symbol declared = context.declaredSymbol(declarationNode).orElse(null);
+            if (declared == null)
+                continue;
+
+            String ownerQualifiedName = declared.qualifiedName().orElse(null);
+            if (ownerQualifiedName == null)
+                continue;
+
+            for (JavaRuleContext.MethodDescriptor method : context.declaredMethodDescriptors(ownerQualifiedName)) {
+                if (Modifier.isStatic(method.modifiers()) || Modifier.isPrivate(method.modifiers()))
+                    continue;
+
+                if (!method.parameterTypes().isEmpty())
+                    continue;
+
+                if ("clone".equals(method.name())) {
+                    if (!isCloneCompatibleWithObjectClone(context, method))
+                        reporter.report(nodeFor(method, declarationNode), method.name() + "()");
+                } else if ("finalize".equals(method.name())) {
+                    if (!isFinalizeCompatibleWithObjectFinalize(method))
+                        reporter.report(nodeFor(method, declarationNode), method.name() + "()");
                 }
             }
         }
@@ -209,10 +245,10 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
         context.traverse(node -> {
             String kindId = node.kind().id();
             if (!JAVA_CLASS_DECLARATION.equals(kindId)
-                    && !JAVA_INTERFACE_DECLARATION.equals(kindId)
-                    && !JAVA_ENUM_DECLARATION.equals(kindId)
-                    && !JAVA_ANNOTATION_TYPE_DECLARATION.equals(kindId)
-                    && !JAVA_RECORD_DECLARATION.equals(kindId)) {
+                && !JAVA_INTERFACE_DECLARATION.equals(kindId)
+                && !JAVA_ENUM_DECLARATION.equals(kindId)
+                && !JAVA_ANNOTATION_TYPE_DECLARATION.equals(kindId)
+                && !JAVA_RECORD_DECLARATION.equals(kindId)) {
                 return;
             }
             if (context.declaredSymbol(node).isPresent())
@@ -231,11 +267,11 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
     }
 
     private static int accessRank(int modifiers) {
-        if (java.lang.reflect.Modifier.isPublic(modifiers))
+        if (Modifier.isPublic(modifiers))
             return 3;
-        if (java.lang.reflect.Modifier.isProtected(modifiers))
+        if (Modifier.isProtected(modifiers))
             return 2;
-        if (java.lang.reflect.Modifier.isPrivate(modifiers))
+        if (Modifier.isPrivate(modifiers))
             return 0;
         return 1;
     }
@@ -249,9 +285,9 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
     }
 
     private static boolean areThrownTypesCompatible(
-            JavaRuleContext context,
-            JavaRuleContext.MethodDescriptor inherited,
-            JavaRuleContext.MethodDescriptor declared
+        JavaRuleContext context,
+        JavaRuleContext.MethodDescriptor inherited,
+        JavaRuleContext.MethodDescriptor declared
     ) {
         for (String declaredThrownType : declared.thrownTypes()) {
             if (!context.isCheckedExceptionType(declaredThrownType))
@@ -274,16 +310,16 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
     }
 
     private static boolean hasConflictingInheritedMethods(
-            JavaRuleContext context,
-            List<JavaRuleContext.MethodDescriptor> inheritedGroup
+        JavaRuleContext context,
+        List<JavaRuleContext.MethodDescriptor> inheritedGroup
     ) {
         for (int i = 0; i < inheritedGroup.size(); i++) {
             JavaRuleContext.MethodDescriptor left = inheritedGroup.get(i);
-            if (java.lang.reflect.Modifier.isStatic(left.modifiers()))
+            if (Modifier.isStatic(left.modifiers()))
                 continue;
             for (int j = i + 1; j < inheritedGroup.size(); j++) {
                 JavaRuleContext.MethodDescriptor right = inheritedGroup.get(j);
-                if (java.lang.reflect.Modifier.isStatic(right.modifiers()))
+                if (Modifier.isStatic(right.modifiers()))
                     continue;
                 if (!areReturnTypesMutuallyCompatible(context, left.returnType(), right.returnType()))
                     return true;
@@ -298,5 +334,36 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
 
     private static SyntaxNode nodeFor(JavaRuleContext.MethodDescriptor descriptor, SyntaxNode fallback) {
         return descriptor.declaration() == null ? fallback : descriptor.declaration();
+    }
+
+    private static boolean isCloneCompatibleWithObjectClone(JavaRuleContext context, JavaRuleContext.MethodDescriptor method) {
+        Type returnType = method.returnType();
+        if (returnType.kind() != Type.Kind.DECLARED)
+            return false;
+
+        if (!context.isSubtype(returnType.displayName(), "java.lang.Object") && !"java.lang.Object".equals(returnType.displayName()))
+            return false;
+
+        for (String thrownType : method.thrownTypes()) {
+            if (!context.isCheckedExceptionType(thrownType))
+                continue;
+
+            if (!"java.lang.CloneNotSupportedException".equals(thrownType) && !context.isSubtype(thrownType, "java.lang.CloneNotSupportedException"))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static boolean isFinalizeCompatibleWithObjectFinalize(JavaRuleContext.MethodDescriptor method) {
+        if (method.returnType().kind() != Type.Kind.VOID)
+            return false;
+
+        for (String thrownType : method.thrownTypes()) {
+            if (!"java.lang.Throwable".equals(thrownType))
+                return false;
+        }
+
+        return true;
     }
 }

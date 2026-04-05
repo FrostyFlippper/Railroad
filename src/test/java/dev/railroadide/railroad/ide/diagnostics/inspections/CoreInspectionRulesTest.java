@@ -29,7 +29,11 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreMemberResolutionInspection(), Set.of("SEM_UNRESOLVED_MEMBER"));
         assertRuleIds(new CoreCallResolutionInspection(), Set.of("SEM_UNRESOLVED_CALL"));
         assertRuleIds(new CoreAccessibilityInspection(), Set.of("SEM_INACCESSIBLE_TYPE", "SEM_INACCESSIBLE_MEMBER", "SEM_INACCESSIBLE_CALL"));
-        assertRuleIds(new CoreInheritanceInspection(), Set.of("SEM_INVALID_INHERITANCE", "SEM_MISSING_IMPLEMENTATION", "SEM_INVALID_OVERRIDE"));
+        assertRuleIds(new CoreInheritanceInspection(), Set.of(
+                "SEM_INVALID_INHERITANCE",
+                "SEM_MISSING_IMPLEMENTATION",
+                "SEM_INVALID_OVERRIDE",
+                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD"));
         assertRuleIds(new CoreModifierInspection(), Set.of("SEM_ILLEGAL_MODIFIER"));
         assertRuleIds(new CoreControlFlowInspection(), Set.of("SEM_INVALID_CONTROL_FLOW", "SEM_MISSING_RETURN"));
         assertRuleIds(new CoreExceptionInspection(), Set.of("SEM_UNCAUGHT_CHECKED_EXCEPTION", "SEM_UNREACHABLE_CATCH", "SEM_INVALID_EXCEPTION_TYPE"));
@@ -517,6 +521,56 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d -> "SEM_INVALID_OVERRIDE".equals(d.code()) && d.message().contains("value")));
+    }
+
+    @Test
+    void coreInheritanceRuleEmitsInterfaceObjectMethodClashDiagnosticForPrimitiveCloneReturnType() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInheritanceInspection(), """
+            interface BadClone {
+                double clone();
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())
+                        && d.message().contains("clone()")));
+    }
+
+    @Test
+    void coreInheritanceRuleDoesNotEmitInterfaceObjectMethodClashDiagnosticForCovariantCloneReturnType() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInheritanceInspection(), """
+            interface GoodClone {
+                String clone();
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())));
+    }
+
+    @Test
+    void coreInheritanceRuleEmitsInterfaceObjectMethodClashDiagnosticForNonVoidFinalize() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInheritanceInspection(), """
+            interface BadFinalize {
+                int finalize();
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())
+                        && d.message().contains("finalize()")));
+    }
+
+    @Test
+    void coreInheritanceRuleDoesNotEmitInterfaceObjectMethodClashDiagnosticForVoidFinalize() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInheritanceInspection(), """
+            interface GoodFinalize {
+                void finalize();
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())));
     }
 
     @Test

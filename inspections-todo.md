@@ -86,7 +86,7 @@ Inspectopedia label in the sections below.
 - [ ] [easy] `Collection declared by class, not interface` - Prefer `List`/`Set`/`Map`-style abstractions over concrete
   collection types in declarations.
 - [ ] [hard] `Feature envy` - Find code that mostly manipulates another object's data instead of its own.
-- [ ] [medium] `Interface method clashes with method in 'Object'` - Detect interface methods that conflict with `Object`
+- [x] [medium] `Interface method clashes with method in 'Object'` - Detect interface methods that conflict with `Object`
   protocol expectations.
 - [ ] [easy] `Magic number` - Identify unnamed numeric literals that should become named constants.
 - [ ] [medium] `Overly strong type cast` - Detect casts stronger than necessary for the operations performed.
