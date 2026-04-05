@@ -39,6 +39,7 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreExceptionInspection(), Set.of("SEM_UNCAUGHT_CHECKED_EXCEPTION", "SEM_UNREACHABLE_CATCH", "SEM_INVALID_EXCEPTION_TYPE"));
         assertRuleIds(new CoreDefiniteAssignmentInspection(), Set.of("SEM_UNASSIGNED_VARIABLE", "SEM_ILLEGAL_FINAL_ASSIGNMENT", "SEM_UNINITIALIZED_FINAL_FIELD"));
         assertRuleIds(new CoreAssignmentInspection(), Set.of("SEM_INCOMPATIBLE_ASSIGNMENT"));
+        assertRuleIds(new CoreOverlyStrongTypeCastInspection(), Set.of("SEM_OVERLY_STRONG_TYPE_CAST"));
         assertRuleIds(new CoreWildcardImportInspection(), Set.of("SEM_WILDCARD_IMPORT"));
         assertRuleIds(new CoreEmptyCatchInspection(), Set.of("SEM_EMPTY_CATCH"));
         assertRuleIds(new CorePublicClassNotNamedAfterFileInspection(), Set.of("SEM_PUBLIC_CLASS_NOT_NAMED_AFTER_FILE"));
@@ -571,6 +572,40 @@ class CoreInspectionRulesTest {
 
         assertFalse(diagnostics.stream().anyMatch(d ->
                 "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())));
+    }
+
+    @Test
+    void coreOverlyStrongTypeCastRuleEmitsDiagnosticWhenSupertypeMethodIsSufficient() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreOverlyStrongTypeCastInspection(), """
+            import java.util.ArrayList;
+
+            class Example {
+                void run(Object value) {
+                    ((ArrayList<?>) value).size();
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+                "SEM_OVERLY_STRONG_TYPE_CAST".equals(d.code())
+                        && d.message().contains("ArrayList")
+                        && d.message().contains("List")));
+    }
+
+    @Test
+    void coreOverlyStrongTypeCastRuleDoesNotEmitDiagnosticWhenSubtypeMethodIsRequired() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreOverlyStrongTypeCastInspection(), """
+            import java.util.ArrayList;
+
+            class Example {
+                void run(Object value) {
+                    ((ArrayList<?>) value).trimToSize();
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+                "SEM_OVERLY_STRONG_TYPE_CAST".equals(d.code())));
     }
 
     @Test

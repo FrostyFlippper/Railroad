@@ -89,7 +89,7 @@ Inspectopedia label in the sections below.
 - [x] [medium] `Interface method clashes with method in 'Object'` - Detect interface methods that conflict with `Object`
   protocol expectations.
 - [ ] [easy] `Magic number` - Identify unnamed numeric literals that should become named constants.
-- [ ] [medium] `Overly strong type cast` - Detect casts stronger than necessary for the operations performed.
+- [x] [medium] `Overly strong type cast` - Detect casts stronger than necessary for the operations performed.
 - [ ] [medium] `Private method only used from inner class` - Find private helpers that are effectively scoped for
   inner-type use only.
 - [ ] [hard] `Static member only used from one other class` - Detect static members whose usage suggests relocation.

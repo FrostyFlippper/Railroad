@@ -201,6 +201,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.ERROR,
         "Interface method '%s' clashes with method in 'java.lang.Object'"
     );
+    public static final JavaSemanticRule OVERLY_STRONG_TYPE_CAST = new JavaSemanticRule(
+        "SEM_OVERLY_STRONG_TYPE_CAST",
+        SemanticDiagnostic.Severity.WARNING,
+        "Cast to '%s' is stronger than necessary; '%s' is sufficient"
+    );
 
     private JavaSemanticRules() {
     }

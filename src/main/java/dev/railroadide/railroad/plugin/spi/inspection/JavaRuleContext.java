@@ -1,14 +1,23 @@
 package dev.railroadide.railroad.plugin.spi.inspection;
 
+import dev.railroadide.railroad.ide.classparser.Type.*;
+import dev.railroadide.railroad.ide.classparser.Type.ArrayType;
+import dev.railroadide.railroad.ide.classparser.Type.PrimitiveType;
+import dev.railroadide.railroad.ide.classparser.Type.WildcardType;
 import dev.railroadide.railroad.ide.classparser.stub.ClassStub;
+import dev.railroadide.railroad.ide.classparser.stub.ConstructorStub;
+import dev.railroadide.railroad.ide.classparser.stub.FieldStub;
+import dev.railroadide.railroad.ide.classparser.stub.MethodStub;
 import dev.railroadide.railroad.ide.sst.impl.java.JavaSemanticAnalyzer;
 import dev.railroadide.railroad.ide.sst.impl.java.JavaTokenType;
 import dev.railroadide.railroad.ide.sst.semantic.api.*;
+import dev.railroadide.railroad.ide.sst.semantic.api.Type.*;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxNode;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxToken;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxTree;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
@@ -77,6 +86,7 @@ public final class JavaRuleContext {
     private volatile @Nullable String cachedCurrentPackageName;
     private volatile @Nullable Map<String, Symbol> cachedLocalTypeSymbolsByQualifiedName;
     private volatile @Nullable Map<String, List<String>> cachedDirectSuperTypesByQualifiedName;
+    private volatile @Nullable Map<String, List<FieldDescriptor>> cachedDeclaredFieldsByOwner;
     private volatile @Nullable Map<String, List<MethodDescriptor>> cachedDeclaredMethodsByOwner;
 
     /**
@@ -92,8 +102,8 @@ public final class JavaRuleContext {
     /**
      * Creates a rule context from raw file and semantic analysis inputs.
      *
-     * @param filePath file path being inspected
-     * @param documentText full source text
+     * @param filePath      file path being inspected
+     * @param documentText  full source text
      * @param semanticModel semantic model for the file
      * @throws NullPointerException if any argument is {@code null}
      */
@@ -253,7 +263,7 @@ public final class JavaRuleContext {
     /**
      * Returns the direct child with the supplied parser kind, or {@code null}.
      *
-     * @param node parent node to search
+     * @param node   parent node to search
      * @param kindId parser kind id to match
      * @return matching direct child, or {@code null}
      * @throws NullPointerException if any argument is {@code null}
@@ -265,7 +275,7 @@ public final class JavaRuleContext {
     /**
      * Returns whether the subtree contains a token of the supplied Java token type.
      *
-     * @param node subtree root
+     * @param node      subtree root
      * @param tokenType token type to search for
      * @return {@code true} if the token type occurs in the subtree
      * @throws NullPointerException if any argument is {@code null}
@@ -277,7 +287,7 @@ public final class JavaRuleContext {
     /**
      * Returns whether the declaration prefix contains the supplied modifier token.
      *
-     * @param node declaration node
+     * @param node      declaration node
      * @param tokenType modifier token to check
      * @return {@code true} if the modifier is present in the declaration prefix
      * @throws NullPointerException if any argument is {@code null}
@@ -320,9 +330,9 @@ public final class JavaRuleContext {
 
                 String kindId = token.kind().id();
                 if (kindId.endsWith("_WHITESPACE")
-                        || kindId.endsWith("_LINE_COMMENT")
-                        || kindId.endsWith("_BLOCK_COMMENT")
-                        || kindId.endsWith("_JAVADOC_COMMENT")) {
+                    || kindId.endsWith("_LINE_COMMENT")
+                    || kindId.endsWith("_BLOCK_COMMENT")
+                    || kindId.endsWith("_JAVADOC_COMMENT")) {
                     continue;
                 }
 
@@ -474,17 +484,17 @@ public final class JavaRuleContext {
             SyntaxNode candidate = parent.get();
             SyntaxNode typeRef = directChild(candidate, JAVA_TYPE_REFERENCE);
             if (typeRef != null)
-                return inferredType(typeRef).orElse(new Type.UnknownType("<unknown>"));
+                return inferredType(typeRef).orElse(new UnknownType("<unknown>"));
             parent = candidate.parent();
         }
-        return new Type.UnknownType("<unknown>");
+        return new UnknownType("<unknown>");
     }
 
     public boolean isAssignable(Type target, Type source) {
         Objects.requireNonNull(target, "target");
         Objects.requireNonNull(source, "source");
 
-        if (target.kind() == Type.Kind.UNKNOWN || source.kind() == Type.Kind.UNKNOWN)
+        if (target.kind() == Kind.UNKNOWN || source.kind() == Kind.UNKNOWN)
             return true;
         if (target.displayName().equals(source.displayName()))
             return true;
@@ -492,7 +502,7 @@ public final class JavaRuleContext {
         if (isNumericType(target) && isNumericType(source))
             return numericRank(target.displayName()) >= numericRank(source.displayName());
 
-        if (target.kind() == Type.Kind.DECLARED && source.kind() == Type.Kind.DECLARED) {
+        if (target.kind() == Kind.DECLARED && source.kind() == Kind.DECLARED) {
             String targetName = simpleTypeName(target.displayName());
             String sourceName = simpleTypeName(source.displayName());
             return targetName.equals(sourceName) || "Object".equals(targetName);
@@ -625,33 +635,33 @@ public final class JavaRuleContext {
 
         if (isTypeSymbol(symbol.kind())) {
             ClassStub stub = jdkClassStubsByQualifiedName().get(symbol.qualifiedName().orElse(null));
-            return stub == null ? java.lang.reflect.Modifier.PUBLIC : stub.modifiers();
+            return stub == null ? Modifier.PUBLIC : stub.modifiers();
         }
 
         String ownerQualifiedName = ownerQualifiedName(symbol).orElse(null);
         if (ownerQualifiedName == null)
-            return java.lang.reflect.Modifier.PUBLIC;
+            return Modifier.PUBLIC;
 
         ClassStub stub = jdkClassStubsByQualifiedName().get(ownerQualifiedName);
         if (stub == null)
-            return symbol.kind() == SymbolKind.CONSTRUCTOR ? typeModifiers(ownerQualifiedName) : java.lang.reflect.Modifier.PUBLIC;
+            return symbol.kind() == SymbolKind.CONSTRUCTOR ? typeModifiers(ownerQualifiedName) : Modifier.PUBLIC;
 
         return switch (symbol.kind()) {
             case FIELD -> stub.fields().stream()
-                    .filter(field -> field.name().equals(symbol.simpleName()))
-                    .findFirst()
-                    .map(field -> field.modifiers())
-                    .orElse(java.lang.reflect.Modifier.PUBLIC);
+                .filter(field -> field.name().equals(symbol.simpleName()))
+                .findFirst()
+                .map(FieldStub::modifiers)
+                .orElse(Modifier.PUBLIC);
             case METHOD -> stub.methods().stream()
-                    .filter(method -> method.name().equals(symbol.simpleName()))
-                    .findFirst()
-                    .map(method -> method.modifiers())
-                    .orElse(java.lang.reflect.Modifier.PUBLIC);
+                .filter(method -> method.name().equals(symbol.simpleName()))
+                .findFirst()
+                .map(MethodStub::modifiers)
+                .orElse(Modifier.PUBLIC);
             case CONSTRUCTOR -> stub.constructors().stream()
-                    .findFirst()
-                    .map(constructor -> constructor.modifiers())
-                    .orElse(typeModifiers(ownerQualifiedName));
-            default -> java.lang.reflect.Modifier.PUBLIC;
+                .findFirst()
+                .map(ConstructorStub::modifiers)
+                .orElse(typeModifiers(ownerQualifiedName));
+            default -> Modifier.PUBLIC;
         };
     }
 
@@ -667,11 +677,11 @@ public final class JavaRuleContext {
             return localType.kind() == SymbolKind.INTERFACE || localType.kind() == SymbolKind.ANNOTATION;
 
         ClassStub stub = jdkClassStubsByQualifiedName().get(qualifiedTypeName);
-        return stub != null && java.lang.reflect.Modifier.isInterface(stub.modifiers());
+        return stub != null && Modifier.isInterface(stub.modifiers());
     }
 
     public boolean isFinalType(String qualifiedTypeName) {
-        return java.lang.reflect.Modifier.isFinal(typeModifiers(qualifiedTypeName));
+        return Modifier.isFinal(typeModifiers(qualifiedTypeName));
     }
 
     public boolean isAbstractType(String qualifiedTypeName) {
@@ -681,7 +691,7 @@ public final class JavaRuleContext {
             if (JAVA_INTERFACE_DECLARATION.equals(kindId) || JAVA_ANNOTATION_TYPE_DECLARATION.equals(kindId))
                 return true;
         }
-        return java.lang.reflect.Modifier.isAbstract(typeModifiers(qualifiedTypeName)) || isInterfaceType(qualifiedTypeName);
+        return Modifier.isAbstract(typeModifiers(qualifiedTypeName)) || isInterfaceType(qualifiedTypeName);
     }
 
     public List<String> directSuperTypeNames(String qualifiedTypeName) {
@@ -690,6 +700,16 @@ public final class JavaRuleContext {
 
     public List<MethodDescriptor> declaredMethodDescriptors(String ownerQualifiedTypeName) {
         return declaredMethodsByOwner().getOrDefault(ownerQualifiedTypeName, List.of());
+    }
+
+    public List<FieldDescriptor> declaredFieldDescriptors(String ownerQualifiedTypeName) {
+        return declaredFieldsByOwner().getOrDefault(ownerQualifiedTypeName, List.of());
+    }
+
+    public List<FieldDescriptor> inheritedFieldDescriptors(String ownerQualifiedTypeName) {
+        List<FieldDescriptor> fields = new ArrayList<>();
+        collectInheritedFieldDescriptors(ownerQualifiedTypeName, fields, new HashSet<>());
+        return List.copyOf(fields);
     }
 
     public List<MethodDescriptor> inheritedMethodDescriptors(String ownerQualifiedTypeName) {
@@ -708,25 +728,25 @@ public final class JavaRuleContext {
             return true;
 
         int modifiers = typeModifiers(qualifiedTypeName);
-        if (java.lang.reflect.Modifier.isPublic(modifiers))
+        if (Modifier.isPublic(modifiers))
             return true;
 
         String currentPackage = currentPackageName();
         String declaringPackage = packageNameOfType(qualifiedTypeName);
-        if (java.lang.reflect.Modifier.isPrivate(modifiers)) {
+        if (Modifier.isPrivate(modifiers)) {
             String currentTopLevel = topLevelEnclosingTypeSymbol(usageSite)
-                    .flatMap(Symbol::qualifiedName)
-                    .orElse(null);
+                .flatMap(Symbol::qualifiedName)
+                .orElse(null);
             String targetTopLevel = topLevelTypeQualifiedName(qualifiedTypeName);
             return currentTopLevel != null && currentTopLevel.equals(targetTopLevel);
         }
 
-        if (java.lang.reflect.Modifier.isProtected(modifiers)) {
+        if (Modifier.isProtected(modifiers)) {
             if (Objects.equals(currentPackage, declaringPackage))
                 return true;
             String currentType = enclosingTypeSymbol(usageSite)
-                    .flatMap(Symbol::qualifiedName)
-                    .orElse(null);
+                .flatMap(Symbol::qualifiedName)
+                .orElse(null);
             return currentType != null && isSubtype(currentType, qualifiedTypeName);
         }
 
@@ -745,25 +765,25 @@ public final class JavaRuleContext {
             return true;
 
         int modifiers = symbolModifiers(symbol);
-        if (java.lang.reflect.Modifier.isPublic(modifiers))
+        if (Modifier.isPublic(modifiers))
             return true;
 
         String currentPackage = currentPackageName();
         String declaringPackage = packageNameOfType(ownerQualifiedName);
-        if (java.lang.reflect.Modifier.isPrivate(modifiers)) {
+        if (Modifier.isPrivate(modifiers)) {
             String currentTopLevel = topLevelEnclosingTypeSymbol(usageSite)
-                    .flatMap(Symbol::qualifiedName)
-                    .orElse(null);
+                .flatMap(Symbol::qualifiedName)
+                .orElse(null);
             String targetTopLevel = topLevelTypeQualifiedName(ownerQualifiedName);
             return currentTopLevel != null && currentTopLevel.equals(targetTopLevel);
         }
 
-        if (java.lang.reflect.Modifier.isProtected(modifiers)) {
+        if (Modifier.isProtected(modifiers)) {
             if (Objects.equals(currentPackage, declaringPackage))
                 return true;
             String currentType = enclosingTypeSymbol(usageSite)
-                    .flatMap(Symbol::qualifiedName)
-                    .orElse(null);
+                .flatMap(Symbol::qualifiedName)
+                .orElse(null);
             return currentType != null && isSubtype(currentType, ownerQualifiedName);
         }
 
@@ -834,9 +854,9 @@ public final class JavaRuleContext {
             current = parent.get();
             String kindId = current.kind().id();
             if (JAVA_METHOD_DECLARATION.equals(kindId)
-                    || JAVA_CONSTRUCTOR_DECLARATION.equals(kindId)
-                    || JAVA_RECORD_COMPACT_CONSTRUCTOR.equals(kindId)
-                    || JAVA_LAMBDA_EXPRESSION.equals(kindId)) {
+                || JAVA_CONSTRUCTOR_DECLARATION.equals(kindId)
+                || JAVA_RECORD_COMPACT_CONSTRUCTOR.equals(kindId)
+                || JAVA_LAMBDA_EXPRESSION.equals(kindId)) {
                 return current;
             }
         }
@@ -874,8 +894,8 @@ public final class JavaRuleContext {
         if (declaration != null) {
             String kindId = declaration.kind().id();
             if (JAVA_METHOD_DECLARATION.equals(kindId)
-                    || JAVA_CONSTRUCTOR_DECLARATION.equals(kindId)
-                    || JAVA_RECORD_COMPACT_CONSTRUCTOR.equals(kindId)) {
+                || JAVA_CONSTRUCTOR_DECLARATION.equals(kindId)
+                || JAVA_RECORD_COMPACT_CONSTRUCTOR.equals(kindId)) {
                 return declaredThrownTypeNames(declaration);
             }
             return List.of();
@@ -925,9 +945,9 @@ public final class JavaRuleContext {
     public boolean isUncheckedExceptionType(String qualifiedTypeName) {
         Objects.requireNonNull(qualifiedTypeName, "qualifiedTypeName");
         return "java.lang.RuntimeException".equals(qualifiedTypeName)
-                || "java.lang.Error".equals(qualifiedTypeName)
-                || isSubtype(qualifiedTypeName, "java.lang.RuntimeException")
-                || isSubtype(qualifiedTypeName, "java.lang.Error");
+            || "java.lang.Error".equals(qualifiedTypeName)
+            || isSubtype(qualifiedTypeName, "java.lang.RuntimeException")
+            || isSubtype(qualifiedTypeName, "java.lang.Error");
     }
 
     public boolean isCheckedExceptionType(String qualifiedTypeName) {
@@ -956,8 +976,8 @@ public final class JavaRuleContext {
         if (expression == null)
             return null;
 
-        Type inferred = inferredType(expression).orElse(new Type.UnknownType("<unknown>"));
-        return inferred.kind() == Type.Kind.UNKNOWN ? null : resolveQualifiedTypeName(inferred.displayName());
+        Type inferred = inferredType(expression).orElse(new UnknownType("<unknown>"));
+        return inferred.kind() == Kind.UNKNOWN ? null : resolveQualifiedTypeName(inferred.displayName());
     }
 
     public List<String> closeThrownTypeNames(String resourceQualifiedTypeName) {
@@ -1040,13 +1060,39 @@ public final class JavaRuleContext {
                 return;
 
             collected.computeIfAbsent(ownerQualifiedName, ignored -> new ArrayList<>())
-                    .add(sourceMethodDescriptor(ownerQualifiedName, symbol, declaration));
+                .add(sourceMethodDescriptor(ownerQualifiedName, symbol, declaration));
         }));
 
         Map<String, List<MethodDescriptor>> withJdk = new LinkedHashMap<>();
         collected.forEach((owner, methods) -> withJdk.put(owner, List.copyOf(methods)));
         Map<String, List<MethodDescriptor>> copy = Map.copyOf(withJdk);
         cachedDeclaredMethodsByOwner = copy;
+        return copy;
+    }
+
+    private Map<String, List<FieldDescriptor>> declaredFieldsByOwner() {
+        Map<String, List<FieldDescriptor>> cached = cachedDeclaredFieldsByOwner;
+        if (cached != null)
+            return cached;
+
+        Map<String, List<FieldDescriptor>> collected = new LinkedHashMap<>();
+
+        traverse(node -> declaredSymbol(node).ifPresent(symbol -> {
+            if (symbol.kind() != SymbolKind.FIELD)
+                return;
+            String ownerQualifiedName = ownerQualifiedName(symbol).orElse(null);
+            SyntaxNode declaration = symbol.declaration().orElse(null);
+            if (ownerQualifiedName == null || declaration == null)
+                return;
+
+            collected.computeIfAbsent(ownerQualifiedName, ignored -> new ArrayList<>())
+                .add(sourceFieldDescriptor(ownerQualifiedName, symbol, declaration));
+        }));
+
+        Map<String, List<FieldDescriptor>> withJdk = new LinkedHashMap<>();
+        collected.forEach((owner, fields) -> withJdk.put(owner, List.copyOf(fields)));
+        Map<String, List<FieldDescriptor>> copy = Map.copyOf(withJdk);
+        cachedDeclaredFieldsByOwner = copy;
         return copy;
     }
 
@@ -1072,27 +1118,27 @@ public final class JavaRuleContext {
         };
 
         if (hasDirectModifierToken(modifierSource, JavaTokenType.PUBLIC_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.PUBLIC;
+            modifiers |= Modifier.PUBLIC;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.PROTECTED_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.PROTECTED;
+            modifiers |= Modifier.PROTECTED;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.PRIVATE_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.PRIVATE;
+            modifiers |= Modifier.PRIVATE;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.STATIC_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.STATIC;
+            modifiers |= Modifier.STATIC;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.FINAL_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.FINAL;
+            modifiers |= Modifier.FINAL;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.ABSTRACT_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.ABSTRACT;
+            modifiers |= Modifier.ABSTRACT;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.NATIVE_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.NATIVE;
+            modifiers |= Modifier.NATIVE;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.SYNCHRONIZED_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.SYNCHRONIZED;
+            modifiers |= Modifier.SYNCHRONIZED;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.TRANSIENT_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.TRANSIENT;
+            modifiers |= Modifier.TRANSIENT;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.VOLATILE_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.VOLATILE;
+            modifiers |= Modifier.VOLATILE;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.STRICTFP_KEYWORD))
-            modifiers |= java.lang.reflect.Modifier.STRICT;
+            modifiers |= Modifier.STRICT;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.DEFAULT_KEYWORD))
             modifiers |= DEFAULT_MODIFIER;
         if (hasDirectModifierToken(modifierSource, JavaTokenType.SEALED_KEYWORD))
@@ -1102,11 +1148,11 @@ public final class JavaRuleContext {
 
         Symbol ownerSymbol = ownerQualifiedName(symbol).flatMap(this::localTypeSymbol).orElse(null);
         if ((symbol.kind() == SymbolKind.FIELD || symbol.kind() == SymbolKind.METHOD)
-                && ownerSymbol != null
-                && ownerSymbol.declaration().isPresent()) {
+            && ownerSymbol != null
+            && ownerSymbol.declaration().isPresent()) {
             String ownerKindId = ownerSymbol.declaration().orElseThrow().kind().id();
             if ("JAVA_INTERFACE_DECLARATION".equals(ownerKindId) || "JAVA_ANNOTATION_TYPE_DECLARATION".equals(ownerKindId))
-                modifiers |= java.lang.reflect.Modifier.PUBLIC;
+                modifiers |= Modifier.PUBLIC;
         }
 
         return modifiers;
@@ -1141,7 +1187,7 @@ public final class JavaRuleContext {
         if (stub != null)
             return stub.modifiers();
 
-        return java.lang.reflect.Modifier.PUBLIC;
+        return Modifier.PUBLIC;
     }
 
     private Optional<Symbol> localTypeSymbol(String qualifiedTypeName) {
@@ -1165,8 +1211,8 @@ public final class JavaRuleContext {
         Symbol localType = localTypeSymbol(qualifiedTypeName).orElse(null);
         if (localType != null && localType.declaration().isPresent()) {
             return topLevelEnclosingTypeSymbol(localType.declaration().orElseThrow())
-                    .flatMap(Symbol::qualifiedName)
-                    .orElse(qualifiedTypeName);
+                .flatMap(Symbol::qualifiedName)
+                .orElse(qualifiedTypeName);
         }
         return qualifiedTypeName;
     }
@@ -1200,9 +1246,9 @@ public final class JavaRuleContext {
                 supers.add(superName);
         }
         stub.interfaces().stream()
-                .map(this::resolveQualifiedClassParserTypeName)
-                .filter(Objects::nonNull)
-                .forEach(supers::add);
+            .map(this::resolveQualifiedClassParserTypeName)
+            .filter(Objects::nonNull)
+            .forEach(supers::add);
         return List.copyOf(supers);
     }
 
@@ -1213,6 +1259,16 @@ public final class JavaRuleContext {
         for (String directSuper : directSuperTypeNamesInternal(ownerQualifiedTypeName)) {
             out.addAll(methodDescriptorsForType(directSuper));
             collectInheritedMethodDescriptors(directSuper, out, visited);
+        }
+    }
+
+    private void collectInheritedFieldDescriptors(String ownerQualifiedTypeName, List<FieldDescriptor> out, Set<String> visited) {
+        if (!visited.add(ownerQualifiedTypeName))
+            return;
+
+        for (String directSuper : directSuperTypeNamesInternal(ownerQualifiedTypeName)) {
+            out.addAll(fieldDescriptorsForType(directSuper));
+            collectInheritedFieldDescriptors(directSuper, out, visited);
         }
     }
 
@@ -1228,20 +1284,43 @@ public final class JavaRuleContext {
         List<MethodDescriptor> methods = new ArrayList<>();
         for (var method : stub.methods()) {
             List<Type> parameterTypes = method.parameters().stream()
-                    .map(parameter -> toSemanticType(parameter.type()))
-                    .toList();
+                .map(parameter -> toSemanticType(parameter.type()))
+                .toList();
             methods.add(new MethodDescriptor(
-                    ownerQualifiedTypeName,
-                    method.name(),
-                    parameterTypes,
-                    toSemanticType(method.returnType()),
-                    thrownTypeNames(method.thrownTypes()),
-                    method.modifiers(),
-                    null,
-                    null
+                ownerQualifiedTypeName,
+                method.name(),
+                parameterTypes,
+                toSemanticType(method.returnType()),
+                thrownTypeNames(method.thrownTypes()),
+                method.modifiers(),
+                null,
+                null
             ));
         }
         return List.copyOf(methods);
+    }
+
+    private List<FieldDescriptor> fieldDescriptorsForType(String ownerQualifiedTypeName) {
+        List<FieldDescriptor> source = declaredFieldsByOwner().get(ownerQualifiedTypeName);
+        if (source != null)
+            return source;
+
+        ClassStub stub = jdkClassStubsByQualifiedName().get(ownerQualifiedTypeName);
+        if (stub == null)
+            return List.of();
+
+        List<FieldDescriptor> fields = new ArrayList<>();
+        for (var field : stub.fields()) {
+            fields.add(new FieldDescriptor(
+                ownerQualifiedTypeName,
+                field.name(),
+                toSemanticType(field.type()),
+                field.modifiers(),
+                null,
+                null
+            ));
+        }
+        return List.copyOf(fields);
     }
 
     private MethodDescriptor sourceMethodDescriptor(String ownerQualifiedName, Symbol symbol, SyntaxNode declaration) {
@@ -1254,8 +1333,8 @@ public final class JavaRuleContext {
                 SyntaxNode typeRef = directChild(child, JAVA_TYPE_REFERENCE);
                 String qualifiedTypeName = typeRef == null ? null : resolveQualifiedTypeName(typeRef);
                 parameterTypes.add(typeRef == null || qualifiedTypeName == null
-                        ? new Type.UnknownType("<unknown>")
-                        : new Type.DeclaredType(qualifiedTypeName, List.of()));
+                    ? new UnknownType("<unknown>")
+                    : new DeclaredType(qualifiedTypeName, List.of()));
             }
         }
 
@@ -1263,43 +1342,55 @@ public final class JavaRuleContext {
         String qualifiedReturnType = returnTypeRef == null ? null : resolveQualifiedTypeName(returnTypeRef);
         Type returnType;
         if (returnTypeRef == null) {
-            returnType = new Type.VoidType();
+            returnType = new VoidType();
         } else if (qualifiedReturnType == null) {
-            returnType = new Type.UnknownType("<unknown>");
+            returnType = new UnknownType("<unknown>");
         } else if (Set.of("boolean", "byte", "short", "char", "int", "long", "float", "double").contains(qualifiedReturnType)) {
             returnType = new Type.PrimitiveType(qualifiedReturnType);
         } else if ("void".equals(qualifiedReturnType)) {
-            returnType = new Type.VoidType();
+            returnType = new VoidType();
         } else {
-            returnType = new Type.DeclaredType(qualifiedReturnType, List.of());
+            returnType = new DeclaredType(qualifiedReturnType, List.of());
         }
 
         int modifiers = sourceSymbolModifiers(symbol, declaration);
-        if (!declaration.children().stream().anyMatch(child -> JAVA_BLOCK.equals(child.kind().id()))
-                && !java.lang.reflect.Modifier.isStatic(modifiers)
-                && !isPrivateModifier(modifiers)) {
+        if (declaration.children().stream().noneMatch(child -> JAVA_BLOCK.equals(child.kind().id()))
+            && !Modifier.isStatic(modifiers)
+            && !isPrivateModifier(modifiers)) {
             SyntaxNode ownerDeclaration = localTypeSymbol(ownerQualifiedName).flatMap(Symbol::declaration).orElse(null);
             if (ownerDeclaration != null
-                    && (JAVA_INTERFACE_DECLARATION.equals(ownerDeclaration.kind().id())
-                    || JAVA_ANNOTATION_TYPE_DECLARATION.equals(ownerDeclaration.kind().id()))) {
-                modifiers |= java.lang.reflect.Modifier.ABSTRACT;
+                && (JAVA_INTERFACE_DECLARATION.equals(ownerDeclaration.kind().id())
+                || JAVA_ANNOTATION_TYPE_DECLARATION.equals(ownerDeclaration.kind().id()))) {
+                modifiers |= Modifier.ABSTRACT;
             }
         }
 
         return new MethodDescriptor(
-                ownerQualifiedName,
-                symbol.simpleName(),
-                List.copyOf(parameterTypes),
-                returnType,
-                declaredThrownTypeNames(declaration),
-                modifiers,
-                declaration,
-                symbol
+            ownerQualifiedName,
+            symbol.simpleName(),
+            List.copyOf(parameterTypes),
+            returnType,
+            declaredThrownTypeNames(declaration),
+            modifiers,
+            declaration,
+            symbol
+        );
+    }
+
+    private FieldDescriptor sourceFieldDescriptor(String ownerQualifiedName, Symbol symbol, SyntaxNode declaration) {
+        Type type = declaredTypeOfVariable(declaration);
+        return new FieldDescriptor(
+            ownerQualifiedName,
+            symbol.simpleName(),
+            type,
+            sourceSymbolModifiers(symbol, declaration),
+            declaration,
+            symbol
         );
     }
 
     private static boolean isPrivateModifier(int modifiers) {
-        return java.lang.reflect.Modifier.isPrivate(modifiers);
+        return Modifier.isPrivate(modifiers);
     }
 
     private void collectTopLevelReferencedTypeNames(SyntaxNode node, List<String> out) {
@@ -1330,7 +1421,7 @@ public final class JavaRuleContext {
         List<String> names = new ArrayList<>();
         for (dev.railroadide.railroad.ide.classparser.Type type : types) {
             Type semanticType = toSemanticType(type);
-            if (semanticType.kind() == Type.Kind.DECLARED || semanticType.kind() == Type.Kind.PRIMITIVE)
+            if (semanticType.kind() == Kind.DECLARED || semanticType.kind() == Kind.PRIMITIVE)
                 names.add(semanticType.displayName());
         }
         return List.copyOf(names);
@@ -1351,24 +1442,20 @@ public final class JavaRuleContext {
 
     private static Type toSemanticType(dev.railroadide.railroad.ide.classparser.Type type) {
         if (type == null)
-            return new Type.UnknownType("<unknown>");
+            return new UnknownType("<unknown>");
 
         return switch (type) {
-            case dev.railroadide.railroad.ide.classparser.Type.PrimitiveType primitive ->
-                    "void".equals(primitive.name())
-                            ? new Type.VoidType()
-                            : new Type.PrimitiveType(primitive.name());
-            case dev.railroadide.railroad.ide.classparser.Type.ArrayType array ->
-                    new Type.ArrayType(toSemanticType(array.componentType()));
-            case dev.railroadide.railroad.ide.classparser.Type.ClassType clazz ->
-                    new Type.DeclaredType(clazz.name(), List.of());
-            case dev.railroadide.railroad.ide.classparser.Type.TypeVariable variable ->
-                    new Type.TypeVariableType(variable.name());
-            case dev.railroadide.railroad.ide.classparser.Type.WildcardType wildcard -> {
-                Type bound = wildcard.bound() == null ? new Type.UnknownType("<unknown>") : toSemanticType(wildcard.bound());
+            case PrimitiveType primitive -> "void".equals(primitive.name())
+                ? new VoidType()
+                : new Type.PrimitiveType(primitive.name());
+            case ArrayType array -> new Type.ArrayType(toSemanticType(array.componentType()));
+            case ClassType clazz -> new DeclaredType(clazz.name(), List.of());
+            case TypeVariable variable -> new TypeVariableType(variable.name());
+            case WildcardType wildcard -> {
+                Type bound = wildcard.bound() == null ? new UnknownType("<unknown>") : toSemanticType(wildcard.bound());
                 yield wildcard.isUpperBound()
-                        ? new Type.WildcardType(bound, null)
-                        : new Type.WildcardType(null, bound);
+                    ? new Type.WildcardType(bound, null)
+                    : new Type.WildcardType(null, bound);
             }
         };
     }
@@ -1376,11 +1463,12 @@ public final class JavaRuleContext {
     private @Nullable String resolveQualifiedClassParserTypeName(dev.railroadide.railroad.ide.classparser.Type type) {
         return switch (type) {
             case null -> null;
-            case dev.railroadide.railroad.ide.classparser.Type.ClassType clazz -> clazz.name();
-            case dev.railroadide.railroad.ide.classparser.Type.ArrayType array -> resolveQualifiedClassParserTypeName(array.componentType());
-            case dev.railroadide.railroad.ide.classparser.Type.TypeVariable ignored -> null;
-            case dev.railroadide.railroad.ide.classparser.Type.WildcardType wildcard -> wildcard.bound() == null ? null : resolveQualifiedClassParserTypeName(wildcard.bound());
-            case dev.railroadide.railroad.ide.classparser.Type.PrimitiveType primitive -> primitive.name();
+            case ClassType clazz -> clazz.name();
+            case ArrayType array -> resolveQualifiedClassParserTypeName(array.componentType());
+            case TypeVariable ignored -> null;
+            case WildcardType wildcard ->
+                wildcard.bound() == null ? null : resolveQualifiedClassParserTypeName(wildcard.bound());
+            case PrimitiveType primitive -> primitive.name();
         };
     }
 
@@ -1391,7 +1479,7 @@ public final class JavaRuleContext {
     }
 
     private static boolean isNumericType(Type type) {
-        return type.kind() == Type.Kind.PRIMITIVE && NUMERIC_PRIMITIVES.contains(type.displayName());
+        return type.kind() == Kind.PRIMITIVE && NUMERIC_PRIMITIVES.contains(type.displayName());
     }
 
     private static int numericRank(String primitive) {
@@ -1407,25 +1495,25 @@ public final class JavaRuleContext {
     }
 
     public record ImportEntry(
-            SyntaxNode declarationNode,
-            SyntaxNode targetNode,
-            String qualifiedTarget,
-            String ownerName,
-            String importedName,
-            boolean isStatic,
-            boolean isWildcard
+        SyntaxNode declarationNode,
+        SyntaxNode targetNode,
+        String qualifiedTarget,
+        String ownerName,
+        String importedName,
+        boolean isStatic,
+        boolean isWildcard
     ) {
     }
 
     public record MethodDescriptor(
-            String ownerQualifiedName,
-            String name,
-            List<Type> parameterTypes,
-            Type returnType,
-            List<String> thrownTypes,
-            int modifiers,
-            @Nullable SyntaxNode declaration,
-            @Nullable Symbol symbol
+        String ownerQualifiedName,
+        String name,
+        List<Type> parameterTypes,
+        Type returnType,
+        List<String> thrownTypes,
+        int modifiers,
+        @Nullable SyntaxNode declaration,
+        @Nullable Symbol symbol
     ) {
         public String signatureKey() {
             StringBuilder builder = new StringBuilder(name).append('(');
@@ -1439,12 +1527,22 @@ public final class JavaRuleContext {
         }
 
         public boolean isAbstract() {
-            return java.lang.reflect.Modifier.isAbstract(modifiers) && !isDefault();
+            return Modifier.isAbstract(modifiers) && !isDefault();
         }
 
         public boolean isDefault() {
             return (modifiers & DEFAULT_MODIFIER) != 0;
         }
+    }
+
+    public record FieldDescriptor(
+        String ownerQualifiedName,
+        String name,
+        Type type,
+        int modifiers,
+        @Nullable SyntaxNode declaration,
+        @Nullable Symbol symbol
+    ) {
     }
 
     public static final class ImportIndex {
@@ -1458,14 +1556,14 @@ public final class JavaRuleContext {
         private final Map<String, Map<String, Set<Integer>>> localStaticMethodAritiesByOwner;
 
         private ImportIndex(
-                List<ImportEntry> imports,
-                Map<String, List<ImportEntry>> staticSingleImportsByMemberName,
-                List<ImportEntry> onDemandStaticImports,
-                Set<String> localQualifiedTypeNames,
-                Set<String> availableQualifiedTypeNames,
-                Map<String, ClassStub> jdkClassStubsByQualifiedName,
-                Map<String, Set<String>> localStaticFieldsByOwner,
-                Map<String, Map<String, Set<Integer>>> localStaticMethodAritiesByOwner
+            List<ImportEntry> imports,
+            Map<String, List<ImportEntry>> staticSingleImportsByMemberName,
+            List<ImportEntry> onDemandStaticImports,
+            Set<String> localQualifiedTypeNames,
+            Set<String> availableQualifiedTypeNames,
+            Map<String, ClassStub> jdkClassStubsByQualifiedName,
+            Map<String, Set<String>> localStaticFieldsByOwner,
+            Map<String, Map<String, Set<Integer>>> localStaticMethodAritiesByOwner
         ) {
             this.imports = imports;
             this.staticSingleImportsByMemberName = staticSingleImportsByMemberName;
@@ -1501,7 +1599,7 @@ public final class JavaRuleContext {
 
         public boolean hasResolvableStaticMember(String ownerQualifiedName, String memberName) {
             return hasResolvableStaticField(ownerQualifiedName, memberName)
-                    || hasResolvableStaticMethod(ownerQualifiedName, memberName, -1);
+                || hasResolvableStaticMethod(ownerQualifiedName, memberName, -1);
         }
 
         public List<Symbol> resolveStaticImportedFields(String fieldName, SyntaxNode referenceNode) {
@@ -1511,10 +1609,10 @@ public final class JavaRuleContext {
                 for (ImportEntry importEntry : singleStaticImports) {
                     if (hasResolvableStaticField(importEntry.ownerName(), fieldName)) {
                         resolved.add(new SimpleSymbol(
-                                SymbolKind.FIELD,
-                                fieldName,
-                                importEntry.ownerName() + "#" + fieldName,
-                                importEntry.targetNode()
+                            SymbolKind.FIELD,
+                            fieldName,
+                            importEntry.ownerName() + "#" + fieldName,
+                            importEntry.targetNode()
                         ));
                     }
                 }
@@ -1523,10 +1621,10 @@ public final class JavaRuleContext {
             for (ImportEntry onDemandImport : onDemandStaticImports) {
                 if (hasResolvableStaticField(onDemandImport.ownerName(), fieldName)) {
                     resolved.add(new SimpleSymbol(
-                            SymbolKind.FIELD,
-                            fieldName,
-                            onDemandImport.ownerName() + "#" + fieldName,
-                            referenceNode
+                        SymbolKind.FIELD,
+                        fieldName,
+                        onDemandImport.ownerName() + "#" + fieldName,
+                        referenceNode
                     ));
                 }
             }
@@ -1541,10 +1639,10 @@ public final class JavaRuleContext {
                 for (ImportEntry importEntry : singleStaticImports) {
                     if (hasResolvableStaticMethod(importEntry.ownerName(), methodName, argumentCountOrUnknown)) {
                         resolved.add(new SimpleSymbol(
-                                SymbolKind.METHOD,
-                                methodName,
-                                importEntry.ownerName() + "#" + methodName,
-                                importEntry.targetNode()
+                            SymbolKind.METHOD,
+                            methodName,
+                            importEntry.ownerName() + "#" + methodName,
+                            importEntry.targetNode()
                         ));
                     }
                 }
@@ -1553,10 +1651,10 @@ public final class JavaRuleContext {
             for (ImportEntry onDemandImport : onDemandStaticImports) {
                 if (hasResolvableStaticMethod(onDemandImport.ownerName(), methodName, argumentCountOrUnknown)) {
                     resolved.add(new SimpleSymbol(
-                            SymbolKind.METHOD,
-                            methodName,
-                            onDemandImport.ownerName() + "#" + methodName,
-                            invocationNode
+                        SymbolKind.METHOD,
+                        methodName,
+                        onDemandImport.ownerName() + "#" + methodName,
+                        invocationNode
                     ));
                 }
             }
@@ -1576,8 +1674,8 @@ public final class JavaRuleContext {
                 }
                 if (importEntry.isStatic()) {
                     staticSingleImportsByMemberName
-                            .computeIfAbsent(importEntry.importedName(), ignored -> new ArrayList<>())
-                            .add(importEntry);
+                        .computeIfAbsent(importEntry.importedName(), ignored -> new ArrayList<>())
+                        .add(importEntry);
                 }
             }
 
@@ -1590,14 +1688,14 @@ public final class JavaRuleContext {
             collectLocalStaticMembers(context, localStaticFieldsByOwner, localStaticMethodAritiesByOwner);
 
             return new ImportIndex(
-                    List.copyOf(imports),
-                    copyListMap(staticSingleImportsByMemberName),
-                    List.copyOf(onDemandStaticImports),
-                    Set.copyOf(localQualifiedTypeNames),
-                    Set.copyOf(availableQualifiedTypeNames),
-                    context.jdkClassStubsByQualifiedName(),
-                    copySetMap(localStaticFieldsByOwner),
-                    copyNestedSetMap(localStaticMethodAritiesByOwner)
+                List.copyOf(imports),
+                copyListMap(staticSingleImportsByMemberName),
+                List.copyOf(onDemandStaticImports),
+                Set.copyOf(localQualifiedTypeNames),
+                Set.copyOf(availableQualifiedTypeNames),
+                context.jdkClassStubsByQualifiedName(),
+                copySetMap(localStaticFieldsByOwner),
+                copyNestedSetMap(localStaticMethodAritiesByOwner)
             );
         }
 
@@ -1615,8 +1713,8 @@ public final class JavaRuleContext {
                 boolean isStatic = context.hasTokenKind(node, JavaTokenType.STATIC_KEYWORD);
                 boolean isWildcard = qualifiedTarget.endsWith(".*");
                 String ownerName = isWildcard
-                        ? qualifiedTarget.substring(0, qualifiedTarget.length() - 2)
-                        : context.packagePrefix(qualifiedTarget);
+                    ? qualifiedTarget.substring(0, qualifiedTarget.length() - 2)
+                    : context.packagePrefix(qualifiedTarget);
                 String importedName = isWildcard ? "*" : context.lastSegment(qualifiedTarget);
                 imports.add(new ImportEntry(node, target, qualifiedTarget, ownerName, importedName, isStatic, isWildcard));
             });
@@ -1633,9 +1731,9 @@ public final class JavaRuleContext {
         }
 
         private static void collectLocalStaticMembers(
-                JavaRuleContext context,
-                Map<String, Set<String>> localStaticFieldsByOwner,
-                Map<String, Map<String, Set<Integer>>> localStaticMethodAritiesByOwner
+            JavaRuleContext context,
+            Map<String, Set<String>> localStaticFieldsByOwner,
+            Map<String, Map<String, Set<Integer>>> localStaticMethodAritiesByOwner
         ) {
             context.traverse(node -> {
                 Symbol symbol = context.declaredSymbol(node).orElse(null);
@@ -1661,9 +1759,9 @@ public final class JavaRuleContext {
                 } else {
                     int arity = methodDeclarationArity(context, symbol);
                     localStaticMethodAritiesByOwner
-                            .computeIfAbsent(ownerName, ignored -> new LinkedHashMap<>())
-                            .computeIfAbsent(memberName, ignored -> new HashSet<>())
-                            .add(arity);
+                        .computeIfAbsent(ownerName, ignored -> new LinkedHashMap<>())
+                        .computeIfAbsent(memberName, ignored -> new HashSet<>())
+                        .add(arity);
                 }
             });
         }
@@ -1675,8 +1773,8 @@ public final class JavaRuleContext {
             if (context.hasTokenKind(declaration, JavaTokenType.STATIC_KEYWORD))
                 return true;
             return declaration.parent()
-                    .map(parent -> context.hasTokenKind(parent, JavaTokenType.STATIC_KEYWORD))
-                    .orElse(false);
+                .map(parent -> context.hasTokenKind(parent, JavaTokenType.STATIC_KEYWORD))
+                .orElse(false);
         }
 
         private static int methodDeclarationArity(JavaRuleContext context, Symbol symbol) {
@@ -1705,7 +1803,7 @@ public final class JavaRuleContext {
                 return false;
 
             return jdkStub.fields().stream()
-                    .anyMatch(field -> field.name().equals(fieldName) && java.lang.reflect.Modifier.isStatic(field.modifiers()));
+                .anyMatch(field -> field.name().equals(fieldName) && Modifier.isStatic(field.modifiers()));
         }
 
         private boolean hasResolvableStaticMethod(String ownerQualifiedName, String methodName, int argumentCountOrUnknown) {
@@ -1723,11 +1821,11 @@ public final class JavaRuleContext {
                 return false;
 
             return jdkStub.methods().stream()
-                    .anyMatch(method ->
-                            method.name().equals(methodName)
-                                    && java.lang.reflect.Modifier.isStatic(method.modifiers())
-                                    && (argumentCountOrUnknown < 0 || method.parameters().size() == argumentCountOrUnknown)
-                    );
+                .anyMatch(method ->
+                    method.name().equals(methodName)
+                        && Modifier.isStatic(method.modifiers())
+                        && (argumentCountOrUnknown < 0 || method.parameters().size() == argumentCountOrUnknown)
+                );
         }
 
         private static Map<String, List<ImportEntry>> copyListMap(Map<String, List<ImportEntry>> source) {

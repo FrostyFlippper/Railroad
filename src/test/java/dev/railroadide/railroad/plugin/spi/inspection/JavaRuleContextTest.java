@@ -138,6 +138,28 @@ class JavaRuleContextTest {
     }
 
     @Test
+    void exposesFieldHelpers() {
+        String source = """
+                class Base {
+                    protected Number baseValue;
+                }
+
+                class Child extends Base {
+                    private String name;
+                }
+                """;
+
+        JavaRuleContext context = contextFor(source);
+
+        assertEquals(1, context.declaredFieldDescriptors("Child").size());
+        assertEquals("name", context.declaredFieldDescriptors("Child").getFirst().name());
+        assertEquals("java.lang.String", context.declaredFieldDescriptors("Child").getFirst().type().displayName());
+        assertEquals(1, context.inheritedFieldDescriptors("Child").size());
+        assertEquals("baseValue", context.inheritedFieldDescriptors("Child").getFirst().name());
+        assertEquals("java.lang.Number", context.inheritedFieldDescriptors("Child").getFirst().type().displayName());
+    }
+
+    @Test
     void exposesDirectModifierHelpers() {
         String source = """
                 public public abstract class Example {
