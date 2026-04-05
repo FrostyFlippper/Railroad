@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Semantic-level diagnostic emitted by name/type analysis.
+ * Semantic-level diagnostic emitted by name resolution, type analysis, or inspections.
  */
 public record SemanticDiagnostic(
         Severity severity,
@@ -31,10 +31,16 @@ public record SemanticDiagnostic(
             throw new IllegalArgumentException("endOffset cannot be less than startOffset");
     }
 
+    /**
+     * Returns the attached syntax node when one was provided.
+     */
     public Optional<SyntaxNode> nodeOptional() {
         return Optional.ofNullable(node);
     }
 
+    /**
+     * Diagnostic severity used by the editor and inspection pipeline.
+     */
     public enum Severity {
         ERROR,
         WARNING,

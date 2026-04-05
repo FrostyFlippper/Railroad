@@ -5,10 +5,28 @@ import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxNode;
 
 /**
  * Sink used by inspections to report diagnostics.
+ * <p>
+ * New rule-based inspections normally use {@link JavaInspectionRuleReporter}, but this
+ * reporter remains the output contract for the legacy {@link JavaInspection} extension
+ * point.
  */
 public interface JavaInspectionReporter {
+    /**
+     * Reports a fully constructed diagnostic.
+     *
+     * @param diagnostic diagnostic to emit
+     * @throws NullPointerException if {@code diagnostic} is {@code null}
+     */
     void report(SemanticDiagnostic diagnostic);
 
+    /**
+     * Reports an error covering the supplied syntax node.
+     *
+     * @param code stable diagnostic code
+     * @param message diagnostic message
+     * @param node highlighted syntax node
+     * @throws NullPointerException if any argument is {@code null}
+     */
     default void error(String code, String message, SyntaxNode node) {
         report(new SemanticDiagnostic(
                 SemanticDiagnostic.Severity.ERROR,
@@ -20,6 +38,14 @@ public interface JavaInspectionReporter {
         ));
     }
 
+    /**
+     * Reports a warning covering the supplied syntax node.
+     *
+     * @param code stable diagnostic code
+     * @param message diagnostic message
+     * @param node highlighted syntax node
+     * @throws NullPointerException if any argument is {@code null}
+     */
     default void warning(String code, String message, SyntaxNode node) {
         report(new SemanticDiagnostic(
                 SemanticDiagnostic.Severity.WARNING,
@@ -31,6 +57,14 @@ public interface JavaInspectionReporter {
         ));
     }
 
+    /**
+     * Reports an informational diagnostic covering the supplied syntax node.
+     *
+     * @param code stable diagnostic code
+     * @param message diagnostic message
+     * @param node highlighted syntax node
+     * @throws NullPointerException if any argument is {@code null}
+     */
     default void info(String code, String message, SyntaxNode node) {
         report(new SemanticDiagnostic(
                 SemanticDiagnostic.Severity.INFO,

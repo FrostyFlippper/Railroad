@@ -8,6 +8,10 @@ import java.util.Objects;
 
 /**
  * Read-only input provided to plugin inspections.
+ * <p>
+ * This is the legacy inspection entry context used by {@link JavaInspection}. New rules
+ * typically receive {@link JavaRuleContext}, which wraps this data and adds many helper
+ * methods for inspection authors.
  */
 public record JavaInspectionContext(
         Path filePath,
@@ -20,6 +24,11 @@ public record JavaInspectionContext(
         semanticModel = Objects.requireNonNull(semanticModel, "semanticModel");
     }
 
+    /**
+     * Convenience accessor for {@code semanticModel().syntaxTree()}.
+     *
+     * @return the syntax tree for the inspected file
+     */
     public SyntaxTree syntaxTree() {
         return semanticModel.syntaxTree();
     }

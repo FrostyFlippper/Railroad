@@ -11,6 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Root AST node for a Java source file.
+ * <p>
+ * A compilation unit contains an optional package declaration, zero or more imports, and
+ * zero or more top-level type declarations. Start AST-based analysis here.
+ */
 public record CompilationUnit(
         Span span,
         Optional<PackageDeclaration> packageDeclaration,

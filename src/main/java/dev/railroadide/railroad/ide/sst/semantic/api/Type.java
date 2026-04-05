@@ -4,15 +4,28 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Public semantic type contract used by type resolution/checking.
+ * Public semantic type contract used by type resolution and inspections.
+ * <p>
+ * Types are lightweight immutable value objects. They are designed for querying rather
+ * than modelling every compiler-internal detail, which makes them suitable for inspection
+ * logic and diagnostics.
  */
 public sealed interface Type
         permits Type.UnknownType, Type.VoidType, Type.PrimitiveType, Type.DeclaredType, Type.ArrayType, Type.TypeVariableType, Type.WildcardType {
 
+    /**
+     * Returns the coarse-grained type category.
+     */
     Kind kind();
 
+    /**
+     * Returns a human-readable type name suitable for diagnostics and logging.
+     */
     String displayName();
 
+    /**
+     * Broad categories supported by the public semantic type model.
+     */
     enum Kind {
         UNKNOWN,
         VOID,
@@ -23,6 +36,9 @@ public sealed interface Type
         WILDCARD
     }
 
+    /**
+     * Type used when semantic analysis cannot determine a more precise type.
+     */
     record UnknownType(String displayName) implements Type {
         public UnknownType {
             displayName = normalizeDisplayName(displayName, "<unknown>");
@@ -34,6 +50,9 @@ public sealed interface Type
         }
     }
 
+    /**
+     * The special {@code void} type.
+     */
     record VoidType() implements Type {
         @Override
         public Kind kind() {
@@ -46,6 +65,9 @@ public sealed interface Type
         }
     }
 
+    /**
+     * A Java primitive type such as {@code int} or {@code boolean}.
+     */
     record PrimitiveType(String displayName) implements Type {
         public PrimitiveType {
             displayName = normalizeDisplayName(displayName, "primitive");
@@ -57,6 +79,9 @@ public sealed interface Type
         }
     }
 
+    /**
+     * A declared reference type such as {@code String} or {@code List<String>}.
+     */
     record DeclaredType(String displayName, List<Type> typeArguments) implements Type {
         public DeclaredType {
             displayName = normalizeDisplayName(displayName, "declared");
@@ -69,6 +94,9 @@ public sealed interface Type
         }
     }
 
+    /**
+     * An array type.
+     */
     record ArrayType(Type componentType) implements Type {
         public ArrayType {
             componentType = Objects.requireNonNull(componentType, "componentType");
@@ -85,6 +113,9 @@ public sealed interface Type
         }
     }
 
+    /**
+     * A type variable such as {@code T}.
+     */
     record TypeVariableType(String displayName) implements Type {
         public TypeVariableType {
             displayName = normalizeDisplayName(displayName, "type variable");
@@ -96,6 +127,9 @@ public sealed interface Type
         }
     }
 
+    /**
+     * A wildcard type such as {@code ? extends Number} or {@code ? super String}.
+     */
     record WildcardType(Type upperBound, Type lowerBound) implements Type {
         public WildcardType {
             if (upperBound == null && lowerBound == null)

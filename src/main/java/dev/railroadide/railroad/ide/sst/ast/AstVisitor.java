@@ -24,6 +24,36 @@ import dev.railroadide.railroad.ide.sst.ast.statements.switches.SwitchRule;
 import dev.railroadide.railroad.ide.sst.ast.statements.switches.SwitchStatement;
 import dev.railroadide.railroad.ide.sst.ast.typeref.*;
 
+/**
+ * Typed visitor over the Java AST.
+ * <p>
+ * Implement this interface when you want exhaustive, type-safe dispatch over AST node
+ * kinds. Each {@link AstNode} implementation routes {@link AstNode#accept(AstVisitor)} to
+ * the matching visit method.
+ * <p>
+ * Typical usage:
+ * <pre>{@code
+ * AstVisitor<Void> visitor = new AstVisitor<>() {
+ *     @Override
+ *     public Void visitMethodDeclaration(MethodDeclaration node) {
+ *         // inspect node
+ *         return null;
+ *     }
+ *
+ *     @Override
+ *     public Void visitCompilationUnit(CompilationUnit node) {
+ *         for (AstNode child : node.children()) {
+ *             child.accept(this);
+ *         }
+ *         return null;
+ *     }
+ *
+ *     // implement remaining methods
+ * };
+ * }</pre>
+ *
+ * @param <R> result type returned by each visit method
+ */
 public interface AstVisitor<R> {
     R visitCompilationUnit(CompilationUnit node);
     R visitPackageDeclaration(PackageDeclaration node);

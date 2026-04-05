@@ -15,6 +15,24 @@ import java.util.function.Consumer;
 
 /**
  * Stable rule evaluation context with semantic model access and Java-specific helpers.
+ * <p>
+ * This is the main convenience API for writing Java inspections. It wraps the parsed file,
+ * semantic model, and a large set of helper operations that cover common inspection tasks:
+ * <ul>
+ *     <li>walking the syntax tree via {@link #traverse(Consumer)}</li>
+ *     <li>querying nodes by parser kind via {@link #nodesOfKind(String)}</li>
+ *     <li>reading declared and resolved symbols</li>
+ *     <li>reading inferred types</li>
+ *     <li>extracting names, packages, modifiers, and Java-specific structure</li>
+ * </ul>
+ * <p>
+ * Recommended workflow for a new inspection:
+ * <ol>
+ *     <li>Find candidate nodes using {@link #nodesOfKind(String)} or {@link #traverse(Consumer)}.</li>
+ *     <li>Use {@link #resolvedSymbol(SyntaxNode)}, {@link #declaredSymbol(SyntaxNode)}, and
+ *     {@link #inferredType(SyntaxNode)} only when semantic information is required.</li>
+ *     <li>Report diagnostics against the narrowest relevant syntax node.</li>
+ * </ol>
  */
 public final class JavaRuleContext {
     public static final int DEFAULT_MODIFIER = 0x00010000;
@@ -61,16 +79,37 @@ public final class JavaRuleContext {
     private volatile @Nullable Map<String, List<String>> cachedDirectSuperTypesByQualifiedName;
     private volatile @Nullable Map<String, List<MethodDescriptor>> cachedDeclaredMethodsByOwner;
 
+    /**
+     * Creates a rule context from the legacy inspection context wrapper.
+     *
+     * @param context legacy inspection context
+     * @throws NullPointerException if {@code context} is {@code null}
+     */
     public JavaRuleContext(JavaInspectionContext context) {
         this(context.filePath(), context.documentText(), context.semanticModel());
     }
 
+    /**
+     * Creates a rule context from raw file and semantic analysis inputs.
+     *
+     * @param filePath file path being inspected
+     * @param documentText full source text
+     * @param semanticModel semantic model for the file
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public JavaRuleContext(Path filePath, String documentText, SemanticModel semanticModel) {
         this.filePath = Objects.requireNonNull(filePath, "filePath");
         this.documentText = Objects.requireNonNull(documentText, "documentText");
         this.semanticModel = Objects.requireNonNull(semanticModel, "semanticModel");
     }
 
+    /**
+     * Returns whether a block node contains only tokens and no nested syntax nodes.
+     *
+     * @param block block node to inspect
+     * @return {@code true} when the block has no nested syntax children
+     * @throws NullPointerException if {@code block} is {@code null}
+     */
     public boolean isEmptyBlock(SyntaxNode block) {
         for (SyntaxNode child : block.children()) {
             if (!(child instanceof SyntaxToken))
@@ -80,76 +119,193 @@ public final class JavaRuleContext {
         return true;
     }
 
+    /**
+     * Returns the current file path being inspected.
+     *
+     * @return current file path
+     */
     public Path filePath() {
         return filePath;
     }
 
+    /**
+     * Returns the full source text for the current file.
+     *
+     * @return current file contents
+     */
     public String documentText() {
         return documentText;
     }
 
+    /**
+     * Returns the underlying semantic model.
+     *
+     * @return semantic model for the current file
+     */
     public SemanticModel semanticModel() {
         return semanticModel;
     }
 
+    /**
+     * Convenience accessor for {@code semanticModel().syntaxTree()}.
+     *
+     * @return syntax tree for the current file
+     */
     public SyntaxTree syntaxTree() {
         return semanticModel.syntaxTree();
     }
 
+    /**
+     * Returns the symbol declared by the supplied node when one exists.
+     *
+     * @param node declaration-like node
+     * @return declared symbol, if present
+     * @throws NullPointerException if {@code node} is {@code null}
+     */
     public Optional<Symbol> declaredSymbol(SyntaxNode node) {
         return semanticModel.declaredSymbol(node);
     }
 
+    /**
+     * Returns the symbol resolved for the supplied node when one exists.
+     *
+     * @param node reference-like node
+     * @return resolved symbol, if present
+     * @throws NullPointerException if {@code node} is {@code null}
+     */
     public Optional<Symbol> resolvedSymbol(SyntaxNode node) {
         return semanticModel.resolvedSymbol(node);
     }
 
+    /**
+     * Returns the inferred type for the supplied node when one exists.
+     *
+     * @param node typed node
+     * @return inferred type, if present
+     * @throws NullPointerException if {@code node} is {@code null}
+     */
     public Optional<Type> inferredType(SyntaxNode node) {
         return semanticModel.inferredType(node);
     }
 
+    /**
+     * Returns known JDK type names as fully qualified names.
+     *
+     * @return immutable set of known JDK qualified type names
+     */
     public Set<String> jdkQualifiedTypeNames() {
         return JavaSemanticAnalyzer.loadJdkQualifiedTypeNames();
     }
 
+    /**
+     * Returns parsed JDK class stubs keyed by fully qualified name.
+     *
+     * @return immutable map of JDK class stubs
+     */
     public Map<String, ClassStub> jdkClassStubsByQualifiedName() {
         return JavaSemanticAnalyzer.loadJdkClassStubsByQualifiedName();
     }
 
+    /**
+     * Returns the canonical qualified name for a node when one can be derived.
+     *
+     * @param node node to inspect
+     * @return canonical qualified name, or {@code null} when unavailable
+     * @throws NullPointerException if {@code node} is {@code null}
+     */
     public @Nullable String canonicalQualifiedName(SyntaxNode node) {
         return JavaSemanticAnalyzer.canonicalQualifiedName(node);
     }
 
+    /**
+     * Returns canonical type text for a type-like node when one can be derived.
+     *
+     * @param node node to inspect
+     * @return canonical type text, or {@code null} when unavailable
+     * @throws NullPointerException if {@code node} is {@code null}
+     */
     public @Nullable String canonicalTypeText(SyntaxNode node) {
         return JavaSemanticAnalyzer.canonicalTypeText(node);
     }
 
+    /**
+     * Returns the first identifier-like token text within a subtree, or {@code null}.
+     *
+     * @param node subtree root
+     * @return first identifier-like token text, or {@code null}
+     * @throws NullPointerException if {@code node} is {@code null}
+     */
     public @Nullable String firstIdentifierLikeTokenText(SyntaxNode node) {
         return JavaSemanticAnalyzer.firstIdentifierLikeTokenText(node);
     }
 
+    /**
+     * Returns the last identifier-like token text within a subtree, or {@code null}.
+     *
+     * @param node subtree root
+     * @return last identifier-like token text, or {@code null}
+     * @throws NullPointerException if {@code node} is {@code null}
+     */
     public @Nullable String lastIdentifierLikeTokenText(SyntaxNode node) {
         return JavaSemanticAnalyzer.lastIdentifierLikeTokenText(node);
     }
 
+    /**
+     * Returns the direct child with the supplied parser kind, or {@code null}.
+     *
+     * @param node parent node to search
+     * @param kindId parser kind id to match
+     * @return matching direct child, or {@code null}
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public @Nullable SyntaxNode directChild(SyntaxNode node, String kindId) {
         return JavaSemanticAnalyzer.directChild(node, kindId);
     }
 
+    /**
+     * Returns whether the subtree contains a token of the supplied Java token type.
+     *
+     * @param node subtree root
+     * @param tokenType token type to search for
+     * @return {@code true} if the token type occurs in the subtree
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public boolean hasTokenKind(SyntaxNode node, JavaTokenType tokenType) {
         return JavaSemanticAnalyzer.hasTokenKind(node, tokenType);
     }
 
+    /**
+     * Returns whether the declaration prefix contains the supplied modifier token.
+     *
+     * @param node declaration node
+     * @param tokenType modifier token to check
+     * @return {@code true} if the modifier is present in the declaration prefix
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public boolean hasDirectModifierToken(SyntaxNode node, JavaTokenType tokenType) {
         Objects.requireNonNull(node, "node");
         Objects.requireNonNull(tokenType, "tokenType");
         return directModifierTokens(node).contains(tokenType);
     }
 
+    /**
+     * Returns the set of direct modifier tokens attached to a declaration node.
+     *
+     * @param node declaration node
+     * @return immutable set of direct modifier tokens
+     * @throws NullPointerException if {@code node} is {@code null}
+     */
     public Set<JavaTokenType> directModifierTokens(SyntaxNode node) {
         return directModifierTokenCounts(node).keySet();
     }
 
+    /**
+     * Returns direct modifier tokens and their repetition counts on a declaration node.
+     *
+     * @param node declaration node
+     * @return immutable map of direct modifier token counts
+     * @throws NullPointerException if {@code node} is {@code null}
+     */
     public Map<JavaTokenType, Integer> directModifierTokenCounts(SyntaxNode node) {
         Objects.requireNonNull(node, "node");
         Map<JavaTokenType, Integer> modifiers = new LinkedHashMap<>();
@@ -188,27 +344,69 @@ public final class JavaRuleContext {
         return Map.copyOf(modifiers);
     }
 
+    /**
+     * Returns whether the supplied node is treated as an expression node.
+     *
+     * @param node node to test
+     * @return {@code true} if the node is an expression
+     * @throws NullPointerException if {@code node} is {@code null}
+     */
     public boolean isExpressionNode(SyntaxNode node) {
         return JavaSemanticAnalyzer.isExpressionNode(node);
     }
 
+    /**
+     * Returns the last segment of a qualified name.
+     *
+     * @param qualifiedName qualified name
+     * @return last segment of the name
+     * @throws NullPointerException if {@code qualifiedName} is {@code null}
+     */
     public String lastSegment(String qualifiedName) {
         return JavaSemanticAnalyzer.lastSegment(qualifiedName);
     }
 
+    /**
+     * Returns the simple name portion of a type name.
+     *
+     * @param typeName type name
+     * @return simple type name
+     * @throws NullPointerException if {@code typeName} is {@code null}
+     */
     public String simpleTypeName(String typeName) {
         return JavaSemanticAnalyzer.simpleTypeName(typeName);
     }
 
+    /**
+     * Returns the package prefix of a qualified name.
+     *
+     * @param qualifiedName qualified name
+     * @return package prefix, possibly empty
+     * @throws NullPointerException if {@code qualifiedName} is {@code null}
+     */
     public String packagePrefix(String qualifiedName) {
         return JavaSemanticAnalyzer.packagePrefix(qualifiedName);
     }
 
+    /**
+     * Traverses the full syntax tree in pre-order and calls the supplied visitor for each
+     * node.
+     *
+     * @param visitor callback invoked for each node
+     * @throws NullPointerException if {@code visitor} is {@code null}
+     */
     public void traverse(Consumer<SyntaxNode> visitor) {
         Objects.requireNonNull(visitor, "visitor");
         traverseNode(syntaxTree().root(), visitor);
     }
 
+    /**
+     * Returns all nodes whose {@code kind().id()} matches the supplied parser kind id.
+     *
+     * @param kindId parser kind id to match
+     * @return immutable list of matching nodes
+     * @throws NullPointerException if {@code kindId} is {@code null}
+     */
     public List<SyntaxNode> nodesOfKind(String kindId) {
         Objects.requireNonNull(kindId, "kindId");
         List<SyntaxNode> nodes = new ArrayList<>();
