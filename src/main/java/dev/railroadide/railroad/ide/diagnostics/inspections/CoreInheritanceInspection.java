@@ -52,6 +52,13 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
             JavaSemanticRules.INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD.messageTemplate(),
             Set.of("core", "interface", "method-clash"),
             CoreInheritanceInspection::reportInterfaceMethodClashesWithObject
+        ),
+        new SimpleJavaInspectionRule(
+            JavaSemanticRules.PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE.id(),
+            JavaSemanticRules.PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE.defaultSeverity(),
+            JavaSemanticRules.PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE.messageTemplate(),
+            Set.of("core", "api"),
+            CoreInheritanceInspection::reportPublicMethodNotExposedByInterface
         )
     );
 
@@ -223,11 +230,49 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
 
                 if ("clone".equals(method.name())) {
                     if (!isCloneCompatibleWithObjectClone(context, method))
-                        reporter.report(nodeFor(method, declarationNode), method.name() + "()");
+                        reporter.report(nodeFor(method, declarationNode), method.signatureKey());
                 } else if ("finalize".equals(method.name())) {
                     if (!isFinalizeCompatibleWithObjectFinalize(method))
-                        reporter.report(nodeFor(method, declarationNode), method.name() + "()");
+                        reporter.report(nodeFor(method, declarationNode), method.signatureKey());
                 }
+            }
+        }
+    }
+
+    private static void reportPublicMethodNotExposedByInterface(JavaRuleContext context, JavaInspectionRuleReporter reporter) {
+        for (SyntaxNode declarationNode : localTypeDeclarationNodes(context)) {
+            if (!JAVA_CLASS_DECLARATION.equals(declarationNode.kind().id()))
+                continue;
+
+            Symbol declared = context.declaredSymbol(declarationNode).orElse(null);
+            if (declared == null)
+                continue;
+
+            String ownerQualifiedName = declared.qualifiedName().orElse(null);
+            if (ownerQualifiedName == null)
+                continue;
+
+            if (context.isAbstractType(ownerQualifiedName))
+                continue;
+
+            if (extendsNonObjectSuperclass(context, ownerQualifiedName))
+                continue;
+
+            Set<String> interfaceMethodSignatures = exposedInterfaceMethodSignatures(context, ownerQualifiedName);
+            if (interfaceMethodSignatures.isEmpty())
+                continue;
+
+            for (JavaRuleContext.MethodDescriptor method : context.declaredMethodDescriptors(ownerQualifiedName)) {
+                if (!Modifier.isPublic(method.modifiers()) || Modifier.isStatic(method.modifiers()))
+                    continue;
+
+                if (isObjectMethod(context, method))
+                    continue;
+
+                if (interfaceMethodSignatures.contains(method.signatureKey()))
+                    continue;
+
+                reporter.report(nodeFor(method, declarationNode), method.signatureKey());
             }
         }
     }
@@ -365,5 +410,57 @@ public final class CoreInheritanceInspection implements JavaInspectionRuleProvid
         }
 
         return true;
+    }
+
+    private static boolean extendsNonObjectSuperclass(JavaRuleContext context, String qualifiedName) {
+        for (String superType : context.directSuperTypeNames(qualifiedName)) {
+            if (!context.isInterfaceType(superType) && !"java.lang.Object".equals(superType))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static Set<String> exposedInterfaceMethodSignatures(JavaRuleContext context, String qualifiedName) {
+        Set<String> interfaceTypes = new LinkedHashSet<>();
+        collectImplementedInterfaces(context, qualifiedName, interfaceTypes, new HashSet<>());
+
+        Set<String> signatures = new LinkedHashSet<>();
+        for (String interfaceType : interfaceTypes) {
+            for (JavaRuleContext.MethodDescriptor method : context.declaredMethodDescriptors(interfaceType)) {
+                if (!Modifier.isStatic(method.modifiers()) && !Modifier.isPrivate(method.modifiers())) {
+                    signatures.add(method.signatureKey());
+                }
+            }
+
+            for (JavaRuleContext.MethodDescriptor method : context.inheritedMethodDescriptors(interfaceType)) {
+                if (!Modifier.isStatic(method.modifiers()) && !Modifier.isPrivate(method.modifiers())) {
+                    signatures.add(method.signatureKey());
+                }
+            }
+        }
+
+        return Set.copyOf(signatures);
+    }
+
+    private static void collectImplementedInterfaces(JavaRuleContext context, String qualifiedName, Set<String> signatures, Set<String> visited) {
+        if (!visited.add(qualifiedName))
+            return;
+
+        for (String superType : context.directSuperTypeNames(qualifiedName)) {
+            if (context.isInterfaceType(superType)) {
+                signatures.add(superType);
+                collectImplementedInterfaces(context, superType, signatures, visited);
+            }
+        }
+    }
+
+    private static boolean isObjectMethod(JavaRuleContext context, JavaRuleContext.MethodDescriptor method) {
+        for (JavaRuleContext.MethodDescriptor objectMethod : context.declaredMethodDescriptors("java.lang.Object")) {
+            if (method.signatureKey().equals(objectMethod.signatureKey()))
+                return true;
+        }
+
+        return false;
     }
 }

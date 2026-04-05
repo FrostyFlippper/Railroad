@@ -206,6 +206,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Cast to '%s' is stronger than necessary; '%s' is sufficient"
     );
+    public static final JavaSemanticRule PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE = new JavaSemanticRule(
+        "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE",
+        SemanticDiagnostic.Severity.WARNING,
+        "Public method '%s' is not exposed through any implemented interface"
+    );
 
     private JavaSemanticRules() {
     }

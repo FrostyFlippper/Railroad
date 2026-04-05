@@ -76,7 +76,7 @@ Inspectopedia label in the sections below.
   indicate misplaced polymorphism.
 - [ ] [easy] `'Optional' used as field or parameter type` - Flag `Optional` as a field or parameter type where it
   complicates APIs or object state.
-- [ ] [hard] `'public' method not exposed in interface` - Find public class methods that are not represented in an
+- [x] [hard] `'public' method not exposed in interface` - Find public class methods that are not represented in an
   interface contract.
 - [ ] [starter] `'public' method with 'boolean' parameter` - Detect public APIs that use booleans as behaviour switches.
 - [ ] [easy] `Chain of 'instanceof' checks` - Find if-else type dispatch chains that should likely become polymorphism

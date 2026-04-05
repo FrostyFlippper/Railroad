@@ -33,7 +33,8 @@ class CoreInspectionRulesTest {
                 "SEM_INVALID_INHERITANCE",
                 "SEM_MISSING_IMPLEMENTATION",
                 "SEM_INVALID_OVERRIDE",
-                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD"));
+                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD",
+                "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE"));
         assertRuleIds(new CoreModifierInspection(), Set.of("SEM_ILLEGAL_MODIFIER"));
         assertRuleIds(new CoreControlFlowInspection(), Set.of("SEM_INVALID_CONTROL_FLOW", "SEM_MISSING_RETURN"));
         assertRuleIds(new CoreExceptionInspection(), Set.of("SEM_UNCAUGHT_CHECKED_EXCEPTION", "SEM_UNREACHABLE_CATCH", "SEM_INVALID_EXCEPTION_TYPE"));
@@ -606,6 +607,73 @@ class CoreInspectionRulesTest {
 
         assertFalse(diagnostics.stream().anyMatch(d ->
                 "SEM_OVERLY_STRONG_TYPE_CAST".equals(d.code())));
+    }
+
+    @Test
+    void coreInheritanceRuleEmitsPublicMethodNotExposedByInterfaceDiagnostic() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInheritanceInspection(), """
+            interface Worker {
+                void run();
+            }
+
+            class DefaultWorker implements Worker {
+                public void run() {
+                }
+
+                public void reset() {
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+                "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE".equals(d.code())
+                        && d.message().contains("reset()")));
+    }
+
+    @Test
+    void coreInheritanceRuleDoesNotEmitPublicMethodNotExposedByInterfaceDiagnosticForInterfaceMethod() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInheritanceInspection(), """
+            interface Worker {
+                void run();
+                void reset();
+            }
+
+            class DefaultWorker implements Worker {
+                public void run() {
+                }
+
+                public void reset() {
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+                "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE".equals(d.code())));
+    }
+
+    @Test
+    void coreInheritanceRuleDoesNotEmitPublicMethodNotExposedByInterfaceDiagnosticForClassWithNonObjectSuperclass() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInheritanceInspection(), """
+            class BaseWorker {
+                public void reset() {
+                }
+            }
+
+            interface Worker {
+                void run();
+            }
+
+            class DefaultWorker extends BaseWorker implements Worker {
+                public void run() {
+                }
+
+                public void extra() {
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+                "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE".equals(d.code())));
     }
 
     @Test
