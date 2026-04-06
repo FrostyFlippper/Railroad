@@ -119,6 +119,16 @@ public class CoreCastConflictingWithInstanceofInspection implements JavaInspecti
         if (condition == null)
             return null;
 
+        if (JavaSyntaxKinds.BINARY_EXPRESSION.id().equals(condition.kind().id()) && hasAndOperator(condition)) {
+            List<SyntaxNode> expressions = context.directExpressionChildren(condition);
+            for (SyntaxNode expression : expressions) {
+                InstanceofFact fact = extractPositiveInstanceofFact(context, expression);
+                if (fact != null)
+                    return fact;
+            }
+            return null;
+        }
+
         if (!JavaSyntaxKinds.INSTANCEOF_EXPRESSION.id().equals(condition.kind().id()))
             return null;
 
@@ -165,6 +175,16 @@ public class CoreCastConflictingWithInstanceofInspection implements JavaInspecti
             return null;
 
         return extractPositiveInstanceofFact(context, negatedExpression);
+    }
+
+    private static boolean hasAndOperator(SyntaxNode node) {
+        for (SyntaxNode child : node.children()) {
+            if (child instanceof SyntaxToken token
+                && JavaSyntaxKinds.tokenKind(JavaTokenType.AND).id().equals(token.kind().id()))
+                return true;
+        }
+
+        return false;
     }
 
     private static @Nullable SyntaxNode instanceofTypeReference(JavaRuleContext context, SyntaxNode instanceofNode) {

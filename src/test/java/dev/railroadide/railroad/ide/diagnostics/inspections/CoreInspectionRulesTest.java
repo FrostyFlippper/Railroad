@@ -992,6 +992,78 @@ class CoreInspectionRulesTest {
     }
 
     @Test
+    void coreCastConflictingWithInstanceofRuleEmitsDiagnosticForInstanceofAndAdditionalCondition() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreCastConflictingWithInstanceofInspection(), """
+            class Example {
+                void run(Object obj, boolean flag) {
+                    if (obj instanceof String && flag) {
+                        Integer value = (Integer) obj;
+                    }
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                        && d.message().contains("Integer")
+                        && d.message().contains("String")));
+    }
+
+    @Test
+    void coreCastConflictingWithInstanceofRuleEmitsDiagnosticForAdditionalConditionAndInstanceof() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreCastConflictingWithInstanceofInspection(), """
+            class Example {
+                void run(Object obj, boolean flag) {
+                    if (flag && obj instanceof String) {
+                        Integer value = (Integer) obj;
+                    }
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                        && d.message().contains("Integer")
+                        && d.message().contains("String")));
+    }
+
+    @Test
+    void coreCastConflictingWithInstanceofRuleDoesNotEmitDiagnosticForCompatibleCastInCompoundCondition() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreCastConflictingWithInstanceofInspection(), """
+            class Example {
+                void run(Object obj, boolean flag) {
+                    if (obj instanceof CharSequence && flag) {
+                        String value = (String) obj;
+                    }
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+    }
+
+    @Test
+    void coreCastConflictingWithInstanceofRuleEmitsDiagnosticInsideElseBranchOfNegatedCompoundCondition() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreCastConflictingWithInstanceofInspection(), """
+            class Example {
+                void run(Object obj, boolean flag) {
+                    if (!(obj instanceof String && flag)) {
+                        return;
+                    } else {
+                        Integer value = (Integer) obj;
+                    }
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                        && d.message().contains("Integer")
+                        && d.message().contains("String")));
+    }
+
+    @Test
     void coreModifierRuleEmitsIllegalTypeAndFieldModifierDiagnostics() {
         List<SemanticDiagnostic> diagnostics = runProvider(new CoreModifierInspection(), """
             private static class Example {
