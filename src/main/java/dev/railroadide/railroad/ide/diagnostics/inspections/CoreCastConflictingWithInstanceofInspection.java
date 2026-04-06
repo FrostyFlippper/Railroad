@@ -1,8 +1,11 @@
 package dev.railroadide.railroad.ide.diagnostics.inspections;
 
 import dev.railroadide.railroad.ide.diagnostics.rules.java.JavaSemanticRules;
+import dev.railroadide.railroad.ide.sst.impl.java.JavaSemanticAnalyzer;
 import dev.railroadide.railroad.ide.sst.impl.java.JavaSyntaxKinds;
+import dev.railroadide.railroad.ide.sst.impl.java.JavaTokenType;
 import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxNode;
+import dev.railroadide.railroad.ide.sst.syntax.api.SyntaxToken;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRule;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRuleProvider;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRuleReporter;
@@ -37,38 +40,76 @@ public class CoreCastConflictingWithInstanceofInspection implements JavaInspecti
     }
 
     private static void reportCastConflictingWithInstanceof(JavaRuleContext context, JavaInspectionRuleReporter reporter) {
+        reportCastConflictingWithInstanceofIfStatement(context, reporter);
+        reportCastConflictingWithInstanceofWhileStatement(context, reporter);
+        reportCastConflictingWithInstanceofForStatement(context, reporter);
+    }
+
+    private static void reportCastConflictingWithInstanceofIfStatement(JavaRuleContext context, JavaInspectionRuleReporter reporter) {
         for (SyntaxNode ifNode : context.nodesOfKind(JavaSyntaxKinds.IF_STATEMENT.id())) {
             SyntaxNode condition = context.firstDirectExpressionChild(ifNode);
             if (condition == null)
                 continue;
 
-            InstanceofFact fact = extractPositiveInstanceofFact(context, condition);
-            if (fact == null)
+            analyzeGuardedBody(context, reporter, condition, thenBranchOf(context, ifNode));
+
+            InstanceofFact negatedFact = extractNegatedInstanceofFact(context, condition);
+            if (negatedFact != null) {
+                SyntaxNode elseBranch = elseBranchOf(context, ifNode);
+                if (elseBranch != null)
+                    analyzeGuardedBody(context, reporter, negatedFact, elseBranch);
+            }
+        }
+    }
+
+    private static void reportCastConflictingWithInstanceofWhileStatement(JavaRuleContext context, JavaInspectionRuleReporter reporter) {
+        for (SyntaxNode whileNode : context.nodesOfKind(JavaSyntaxKinds.WHILE_STATEMENT.id())) {
+            SyntaxNode condition = context.firstDirectExpressionChild(whileNode);
+            if (condition == null)
                 continue;
 
-            SyntaxNode thenBranch = thenBranchOf(context, ifNode);
-            if (thenBranch == null)
+            analyzeGuardedBody(context, reporter, condition, guardedBodyOf(context, whileNode));
+        }
+    }
+
+    private static void reportCastConflictingWithInstanceofForStatement(JavaRuleContext context, JavaInspectionRuleReporter reporter) {
+        for (SyntaxNode forNode : context.nodesOfKind(JavaSyntaxKinds.FOR_STATEMENT.id())) {
+            SyntaxNode condition = basicForConditionOf(forNode);
+            SyntaxNode body = forBodyOf(forNode);
+            analyzeGuardedBody(context, reporter, condition, body);
+        }
+    }
+
+    private static void analyzeGuardedBody(JavaRuleContext context, JavaInspectionRuleReporter reporter, SyntaxNode condition, SyntaxNode body) {
+        InstanceofFact fact = extractPositiveInstanceofFact(context, condition);
+        if (fact == null || body == null)
+            return;
+
+        analyzeGuardedBody(context, reporter, fact, body);
+    }
+
+    private static void analyzeGuardedBody(JavaRuleContext context, JavaInspectionRuleReporter reporter, InstanceofFact fact, SyntaxNode body) {
+        if (body == null)
+            return;
+
+        for (SyntaxNode castNode : findDescendantCastExpressions(body)) {
+            if (!castsSameVariable(context, castNode, fact.variableName()))
                 continue;
 
-            for (SyntaxNode castNode : findDescendantCastExpressions(thenBranch)) {
-                if (!castsSameVariable(context, castNode, fact.variableName()))
-                    continue;
+            SyntaxNode castTypeNode = context.directChild(castNode, JavaSyntaxKinds.TYPE_REFERENCE.id());
+            if (castTypeNode == null)
+                continue;
 
-                SyntaxNode castTypeNode = context.directChild(castNode, JavaSyntaxKinds.TYPE_REFERENCE.id());
-                if (castTypeNode == null)
-                    continue;
+            String castTypeName = context.resolveQualifiedTypeName(castTypeNode);
+            if (castTypeName == null || castTypeName.isBlank())
+                continue;
 
-                String castTypeName = context.resolveQualifiedTypeName(castTypeNode);
-                if (castTypeName == null || castTypeName.isBlank())
-                    continue;
-
-                if (typesConflict(context, fact.testedTypeName(), castTypeName)) {
-                    reporter.report(
-                        castNode,
-                        context.simpleTypeName(castTypeName),
-                        context.simpleTypeName(fact.testedTypeName())
-                    );
-                }
+            if (typesConflict(context, fact.testedTypeName(), castTypeName)) {
+                reporter.report(
+                    castNode,
+                    context.simpleTypeName(castTypeName),
+                    context.simpleTypeName(fact.testedTypeName())
+                );
             }
         }
     }
@@ -102,6 +143,28 @@ public class CoreCastConflictingWithInstanceofInspection implements JavaInspecti
             return null;
 
         return new InstanceofFact(variableName, testedTypeName);
+    }
+
+    private static @Nullable InstanceofFact extractNegatedInstanceofFact(JavaRuleContext context, SyntaxNode condition) {
+        condition = context.unwrapTransparentExpression(condition);
+        if (condition == null || !JavaSyntaxKinds.UNARY_EXPRESSION.id().equals(condition.kind().id()))
+            return null;
+
+        boolean sawBang = false;
+        for (SyntaxNode child : condition.children()) {
+            if (child instanceof SyntaxToken token && "!".equals(token.text())) {
+                sawBang = true;
+            }
+        }
+
+        if (!sawBang)
+            return null;
+
+        SyntaxNode negatedExpression = context.firstExpressionChild(condition);
+        if (negatedExpression == null)
+            return null;
+
+        return extractPositiveInstanceofFact(context, negatedExpression);
     }
 
     private static @Nullable SyntaxNode instanceofTypeReference(JavaRuleContext context, SyntaxNode instanceofNode) {
@@ -144,6 +207,27 @@ public class CoreCastConflictingWithInstanceofInspection implements JavaInspecti
         }
 
         return null;
+    }
+
+    private static @Nullable SyntaxNode elseBranchOf(JavaRuleContext context, SyntaxNode ifNode) {
+        boolean sawElse = false;
+        for (SyntaxNode child : ifNode.children()) {
+            if (!sawElse) {
+                if (isElseToken(child))
+                    sawElse = true;
+                continue;
+            }
+
+            if (!(child instanceof SyntaxToken))
+                return child;
+        }
+
+        return null;
+    }
+
+    private static boolean isElseToken(SyntaxNode node) {
+        return node instanceof SyntaxToken token
+            && JavaSyntaxKinds.tokenKind(JavaTokenType.ELSE_KEYWORD).id().equals(token.kind().id());
     }
 
     private static List<SyntaxNode> findDescendantCastExpressions(SyntaxNode node) {
@@ -193,6 +277,68 @@ public class CoreCastConflictingWithInstanceofInspection implements JavaInspecti
             return false;
 
         return true;
+    }
+
+    private static @Nullable SyntaxNode basicForConditionOf(SyntaxNode forNode) {
+        SyntaxNode basicFor = null;
+        for (SyntaxNode child : forNode.children()) {
+            if (JavaSyntaxKinds.BASIC_FOR_STATEMENT.id().equals(child.kind().id())) {
+                basicFor = child;
+                break;
+            }
+        }
+
+        if (basicFor == null)
+            return null;
+
+        int semicolonCount = 0;
+        for (SyntaxNode child : basicFor.children()) {
+            if (child instanceof SyntaxToken token
+                && ";".equals(token.text())) {
+                semicolonCount++;
+                continue;
+            }
+
+            if (semicolonCount == 1 && JavaSemanticAnalyzer.isExpressionNode(child))
+                return child;
+        }
+
+        return null;
+    }
+
+    private static @Nullable SyntaxNode forBodyOf(SyntaxNode forNode) {
+        boolean seenHeader = false;
+        for (SyntaxNode child : forNode.children()) {
+            String kindId = child.kind().id();
+            if (!seenHeader && (
+                JavaSyntaxKinds.BASIC_FOR_STATEMENT.id().equals(kindId)
+                    || JavaSyntaxKinds.ENHANCED_FOR_STATEMENT.id().equals(kindId))) {
+                seenHeader = true;
+                continue;
+            }
+
+            if (seenHeader)
+                return child;
+        }
+
+        return null;
+    }
+
+    private static @Nullable SyntaxNode guardedBodyOf(JavaRuleContext context, SyntaxNode guardedStatementNode) {
+        List<SyntaxNode> children = guardedStatementNode.children();
+        boolean seenCondition = false;
+
+        for (SyntaxNode child : children) {
+            if (!seenCondition && context.isExpressionNode(child)) {
+                seenCondition = true;
+                continue;
+            }
+
+            if (seenCondition)
+                return child;
+        }
+
+        return null;
     }
 
     private record InstanceofFact(String variableName, String testedTypeName) {
