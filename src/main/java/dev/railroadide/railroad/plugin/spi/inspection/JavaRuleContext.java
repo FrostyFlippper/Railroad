@@ -428,6 +428,23 @@ public final class JavaRuleContext {
         return List.copyOf(nodes);
     }
 
+    /**
+     * Returns all nodes whose {@code kind().id()} is contained in the supplied set of parser kind ids.
+     *
+     * @param kindIds set of parser kind ids to match
+     * @return immutable list of matching nodes
+     * @throws NullPointerException if {@code kindIds} is {@code null}
+     */
+    public List<SyntaxNode> nodesOfKinds(Set<String> kindIds) {
+        Objects.requireNonNull(kindIds, "kindIds");
+        List<SyntaxNode> nodes = new ArrayList<>();
+        traverse(node -> {
+            if (kindIds.contains(node.kind().id()))
+                nodes.add(node);
+        });
+        return List.copyOf(nodes);
+    }
+
     public @Nullable SyntaxNode firstDirectExpressionChild(SyntaxNode node) {
         for (SyntaxNode child : node.children()) {
             if (isExpressionNode(child))
@@ -1516,6 +1533,13 @@ public final class JavaRuleContext {
             case "double" -> 5;
             default -> -1;
         };
+    }
+
+    public void traverseDescendants(SyntaxNode root, Consumer<SyntaxNode> visitor) {
+        visitor.accept(root);
+        for (SyntaxNode child : root.children()) {
+            traverseDescendants(child, visitor);
+        }
     }
 
     public record ImportEntry(

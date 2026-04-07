@@ -56,6 +56,7 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreParameterNamedUnderscoreInspection(), Set.of("SEM_PARAMETER_NAME_UNDERSCORE"));
         assertRuleIds(new CoreUnreachableCodeInspection(), Set.of("SEM_UNREACHABLE_CODE"));
         assertRuleIds(new CoreAssertionCanBeReplacedWithIfStatementInspection(), Set.of("SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT"));
+        assertRuleIds(new CoreFeatureEnvyInspection(), Set.of("SEM_FEATURE_ENVY_MANIPULATE", "SEM_FEATURE_ENVY_TIGHTLY_COUPLED"));
     }
 
     @Test
@@ -1660,6 +1661,95 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d -> "SEM_UNINITIALIZED_FINAL_FIELD".equals(d.code()) && d.message().contains("value")));
+    }
+
+    @Test
+    void coreFeatureEnvyRuleEmitsManipulateDiagnostic() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFeatureEnvyInspection(), """
+            class Host {
+                void envy(External ext) {
+                    ext.a = 1;
+                    ext.b = 2;
+                    ext.c = 3;
+                }
+            }
+            class External {
+                int a, b, c;
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_FEATURE_ENVY_MANIPULATE".equals(d.code())), "Expected SEM_FEATURE_ENVY_MANIPULATE diagnostic");
+    }
+
+    @Test
+    void coreFeatureEnvyRuleEmitsTightlyCoupledDiagnostic() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFeatureEnvyInspection(), """
+            class Host {
+                void envy(External ext) {
+                    ext.doA();
+                    ext.doB();
+                    ext.doC();
+                }
+            }
+            class External {
+                void doA() {}
+                void doB() {}
+                void doC() {}
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_FEATURE_ENVY_TIGHTLY_COUPLED".equals(d.code())), "Expected SEM_FEATURE_ENVY_TIGHTLY_COUPLED diagnostic");
+    }
+
+    @Test
+    void coreFeatureEnvyRuleDoesNotEmitDiagnosticForStaticMembers() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFeatureEnvyInspection(), """
+            class Host {
+                void ok(External ext) {
+                    External.doA();
+                    External.doB();
+                    External.doC();
+                }
+            }
+            class External {
+                static void doA() {}
+                static void doB() {}
+                static void doC() {}
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> d.code().startsWith("SEM_FEATURE_ENVY")));
+    }
+
+    @Test
+    void coreFeatureEnvyRuleDoesNotEmitDiagnosticForLibraryTypes() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFeatureEnvyInspection(), """
+            class Host {
+                void ok(java.util.List<String> list) {
+                    list.add("a");
+                    list.add("b");
+                    list.add("c");
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> d.code().startsWith("SEM_FEATURE_ENVY")));
+    }
+
+    @Test
+    void coreFeatureEnvyRuleDoesNotEmitDiagnosticForOwnMembers() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFeatureEnvyInspection(), """
+            class Host {
+                int a, b, c;
+                void ok() {
+                    a = 1;
+                    b = 2;
+                    c = 3;
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> d.code().startsWith("SEM_FEATURE_ENVY")));
     }
 
     private static List<SemanticDiagnostic> runProvider(JavaInspectionRuleProvider provider, String document) {

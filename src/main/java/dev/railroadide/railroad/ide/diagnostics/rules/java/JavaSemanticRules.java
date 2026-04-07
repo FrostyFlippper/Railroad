@@ -221,6 +221,16 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.INFO,
         "Assertion can be replaced with an 'if' statement for better error handling"
     );
+    public static final JavaSemanticRule FEATURE_ENVY_MANIPULATE = new JavaSemanticRule(
+        "SEM_FEATURE_ENVY_MANIPULATE",
+        SemanticDiagnostic.Severity.INFO,
+        "Feature envy: '%s' mostly manipulates '%s' instead of its own data. Consider moving the work into '%s'."
+    );
+    public static final JavaSemanticRule FEATURE_ENVY_TIGHTLY_COUPLED = new JavaSemanticRule(
+        "SEM_FEATURE_ENVY_TIGHTLY_COUPLED",
+        SemanticDiagnostic.Severity.INFO,
+        "Feature envy: '%s' is tightly coupled to '%s's data; delegate the logic to '%s' or a DTO."
+    );
 
     private JavaSemanticRules() {
     }
