@@ -186,7 +186,7 @@ Inspectopedia label in the sections below.
   dispatch value.
 - [ ] [easy] `'switch' statement without 'default' branch` - Flag non-exhaustive switches.
 - [ ] [medium] `'while' can be replaced with 'do while'` - Detect loops whose body must run at least once.
-- [ ] [medium] `Assertion can be replaced with 'if' statement` - Find asserts that should be enforced with explicit
+- [x] [medium] `Assertion can be replaced with 'if' statement` - Find asserts that should be enforced with explicit
   runtime checks.
 - [ ] [easy] `Boolean expression can be replaced with conditional expression` - Simplify verbose boolean logic.
 - [ ] [medium] `Common subexpression can be extracted from 'switch'` - Pull repeated branch logic around a `switch`.

@@ -216,6 +216,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Cast to '%s' conflicts with previous 'instanceof' check for '%s'"
     );
+    public static final JavaSemanticRule ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT = new JavaSemanticRule(
+        "SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT",
+        SemanticDiagnostic.Severity.INFO,
+        "Assertion can be replaced with an 'if' statement for better error handling"
+    );
 
     private JavaSemanticRules() {
     }

@@ -55,6 +55,7 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreFieldNameSameAsClassInspection(), Set.of("SEM_FIELD_NAME_SAME_AS_CLASS_NAME"));
         assertRuleIds(new CoreParameterNamedUnderscoreInspection(), Set.of("SEM_PARAMETER_NAME_UNDERSCORE"));
         assertRuleIds(new CoreUnreachableCodeInspection(), Set.of("SEM_UNREACHABLE_CODE"));
+        assertRuleIds(new CoreAssertionCanBeReplacedWithIfStatementInspection(), Set.of("SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT"));
     }
 
     @Test
@@ -359,6 +360,97 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d -> "SEM_UNREACHABLE_CODE".equals(d.code())));
+    }
+
+    @Test
+    void coreAssertionRuleEmitsDiagnosticForPublicMethod() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreAssertionCanBeReplacedWithIfStatementInspection(), """
+            class Example {
+                public void run(int value) {
+                    assert value > 0;
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT".equals(d.code())));
+    }
+
+    @Test
+    void coreAssertionRuleEmitsDiagnosticWhenMessagePresent() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreAssertionCanBeReplacedWithIfStatementInspection(), """
+            class Example {
+                private void validate(int value) {
+                    assert value > 0 : "value must be positive";
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT".equals(d.code())));
+    }
+
+    @Test
+    void coreAssertionRuleEmitsDiagnosticForProtectedMethod() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreAssertionCanBeReplacedWithIfStatementInspection(), """
+            class Example {
+                protected void run(int value) {
+                    assert value > 0;
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT".equals(d.code())));
+    }
+
+    @Test
+    void coreAssertionRuleEmitsDiagnosticForInterfaceMethod() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreAssertionCanBeReplacedWithIfStatementInspection(), """
+            interface Example {
+                default void run(int value) {
+                    assert value > 0;
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT".equals(d.code())));
+    }
+
+    @Test
+    void coreAssertionRuleEmitsDiagnosticForPublicConstructor() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreAssertionCanBeReplacedWithIfStatementInspection(), """
+            class Example {
+                public Example(int value) {
+                    assert value > 0;
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT".equals(d.code())));
+    }
+
+    @Test
+    void coreAssertionRuleDoesNotEmitDiagnosticForPrivateHelperWithoutMessage() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreAssertionCanBeReplacedWithIfStatementInspection(), """
+            class Example {
+                private void validate(int value) {
+                    assert value > 0;
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT".equals(d.code())));
+    }
+
+    @Test
+    void coreAssertionRuleDoesNotEmitDiagnosticForPackagePrivateMethodWithoutMessage() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreAssertionCanBeReplacedWithIfStatementInspection(), """
+            class Example {
+                void validate(int value) {
+                    assert value > 0;
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT".equals(d.code())));
     }
 
     @Test
