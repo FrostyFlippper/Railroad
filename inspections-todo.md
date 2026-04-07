@@ -380,9 +380,9 @@ Inspectopedia label in the sections below.
   initialised.
 - [ ] [medium] `Non-final static field is used during class initialization` - Flag mutable static state used during
   class initialisation.
-- [ ] [hard] `Overridable method called during object construction` - Detect constructor-time calls to non-final
+- [x] [hard] `Overridable method called during object construction` - Detect constructor-time calls to non-final
   overridable methods.
-- [ ] [hard] `Overridden method called during object construction` - Detect calls to methods whose runtime dispatch may
+- [x] [hard] `Overridden method called during object construction` - Detect calls to methods whose runtime dispatch may
   hit subclass behaviour during construction.
 - [-] [hard] `Static field may not be initialized` - Partially covered through definite-assignment checks for final
   fields, but not general static-field initialisation analysis.

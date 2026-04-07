@@ -57,6 +57,9 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreUnreachableCodeInspection(), Set.of("SEM_UNREACHABLE_CODE"));
         assertRuleIds(new CoreAssertionCanBeReplacedWithIfStatementInspection(), Set.of("SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT"));
         assertRuleIds(new CoreFeatureEnvyInspection(), Set.of("SEM_FEATURE_ENVY_MANIPULATE", "SEM_FEATURE_ENVY_TIGHTLY_COUPLED"));
+        assertRuleIds(new CoreInitializationInspection(), Set.of(
+                "SEM_OVERRIDABLE_METHOD_DURING_CONSTRUCTION",
+                "SEM_OVERRIDDEN_METHOD_DURING_CONSTRUCTION"));
     }
 
     @Test
@@ -1750,6 +1753,121 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d -> d.code().startsWith("SEM_FEATURE_ENVY")));
+    }
+
+    @Test
+    void coreInitializationRuleEmitsDiagnosticForImplicitThisCall() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInitializationInspection(), """
+            class Example {
+                void configure() {}
+
+                Example() {
+                    configure();
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_OVERRIDABLE_METHOD_DURING_CONSTRUCTION".equals(d.code())));
+    }
+
+    @Test
+    void coreInitializationRuleEmitsDiagnosticForExplicitThisCall() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInitializationInspection(), """
+            class Example {
+                void configure() {}
+
+                Example() {
+                    this.configure();
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_OVERRIDABLE_METHOD_DURING_CONSTRUCTION".equals(d.code())));
+    }
+
+    @Test
+    void coreInitializationRuleDoesNotEmitDiagnosticForOtherReceiver() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInitializationInspection(), """
+            class Example {
+                void configure() {}
+
+                Example(Example other) {
+                    other.configure();
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_OVERRIDABLE_METHOD_DURING_CONSTRUCTION".equals(d.code())));
+    }
+
+    @Test
+    void coreInitializationRuleDoesNotEmitDiagnosticForSuperCall() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInitializationInspection(), """
+            class Base {
+                void configure() {}
+            }
+
+            class Example extends Base {
+                Example() {
+                    super.configure();
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_OVERRIDABLE_METHOD_DURING_CONSTRUCTION".equals(d.code())));
+    }
+
+    @Test
+    void coreInitializationRuleDoesNotEmitDiagnosticForFinalOrStaticTarget() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInitializationInspection(), """
+            class Example {
+                final void configureFinal() {}
+                static void configureStatic() {}
+
+                Example() {
+                    configureFinal();
+                    configureStatic();
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_OVERRIDABLE_METHOD_DURING_CONSTRUCTION".equals(d.code())));
+    }
+
+    @Test
+    void coreInitializationRuleEmitsOverriddenDiagnosticWhenSubclassOverrides() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInitializationInspection(), """
+            class Base {
+                void configure() {}
+
+                Base() {
+                    configure();
+                }
+            }
+
+            class Derived extends Base {
+                @Override
+                void configure() {
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_OVERRIDDEN_METHOD_DURING_CONSTRUCTION".equals(d.code())));
+    }
+
+    @Test
+    void coreInitializationRuleDoesNotEmitOverriddenDiagnosticWhenNoSubclass() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreInitializationInspection(), """
+            class Example {
+                void configure() {}
+
+                Example() {
+                    configure();
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_OVERRIDDEN_METHOD_DURING_CONSTRUCTION".equals(d.code())));
     }
 
     private static List<SemanticDiagnostic> runProvider(JavaInspectionRuleProvider provider, String document) {

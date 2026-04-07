@@ -231,6 +231,16 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.INFO,
         "Feature envy: '%s' is tightly coupled to '%s's data; delegate the logic to '%s' or a DTO."
     );
+    public static final JavaSemanticRule OVERRIDABLE_METHOD_DURING_CONSTRUCTION = new JavaSemanticRule(
+        "SEM_OVERRIDABLE_METHOD_DURING_CONSTRUCTION",
+        SemanticDiagnostic.Severity.WARNING,
+        "Constructor calls overridable method '%s'."
+    );
+    public static final JavaSemanticRule OVERRIDDEN_METHOD_DURING_CONSTRUCTION = new JavaSemanticRule(
+        "SEM_OVERRIDDEN_METHOD_DURING_CONSTRUCTION",
+        SemanticDiagnostic.Severity.WARNING,
+        "Constructor calls overridden method '%s'."
+    );
 
     private JavaSemanticRules() {
     }

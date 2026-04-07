@@ -42,6 +42,7 @@ public final class JavaInspectionRegistries {
     public static final CoreCastConflictingWithInstanceofInspection CORE_CAST_CONFLICTING_WITH_INSTANCEOF_INSPECTION = new CoreCastConflictingWithInstanceofInspection();
     public static final CoreAssertionCanBeReplacedWithIfStatementInspection CORE_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT_INSPECTION = new CoreAssertionCanBeReplacedWithIfStatementInspection();
     public static final CoreFeatureEnvyInspection CORE_FEATURE_ENVY_INSPECTION = new CoreFeatureEnvyInspection();
+    public static final CoreInitializationInspection CORE_INITIALIZATION_INSPECTION = new CoreInitializationInspection();
 
     public static final Registry<JavaInspection> JAVA_INSPECTION_REGISTRY =
         RegistryManager.createRegistry("railroad:java_inspection", JavaInspection.class);
@@ -79,6 +80,7 @@ public final class JavaInspectionRegistries {
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreCastConflictingWithInstanceofInspection.ID, CORE_CAST_CONFLICTING_WITH_INSTANCEOF_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreAssertionCanBeReplacedWithIfStatementInspection.ID, CORE_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreFeatureEnvyInspection.ID, CORE_FEATURE_ENVY_INSPECTION);
+        JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreInitializationInspection.ID, CORE_INITIALIZATION_INSPECTION);
     }
 
     private JavaInspectionRegistries() {
@@ -115,7 +117,8 @@ public final class JavaInspectionRegistries {
             CORE_OVERLY_STRONG_TYPE_CAST_INSPECTION,
             CORE_CAST_CONFLICTING_WITH_INSTANCEOF_INSPECTION,
             CORE_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT_INSPECTION,
-            CORE_FEATURE_ENVY_INSPECTION
+            CORE_FEATURE_ENVY_INSPECTION,
+            CORE_INITIALIZATION_INSPECTION
         );
     }
 }
