@@ -4,7 +4,7 @@ import dev.railroadide.railroad.Railroad;
 import dev.railroadide.railroad.ide.completion.CompletionItem;
 import dev.railroadide.railroad.ide.completion.CompletionProvider;
 import dev.railroadide.railroad.ide.completion.CompletionResult;
-import dev.railroadide.railroad.ide.completion.JdtCompletionProvider;
+import dev.railroadide.railroad.ide.completion.SstCompletionProvider;
 import dev.railroadide.railroad.ide.diagnostics.DiagnosticsProvider;
 import dev.railroadide.railroad.ide.diagnostics.EditorDiagnostic;
 import dev.railroadide.railroad.ide.diagnostics.SemanticDiagnosticsProvider;
@@ -115,7 +115,7 @@ public class JavaCodeEditorPane extends TextEditorPane {
     public JavaCodeEditorPane(Project project, Path item) {
         super(item);
         this.project = Objects.requireNonNull(project, "project");
-        this.completionProvider = new JdtCompletionProvider(filePath, SYSTEM_MODULE_PATHS);
+        this.completionProvider = new SstCompletionProvider(project, filePath);
         this.diagnosticsProvider = new SemanticDiagnosticsProvider(project, filePath);
         this.signatureHelpProvider = new JdtSignatureHelpProvider(filePath, SYSTEM_MODULE_PATHS);
 
