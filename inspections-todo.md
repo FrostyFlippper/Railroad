@@ -371,7 +371,7 @@ Inspectopedia label in the sections below.
 
 ## Initialization
 
-- [ ] [hard] `'this' reference escaped in object construction` - Detect `this` escaping before construction completes.
+- [x] [hard] `'this' reference escaped in object construction` - Detect `this` escaping before construction completes.
 - [ ] [hard] `Abstract method called during object construction` - Flag constructor-time calls to abstract methods.
 - [ ] [easy] `Double brace initialization` - Detect double-brace initialisation and its hidden class/allocation costs.
 - [-] [hard] `Instance field may not be initialized` - Partially covered through definite-assignment checks for final

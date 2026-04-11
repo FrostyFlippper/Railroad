@@ -251,6 +251,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.ERROR,
         "Method '%s' declares disallowed exception '%s' in its signature"
     );
+    public static final JavaSemanticRule THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION = new JavaSemanticRule(
+        "SEM_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION",
+        SemanticDiagnostic.Severity.WARNING,
+        "Constructor leaks 'this' reference via '%s' before the object is fully constructed"
+    );
 
     private JavaSemanticRules() {
     }

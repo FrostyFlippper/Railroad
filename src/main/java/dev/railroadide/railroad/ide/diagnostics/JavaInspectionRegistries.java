@@ -44,6 +44,7 @@ public final class JavaInspectionRegistries {
     public static final CoreFeatureEnvyInspection CORE_FEATURE_ENVY_INSPECTION = new CoreFeatureEnvyInspection();
     public static final CoreInitializationInspection CORE_INITIALIZATION_INSPECTION = new CoreInitializationInspection();
     public static final CoreAssertionWithSideEffectsInspection CORE_ASSERTION_WITH_SIDE_EFFECTS_INSPECTION = new CoreAssertionWithSideEffectsInspection();
+    public static final CoreThisReferenceEscapedObjectConstructionInspection CORE_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION_INSPECTION = new CoreThisReferenceEscapedObjectConstructionInspection();
 
     public static final Registry<JavaInspection> JAVA_INSPECTION_REGISTRY =
         RegistryManager.createRegistry("railroad:java_inspection", JavaInspection.class);
@@ -83,6 +84,7 @@ public final class JavaInspectionRegistries {
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreFeatureEnvyInspection.ID, CORE_FEATURE_ENVY_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreInitializationInspection.ID, CORE_INITIALIZATION_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreAssertionWithSideEffectsInspection.ID, CORE_ASSERTION_WITH_SIDE_EFFECTS_INSPECTION);
+        JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreThisReferenceEscapedObjectConstructionInspection.ID, CORE_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION_INSPECTION);
     }
 
     private JavaInspectionRegistries() {
@@ -121,7 +123,8 @@ public final class JavaInspectionRegistries {
             CORE_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT_INSPECTION,
             CORE_FEATURE_ENVY_INSPECTION,
             CORE_INITIALIZATION_INSPECTION,
-            CORE_ASSERTION_WITH_SIDE_EFFECTS_INSPECTION
+            CORE_ASSERTION_WITH_SIDE_EFFECTS_INSPECTION,
+            CORE_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION_INSPECTION
         );
     }
 }
