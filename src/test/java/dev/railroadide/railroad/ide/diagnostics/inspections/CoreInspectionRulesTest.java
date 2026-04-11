@@ -37,7 +37,11 @@ class CoreInspectionRulesTest {
                 "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE"));
         assertRuleIds(new CoreModifierInspection(), Set.of("SEM_ILLEGAL_MODIFIER"));
         assertRuleIds(new CoreControlFlowInspection(), Set.of("SEM_INVALID_CONTROL_FLOW", "SEM_MISSING_RETURN"));
-        assertRuleIds(new CoreExceptionInspection(), Set.of("SEM_UNCAUGHT_CHECKED_EXCEPTION", "SEM_UNREACHABLE_CATCH", "SEM_INVALID_EXCEPTION_TYPE"));
+        assertRuleIds(new CoreExceptionInspection(), Set.of(
+                "SEM_UNCAUGHT_CHECKED_EXCEPTION",
+                "SEM_UNREACHABLE_CATCH",
+                "SEM_INVALID_EXCEPTION_TYPE",
+                "SEM_DISALLOWED_EXCEPTION_IN_METHOD_SIGNATURE"));
         assertRuleIds(new CoreDefiniteAssignmentInspection(), Set.of("SEM_UNASSIGNED_VARIABLE", "SEM_ILLEGAL_FINAL_ASSIGNMENT", "SEM_UNINITIALIZED_FINAL_FIELD"));
         assertRuleIds(new CoreAssignmentInspection(), Set.of("SEM_INCOMPATIBLE_ASSIGNMENT"));
         assertRuleIds(new CoreOverlyStrongTypeCastInspection(), Set.of("SEM_OVERLY_STRONG_TYPE_CAST"));
@@ -1471,6 +1475,44 @@ class CoreInspectionRulesTest {
         assertTrue(diagnostics.stream().anyMatch(d -> d.message().contains("declared thrown type 'java.lang.String' must extend Throwable")));
         assertTrue(diagnostics.stream().anyMatch(d -> d.message().contains("caught type 'java.lang.String' must extend Throwable")));
         assertTrue(diagnostics.stream().anyMatch(d -> d.message().contains("Unhandled checked exception 'java.io.IOException'")));
+    }
+
+    @Test
+    void coreExceptionRuleEmitsDisallowedExceptionDeclarationDiagnostic() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreExceptionInspection(), """
+            class Example {
+                void banned() throws Exception {
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_DISALLOWED_EXCEPTION_IN_METHOD_SIGNATURE".equals(d.code())));
+        assertTrue(diagnostics.stream().anyMatch(d -> d.message().contains("declares disallowed exception 'java.lang.Exception'")));
+    }
+
+    @Test
+    void coreExceptionRuleEmitsDisallowedExceptionDeclarationDiagnosticForConstructor() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreExceptionInspection(), """
+            class Example {
+                Example() throws RuntimeException {
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_DISALLOWED_EXCEPTION_IN_METHOD_SIGNATURE".equals(d.code())));
+        assertTrue(diagnostics.stream().anyMatch(d -> d.message().contains("declares disallowed exception 'java.lang.RuntimeException'")));
+    }
+
+    @Test
+    void coreExceptionRuleDoesNotEmitDisallowedExceptionDiagnosticForAllowedCheckedException() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreExceptionInspection(), """
+            class Example {
+                void allowed() throws java.io.IOException {
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_DISALLOWED_EXCEPTION_IN_METHOD_SIGNATURE".equals(d.code())));
     }
 
     @Test

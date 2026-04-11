@@ -445,6 +445,17 @@ public final class JavaRuleContext {
         return List.copyOf(nodes);
     }
 
+    /**
+     * Returns all nodes whose {@code kind().id()} is contained in the supplied array of parser kind ids.
+     *
+     * @param kindIds array of parser kind ids to match
+     * @return immutable list of matching nodes
+     * @throws NullPointerException if {@code kindIds} is {@code null}
+     */
+    public List<SyntaxNode> nodesOfKinds(String... kindIds) {
+        return nodesOfKinds(Set.of(kindIds));
+    }
+
     public @Nullable SyntaxNode firstDirectExpressionChild(SyntaxNode node) {
         for (SyntaxNode child : node.children()) {
             if (isExpressionNode(child))

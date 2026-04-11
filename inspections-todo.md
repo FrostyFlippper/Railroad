@@ -315,7 +315,7 @@ Inspectopedia label in the sections below.
 - [ ] [medium] `Overly broad 'throws' clause` - Narrow overly generic declared exceptions.
 - [ ] [medium] `Prohibited 'Exception' caught` - Detect disallowed catch targets like generic `Exception` in configured
   contexts.
-- [ ] [medium] `Prohibited exception declared` - Flag disallowed exceptions in method signatures.
+- [x] [medium] `Prohibited exception declared` - Flag disallowed exceptions in method signatures.
 - [ ] [medium] `Prohibited exception thrown` - Flag disallowed exception types in `throw`.
 - [ ] [easy] `Throwable supplier never returns a value` - Detect `orElseThrow` suppliers that throw instead of returning
   the throwable.

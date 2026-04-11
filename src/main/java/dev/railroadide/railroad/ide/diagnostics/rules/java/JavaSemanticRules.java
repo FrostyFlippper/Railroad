@@ -246,6 +246,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Assertion contains side effects, which may not be executed if assertions are disabled"
     );
+    public static final JavaSemanticRule DISALLOWED_EXCEPTION_IN_METHOD_SIGNATURE = new JavaSemanticRule(
+        "SEM_DISALLOWED_EXCEPTION_IN_METHOD_SIGNATURE",
+        SemanticDiagnostic.Severity.ERROR,
+        "Method '%s' declares disallowed exception '%s' in its signature"
+    );
 
     private JavaSemanticRules() {
     }
