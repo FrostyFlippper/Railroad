@@ -56,6 +56,7 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreParameterNamedUnderscoreInspection(), Set.of("SEM_PARAMETER_NAME_UNDERSCORE"));
         assertRuleIds(new CoreUnreachableCodeInspection(), Set.of("SEM_UNREACHABLE_CODE"));
         assertRuleIds(new CoreAssertionCanBeReplacedWithIfStatementInspection(), Set.of("SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT"));
+        assertRuleIds(new CoreAssertionWithSideEffectsInspection(), Set.of("SEM_ASSERTION_WITH_SIDE_EFFECTS"));
         assertRuleIds(new CoreFeatureEnvyInspection(), Set.of("SEM_FEATURE_ENVY_MANIPULATE", "SEM_FEATURE_ENVY_TIGHTLY_COUPLED"));
         assertRuleIds(new CoreInitializationInspection(), Set.of(
                 "SEM_OVERRIDABLE_METHOD_DURING_CONSTRUCTION",
@@ -455,6 +456,40 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d -> "SEM_ASSERTION_CAN_BE_REPLACED_WITH_IF_STATEMENT".equals(d.code())));
+    }
+
+    @Test
+    void coreAssertionSideEffectRuleEmitsDiagnosticForAssignmentInCondition() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreAssertionWithSideEffectsInspection(), """
+            class Example {
+                void run() {
+                    int value = 0;
+                    assert (value = 1) > 0;
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_ASSERTION_WITH_SIDE_EFFECTS".equals(d.code())));
+    }
+
+    @Test
+    void coreAssertionSideEffectRuleEmitsDiagnosticForMutatingMethodCall() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreAssertionWithSideEffectsInspection(), """
+            class Example {
+                private int counter;
+
+                private boolean mutate() {
+                    counter++;
+                    return true;
+                }
+
+                void run() {
+                    assert mutate();
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_ASSERTION_WITH_SIDE_EFFECTS".equals(d.code())));
     }
 
     @Test

@@ -241,6 +241,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Constructor calls overridden method '%s'."
     );
+    public static final JavaSemanticRule ASSERTION_WITH_SIDE_EFFECTS = new JavaSemanticRule(
+        "SEM_ASSERTION_WITH_SIDE_EFFECTS",
+        SemanticDiagnostic.Severity.WARNING,
+        "Assertion contains side effects, which may not be executed if assertions are disabled"
+    );
 
     private JavaSemanticRules() {
     }

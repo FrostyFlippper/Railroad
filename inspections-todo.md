@@ -566,7 +566,7 @@ Inspectopedia label in the sections below.
 
 ## High-priority probable bugs
 
-- [ ] [hard] `'assert' statement with side effects` - Detect asserts whose condition mutates state.
+- [x] [hard] `'assert' statement with side effects` - Detect asserts whose condition mutates state.
 - [ ] [medium] `'Comparable' implemented but 'equals()' not overridden` - Enforce consistency between ordering and
   equality contracts.
 - [ ] [easy] `'equals()' and 'hashCode()' not paired` - Require both methods to be implemented together.
