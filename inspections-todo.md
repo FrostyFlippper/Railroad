@@ -414,7 +414,7 @@ Inspectopedia label in the sections below.
 - [ ] [easy] `Floating-point equality comparison` - Flag direct `==`/`!=` on floating-point values.
 - [ ] [medium] `Implicit numeric conversion` - Detect silent widening/narrowing conversions.
 - [ ] [easy] `Integer division in floating-point context` - Flag truncated integer division feeding float/double usage.
-- [ ] [medium] `Negative int hexadecimal constant in long context` - Detect surprising sign behaviour with hex literals.
+- [x] [medium] `Negative int hexadecimal constant in long context` - Detect surprising sign behaviour with hex literals.
 - [ ] [medium] `Non-reproducible call to 'Math'` - Flag math calls whose results are not guaranteed bit-for-bit
   reproducible.
 - [ ] [easy] `Number constructor call with primitive argument` - Replace boxed-number constructors with

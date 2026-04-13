@@ -256,6 +256,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Constructor leaks 'this' reference via '%s' before the object is fully constructed"
     );
+    public static final JavaSemanticRule NEGATIVE_HEX_INT_IN_LONG_CONTEXT = new JavaSemanticRule(
+        "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT",
+        SemanticDiagnostic.Severity.WARNING,
+        "Negative hexadecimal integer literal '%s' in long context may be misinterpreted as a negative integer literal"
+    );
 
     private JavaSemanticRules() {
     }

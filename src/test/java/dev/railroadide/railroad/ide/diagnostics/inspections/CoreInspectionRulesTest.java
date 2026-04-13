@@ -44,6 +44,7 @@ class CoreInspectionRulesTest {
                 "SEM_DISALLOWED_EXCEPTION_IN_METHOD_SIGNATURE"));
         assertRuleIds(new CoreDefiniteAssignmentInspection(), Set.of("SEM_UNASSIGNED_VARIABLE", "SEM_ILLEGAL_FINAL_ASSIGNMENT", "SEM_UNINITIALIZED_FINAL_FIELD"));
         assertRuleIds(new CoreAssignmentInspection(), Set.of("SEM_INCOMPATIBLE_ASSIGNMENT"));
+        assertRuleIds(new CoreNegativeHexIntInLongContextInspection(), Set.of("SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT"));
         assertRuleIds(new CoreOverlyStrongTypeCastInspection(), Set.of("SEM_OVERLY_STRONG_TYPE_CAST"));
         assertRuleIds(new CoreCastConflictingWithInstanceofInspection(), Set.of("SEM_CAST_CONFLICTING_WITH_INSTANCEOF"));
         assertRuleIds(new CoreWildcardImportInspection(), Set.of("SEM_WILDCARD_IMPORT"));
@@ -508,6 +509,127 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d -> "SEM_UNRESOLVED_CALL".equals(d.code())));
+    }
+
+    @Test
+    void coreNegativeHexIntInLongContextRuleEmitsDiagnosticForParenthesizedAndNestedLongContexts() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreNegativeHexIntInLongContextInspection(), """
+            class Example {
+                long parenthesized = (0x8000_0000);
+
+                long nested = 1 + (0x8000_0000);
+            }
+            """);
+
+        long count = diagnostics.stream()
+            .filter(d -> "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT".equals(d.code()))
+            .count();
+        assertEquals(2L, count);
+    }
+
+    @Test
+    void coreNegativeHexIntInLongContextRuleEmitsDiagnosticForJdkMethodInvocationArgument() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreNegativeHexIntInLongContextInspection(), """
+            class Example {
+                long run() {
+                    return Long.max(0x8000_0000, 1L);
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT".equals(d.code())));
+    }
+
+    @Test
+    void coreNegativeHexIntInLongContextRuleEmitsDiagnosticForFieldInitializer() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreNegativeHexIntInLongContextInspection(), """
+            class Example {
+                long field = 0x8000_0000;
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT".equals(d.code())));
+    }
+
+    @Test
+    void coreNegativeHexIntInLongContextRuleEmitsDiagnosticForArrayInitializer() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreNegativeHexIntInLongContextInspection(), """
+            class Example {
+                long[] values = { 0x8000_0000 };
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT".equals(d.code())));
+    }
+
+    @Test
+    void coreNegativeHexIntInLongContextRuleEmitsDiagnosticForConditionalArm() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreNegativeHexIntInLongContextInspection(), """
+            class Example {
+                long conditional(boolean flag) {
+                    return flag ? 0x8000_0000 : 1L;
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT".equals(d.code())));
+    }
+
+    @Test
+    void coreNegativeHexIntInLongContextRuleEmitsDiagnosticForCastContext() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreNegativeHexIntInLongContextInspection(), """
+            class Example {
+                long casted() {
+                    return (long) 0x8000_0000;
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT".equals(d.code())));
+    }
+
+    @Test
+    void coreNegativeHexIntInLongContextRuleDoesNotEmitForDecimalLongLiteral() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreNegativeHexIntInLongContextInspection(), """
+            class Example {
+                long value = 2147483648L;
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT".equals(d.code())));
+    }
+
+    @Test
+    void coreNegativeHexIntInLongContextRuleDoesNotEmitForHexLiteralWithLongSuffix() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreNegativeHexIntInLongContextInspection(), """
+            class Example {
+                long value = 0x8000_0000L;
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT".equals(d.code())));
+    }
+
+    @Test
+    void coreNegativeHexIntInLongContextRuleDoesNotEmitForNonNegativeHexInt() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreNegativeHexIntInLongContextInspection(), """
+            class Example {
+                long value = 0x7FFF_FFFF;
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT".equals(d.code())));
+    }
+
+    @Test
+    void coreNegativeHexIntInLongContextRuleDoesNotEmitForOutOfRangeHexLiteral() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreNegativeHexIntInLongContextInspection(), """
+            class Example {
+                long value = 0x1_0000_0000;
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT".equals(d.code())));
     }
 
     @Test
