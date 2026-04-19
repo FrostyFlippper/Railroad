@@ -261,6 +261,21 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Negative hexadecimal integer literal '%s' in long context may be misinterpreted as a negative integer literal"
     );
+    public static final JavaSemanticRule CONSTANT_CONDITIONAL_EXPRESSION_HARDCODED_LITERAL = new JavaSemanticRule(
+        "SEM_CONSTANT_CONDITIONAL_EXPRESSION_HARDCODED_LITERAL",
+        SemanticDiagnostic.Severity.WARNING,
+        "'%s' condition is always '%s' due to hardcoded literal"
+    );
+    public static final JavaSemanticRule CONSTANT_CONDITIONAL_EXPRESSION_COMPILE_TIME_CONSTANT = new JavaSemanticRule(
+        "SEM_CONSTANT_CONDITIONAL_EXPRESSION_COMPILE_TIME_CONSTANT",
+        SemanticDiagnostic.Severity.WARNING,
+        "'%s' condition is always '%s' due to compile-time constant evaluation"
+    );
+    public static final JavaSemanticRule CONSTANT_CONDITIONAL_EXPRESSION_DATA_FLOW_CONSTANT = new JavaSemanticRule(
+        "SEM_CONSTANT_CONDITIONAL_EXPRESSION_DATA_FLOW_CONSTANT",
+        SemanticDiagnostic.Severity.WARNING,
+        "'%s' is known to be '%s' due to data flow analysis, making the condition always '%s'"
+    );
 
     private JavaSemanticRules() {
     }

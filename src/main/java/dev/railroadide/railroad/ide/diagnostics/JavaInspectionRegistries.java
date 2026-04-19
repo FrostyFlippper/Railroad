@@ -46,6 +46,7 @@ public final class JavaInspectionRegistries {
     public static final CoreAssertionWithSideEffectsInspection CORE_ASSERTION_WITH_SIDE_EFFECTS_INSPECTION = new CoreAssertionWithSideEffectsInspection();
     public static final CoreThisReferenceEscapedObjectConstructionInspection CORE_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION_INSPECTION = new CoreThisReferenceEscapedObjectConstructionInspection();
     public static final CoreNegativeHexIntInLongContextInspection CORE_NEGATIVE_HEX_INT_IN_LONG_CONTEXT_INSPECTION = new CoreNegativeHexIntInLongContextInspection();
+    public static final CoreConstantConditionalExpressionInspection CORE_CONSTANT_CONDITIONAL_EXPRESSION_INSPECTION = new CoreConstantConditionalExpressionInspection();
 
     public static final Registry<JavaInspection> JAVA_INSPECTION_REGISTRY =
         RegistryManager.createRegistry("railroad:java_inspection", JavaInspection.class);
@@ -87,6 +88,7 @@ public final class JavaInspectionRegistries {
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreAssertionWithSideEffectsInspection.ID, CORE_ASSERTION_WITH_SIDE_EFFECTS_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreThisReferenceEscapedObjectConstructionInspection.ID, CORE_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreNegativeHexIntInLongContextInspection.ID, CORE_NEGATIVE_HEX_INT_IN_LONG_CONTEXT_INSPECTION);
+        JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreConstantConditionalExpressionInspection.ID, CORE_CONSTANT_CONDITIONAL_EXPRESSION_INSPECTION);
     }
 
     private JavaInspectionRegistries() {
@@ -127,7 +129,8 @@ public final class JavaInspectionRegistries {
             CORE_INITIALIZATION_INSPECTION,
             CORE_ASSERTION_WITH_SIDE_EFFECTS_INSPECTION,
             CORE_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION_INSPECTION,
-            CORE_NEGATIVE_HEX_INT_IN_LONG_CONTEXT_INSPECTION
+            CORE_NEGATIVE_HEX_INT_IN_LONG_CONTEXT_INSPECTION,
+            CORE_CONSTANT_CONDITIONAL_EXPRESSION_INSPECTION
         );
     }
 }

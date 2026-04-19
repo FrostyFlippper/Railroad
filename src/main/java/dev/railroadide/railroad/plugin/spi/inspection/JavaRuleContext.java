@@ -114,6 +114,62 @@ public final class JavaRuleContext {
         this.semanticModel = Objects.requireNonNull(semanticModel, "semanticModel");
     }
 
+    public @Nullable SyntaxNode forBodyOf(SyntaxNode forNode) {
+        boolean seenHeader = false;
+        for (SyntaxNode child : forNode.children()) {
+            String kindId = child.kind().id();
+            if (!seenHeader && (
+                JavaSyntaxKinds.BASIC_FOR_STATEMENT.id().equals(kindId)
+                    || JavaSyntaxKinds.ENHANCED_FOR_STATEMENT.id().equals(kindId))) {
+                seenHeader = true;
+                continue;
+            }
+
+            if (seenHeader)
+                return child;
+        }
+
+        return null;
+    }
+
+    public @Nullable SyntaxNode thenBranchOf(SyntaxNode ifNode) {
+        List<SyntaxNode> children = ifNode.children();
+        boolean seenCondition = false;
+
+        for (SyntaxNode child : children) {
+            if (!seenCondition && isExpressionNode(child)) {
+                seenCondition = true;
+                continue;
+            }
+
+            if (seenCondition)
+                return child;
+        }
+
+        return null;
+    }
+
+    public @Nullable SyntaxNode elseBranchOf(SyntaxNode ifNode) {
+        boolean sawElse = false;
+        for (SyntaxNode child : ifNode.children()) {
+            if (!sawElse) {
+                if (isElseToken(child))
+                    sawElse = true;
+                continue;
+            }
+
+            if (!(child instanceof SyntaxToken))
+                return child;
+        }
+
+        return null;
+    }
+
+    private boolean isElseToken(SyntaxNode node) {
+        return node instanceof SyntaxToken token
+            && JavaSyntaxKinds.tokenKind(JavaTokenType.ELSE_KEYWORD).id().equals(token.kind().id());
+    }
+
     /**
      * Returns whether a block node contains only tokens and no nested syntax nodes.
      *
