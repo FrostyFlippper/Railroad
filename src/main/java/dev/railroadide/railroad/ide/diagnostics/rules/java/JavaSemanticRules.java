@@ -276,6 +276,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "'%s' is known to be '%s' due to data flow analysis, making the condition always '%s'"
     );
+    public static final JavaSemanticRule OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK = new JavaSemanticRule(
+        "SEM_OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK",
+        SemanticDiagnostic.Severity.WARNING,
+        "Call to 'Optional.get()' without preceding 'isPresent()' check may throw 'NoSuchElementException'"
+    );
 
     private JavaSemanticRules() {
     }

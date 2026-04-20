@@ -132,6 +132,21 @@ public final class JavaRuleContext {
         return null;
     }
 
+    public SyntaxNode lambdaBodyOf(SyntaxNode lambda) {
+        boolean seenArrow = false;
+        for (SyntaxNode child : lambda.children()) {
+            if (!seenArrow && child instanceof SyntaxToken token && "->".equals(token.text())) {
+                seenArrow = true;
+                continue;
+            }
+
+            if (seenArrow && !(child instanceof SyntaxToken))
+                return child;
+        }
+
+        return null;
+    }
+
     public @Nullable SyntaxNode thenBranchOf(SyntaxNode ifNode) {
         List<SyntaxNode> children = ifNode.children();
         boolean seenCondition = false;
@@ -527,6 +542,78 @@ public final class JavaRuleContext {
                 children.add(child);
         }
         return List.copyOf(children);
+    }
+
+    public boolean isMethodInvocationNamed(SyntaxNode node, String methodName) {
+        Objects.requireNonNull(node, "node");
+        Objects.requireNonNull(methodName, "methodName");
+
+        if (!JAVA_METHOD_INVOCATION_EXPRESSION.equals(node.kind().id()))
+            return false;
+
+        SyntaxNode selectorName = selectorNameNode(node);
+        String actualName = selectorName == null ? null : firstIdentifierLikeTokenText(selectorName);
+        return methodName.equals(actualName);
+    }
+
+    public @Nullable SyntaxNode invocationReceiver(SyntaxNode invocation) {
+        Objects.requireNonNull(invocation, "invocation");
+        return explicitReceiver(invocation);
+    }
+
+    public boolean hasNoArguments(SyntaxNode invocation) {
+        Objects.requireNonNull(invocation, "invocation");
+        SyntaxNode argumentList = directChild(invocation, JAVA_ARGUMENT_LIST);
+        if (argumentList == null)
+            return true;
+
+        for (SyntaxNode child : argumentList.children()) {
+            if (isExpressionNode(child))
+                return false;
+        }
+
+        return true;
+    }
+
+    public @Nullable String simpleReceiverName(SyntaxNode invocation) {
+        Objects.requireNonNull(invocation, "invocation");
+        SyntaxNode receiver = unwrapTransparentExpression(invocationReceiver(invocation));
+        return simpleExpressionKey(receiver);
+    }
+
+    public @Nullable String simpleExpressionKey(@Nullable SyntaxNode expression) {
+        SyntaxNode current = unwrapTransparentExpression(expression);
+        if (current == null)
+            return null;
+
+        if (JavaSyntaxKinds.NAME_EXPRESSION.id().equals(current.kind().id()))
+            return firstIdentifierLikeTokenText(current);
+
+        return null;
+    }
+
+    public @Nullable SyntaxNode conditionOf(SyntaxNode node) {
+        Objects.requireNonNull(node, "node");
+
+        return switch (node.kind().id()) {
+            case "JAVA_IF_STATEMENT", "JAVA_WHILE_STATEMENT", "JAVA_DO_WHILE_STATEMENT" ->
+                firstDirectExpressionChild(node);
+            case "JAVA_FOR_STATEMENT" -> basicForConditionOf(node);
+            default -> null;
+        };
+    }
+
+    public boolean hasOperatorToken(SyntaxNode node, JavaTokenType tokenType) {
+        Objects.requireNonNull(node, "node");
+        Objects.requireNonNull(tokenType, "tokenType");
+
+        String expectedKindId = JavaSyntaxKinds.tokenKind(tokenType).id();
+        for (SyntaxNode child : node.children()) {
+            if (child instanceof SyntaxToken token && expectedKindId.equals(token.kind().id()))
+                return true;
+        }
+
+        return false;
     }
 
     public @Nullable SyntaxNode selectorNameNode(SyntaxNode node) {
@@ -1200,6 +1287,25 @@ public final class JavaRuleContext {
         return null;
     }
 
+    private @Nullable SyntaxNode basicForConditionOf(SyntaxNode forNode) {
+        SyntaxNode basicFor = directChild(forNode, JavaSyntaxKinds.BASIC_FOR_STATEMENT.id());
+        if (basicFor == null)
+            return null;
+
+        int semicolonCount = 0;
+        for (SyntaxNode child : basicFor.children()) {
+            if (child instanceof SyntaxToken token && ";".equals(token.text())) {
+                semicolonCount++;
+                continue;
+            }
+
+            if (semicolonCount == 1 && isExpressionNode(child))
+                return child;
+        }
+
+        return null;
+    }
+
     private Map<String, Symbol> localTypeSymbolsByQualifiedName() {
         Map<String, Symbol> cached = cachedLocalTypeSymbolsByQualifiedName;
         if (cached != null)
@@ -1699,6 +1805,48 @@ public final class JavaRuleContext {
         visitor.accept(root);
         for (SyntaxNode child : root.children()) {
             traverseDescendants(child, visitor);
+        }
+    }
+
+    public @Nullable SyntaxNode guardedBodyOf(SyntaxNode loopNode) {
+        SyntaxNode condition = conditionOf(loopNode);
+        boolean seenCondition = false;
+        for (SyntaxNode child : loopNode.children()) {
+            if (!seenCondition && Objects.equals(child, condition)) {
+                seenCondition = true;
+                continue;
+            }
+
+            if (seenCondition && !(child instanceof SyntaxToken))
+                return child;
+        }
+
+        return null;
+    }
+
+    public NegationUnwrapResult unwrapLeadingNegations(SyntaxNode expression) {
+        SyntaxNode current = unwrapTransparentExpression(expression);
+        if (current == null)
+            return null;
+
+        int negationCount = 0;
+        while (current != null && Objects.equals(JavaSyntaxKinds.UNARY_EXPRESSION.id(), current.kind().id())) {
+            if (!hasOperatorToken(current, JavaTokenType.EXCLAMATION_MARK))
+                break;
+
+            negationCount++;
+            current = unwrapTransparentExpression(firstExpressionChild(current));
+        }
+
+        return new NegationUnwrapResult(current, negationCount);
+    }
+
+    public record NegationUnwrapResult(
+        SyntaxNode expression,
+        int negationCount
+    ) {
+        public boolean isNegated() {
+            return negationCount % 2 != 0;
         }
     }
 

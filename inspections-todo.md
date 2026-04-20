@@ -598,7 +598,7 @@ Inspectopedia label in the sections below.
   bugs.
 - [ ] [easy] `Number comparison using '==', instead of 'equals()'` - Detect boxed-number reference comparison.
 - [ ] [easy] `Object comparison using '==', instead of 'equals()'` - Detect accidental reference equality.
-- [ ] [medium] `Optional.get() is called without isPresent() check` - Detect unsafe optional extraction.
+- [-] [medium] `Optional.get() is called without isPresent() check` - Detect unsafe optional extraction.
 - [ ] [medium] `Result of method call ignored` - Flag ignored return values from meaningful methods.
 - [ ] [starter] `Result of object allocation ignored` - Detect `new` expressions whose result is unused.
 - [ ] [medium] `Sorted collection with non-comparable elements` - Detect natural-order sorted collections whose element
