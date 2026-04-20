@@ -48,6 +48,7 @@ public final class JavaInspectionRegistries {
     public static final CoreNegativeHexIntInLongContextInspection CORE_NEGATIVE_HEX_INT_IN_LONG_CONTEXT_INSPECTION = new CoreNegativeHexIntInLongContextInspection();
     public static final CoreConstantConditionalExpressionInspection CORE_CONSTANT_CONDITIONAL_EXPRESSION_INSPECTION = new CoreConstantConditionalExpressionInspection();
     public static final CoreOptionalGetWithoutIsPresentCheckInspection CORE_OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK_INSPECTION = new CoreOptionalGetWithoutIsPresentCheckInspection();
+    public static final CoreInfiniteRecursionInspection CORE_INFINITE_RECURSION_INSPECTION = new CoreInfiniteRecursionInspection();
 
     public static final Registry<JavaInspection> JAVA_INSPECTION_REGISTRY =
         RegistryManager.createRegistry("railroad:java_inspection", JavaInspection.class);
@@ -91,6 +92,7 @@ public final class JavaInspectionRegistries {
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreNegativeHexIntInLongContextInspection.ID, CORE_NEGATIVE_HEX_INT_IN_LONG_CONTEXT_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreConstantConditionalExpressionInspection.ID, CORE_CONSTANT_CONDITIONAL_EXPRESSION_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreOptionalGetWithoutIsPresentCheckInspection.ID, CORE_OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK_INSPECTION);
+        JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreInfiniteRecursionInspection.ID, CORE_INFINITE_RECURSION_INSPECTION);
     }
 
     private JavaInspectionRegistries() {
@@ -133,7 +135,8 @@ public final class JavaInspectionRegistries {
             CORE_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION_INSPECTION,
             CORE_NEGATIVE_HEX_INT_IN_LONG_CONTEXT_INSPECTION,
             CORE_CONSTANT_CONDITIONAL_EXPRESSION_INSPECTION,
-            CORE_OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK_INSPECTION
+            CORE_OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK_INSPECTION,
+            CORE_INFINITE_RECURSION_INSPECTION
         );
     }
 }

@@ -281,6 +281,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Call to 'Optional.get()' without preceding 'isPresent()' check may throw 'NoSuchElementException'"
     );
+    public static final JavaSemanticRule INFINITE_RECURSION = new JavaSemanticRule(
+        "SEM_INFINITE_RECURSION",
+        SemanticDiagnostic.Severity.WARNING,
+        "Method '%s' is recursively called without a base case, leading to infinite recursion"
+    );
 
     private JavaSemanticRules() {
     }

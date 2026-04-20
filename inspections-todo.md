@@ -588,7 +588,7 @@ Inspectopedia label in the sections below.
 - [ ] [medium] `Copy constructor misses field` - Find copy constructors that omit part of object state.
 - [ ] [easy] `Covariant 'equals()'` - Detect `equals(T)` without proper `equals(Object)`.
 - [ ] [starter] `Expression is compared to itself` - Flag `x == x`-style accidental self-comparisons.
-- [ ] [hard] `Infinite recursion` - Detect self-calls that never bottom out.
+- [-] [hard] `Infinite recursion` - Detect self-calls that never bottom out.
 - [ ] [medium] `Invalid method reference used for 'Comparator'` - Flag method references that violate comparator
   contract expectations.
 - [ ] [medium] `Loop executes zero or billions of times` - Detect loops that do not terminate as intended due to
