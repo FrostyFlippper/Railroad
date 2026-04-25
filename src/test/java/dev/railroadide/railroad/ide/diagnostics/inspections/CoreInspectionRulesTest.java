@@ -56,6 +56,7 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreEmptySynchronizedInspection(), Set.of("SEM_EMPTY_SYNCHRONIZED"));
         assertRuleIds(new CoreEmptySwitchInspection(), Set.of("SEM_EMPTY_SWITCH"));
         assertRuleIds(new CoreUselessDefaultInSwitchInspection(), Set.of("SEM_USELESS_DEFAULT_IN_SWITCH"));
+        assertRuleIds(new CoreFallthroughCaseInSwitchInspection(), Set.of("SEM_FALLTHROUGH_CASE_IN_SWITCH"));
         assertRuleIds(new CoreSingleLetterFieldNameInspection(), Set.of("SEM_SINGLE_LETTER_FIELD_NAME"));
         assertRuleIds(new CoreFieldNameSameAsClassInspection(), Set.of("SEM_FIELD_NAME_SAME_AS_CLASS_NAME"));
         assertRuleIds(new CoreParameterNamedUnderscoreInspection(), Set.of("SEM_PARAMETER_NAME_UNDERSCORE"));
@@ -208,6 +209,177 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d -> "SEM_USELESS_DEFAULT_IN_SWITCH".equals(d.code())));
+    }
+
+    @Test
+    void coreFallthroughCaseInSwitchRuleEmitsDiagnosticForPlainFallthrough() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFallthroughCaseInSwitchInspection(), """
+            class Example {
+                void run(int value) {
+                    switch (value) {
+                        case 1:
+                            System.out.println("one");
+                        case 2:
+                            System.out.println("two");
+                            break;
+                    }
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_FALLTHROUGH_CASE_IN_SWITCH".equals(d.code())));
+    }
+
+    @Test
+    void coreFallthroughCaseInSwitchRuleDoesNotEmitDiagnosticForStackedLabels() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFallthroughCaseInSwitchInspection(), """
+            class Example {
+                void run(int value) {
+                    switch (value) {
+                        case 1:
+                        case 2:
+                            System.out.println("grouped");
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_FALLTHROUGH_CASE_IN_SWITCH".equals(d.code())));
+    }
+
+    @Test
+    void coreFallthroughCaseInSwitchRuleDoesNotEmitDiagnosticWhenCaseBreaks() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFallthroughCaseInSwitchInspection(), """
+            class Example {
+                void run(int value) {
+                    switch (value) {
+                        case 1:
+                            System.out.println("one");
+                            break;
+                        case 2:
+                            System.out.println("two");
+                            break;
+                    }
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_FALLTHROUGH_CASE_IN_SWITCH".equals(d.code())));
+    }
+
+    @Test
+    void coreFallthroughCaseInSwitchRuleDoesNotEmitDiagnosticWhenCaseReturns() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFallthroughCaseInSwitchInspection(), """
+            class Example {
+                int run(int value) {
+                    switch (value) {
+                        case 1:
+                            return 1;
+                        case 2:
+                            return 2;
+                        default:
+                            return 0;
+                    }
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_FALLTHROUGH_CASE_IN_SWITCH".equals(d.code())));
+    }
+
+    @Test
+    void coreFallthroughCaseInSwitchRuleDoesNotEmitDiagnosticWhenCaseThrows() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFallthroughCaseInSwitchInspection(), """
+            class Example {
+                void run(int value) {
+                    switch (value) {
+                        case 1:
+                            throw new RuntimeException();
+                        case 2:
+                            System.out.println("two");
+                            break;
+                    }
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_FALLTHROUGH_CASE_IN_SWITCH".equals(d.code())));
+    }
+
+    @Test
+    void coreFallthroughCaseInSwitchRuleDoesNotEmitDiagnosticForArrowSwitchRules() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFallthroughCaseInSwitchInspection(), """
+            class Example {
+                void run(int value) {
+                    switch (value) {
+                        case 1 -> System.out.println("one");
+                        case 2 -> System.out.println("two");
+                        default -> System.out.println("default");
+                    }
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_FALLTHROUGH_CASE_IN_SWITCH".equals(d.code())));
+    }
+
+    @Test
+    void coreFallthroughCaseInSwitchRuleEmitsDiagnosticWhenOnlySomePathsBreak() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFallthroughCaseInSwitchInspection(), """
+            class Example {
+                void run(int value, boolean stop) {
+                    switch (value) {
+                        case 1:
+                            if (stop) {
+                                break;
+                            }
+                            System.out.println("falls through");
+                        case 2:
+                            System.out.println("two");
+                            break;
+                    }
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_FALLTHROUGH_CASE_IN_SWITCH".equals(d.code())));
+    }
+
+    @Test
+    void coreFallthroughCaseInSwitchRuleEmitsDiagnosticForFallthroughIntoDefault() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFallthroughCaseInSwitchInspection(), """
+            class Example {
+                void run(int value) {
+                    switch (value) {
+                        case 1:
+                            System.out.println("one");
+                        default:
+                            System.out.println("default");
+                    }
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_FALLTHROUGH_CASE_IN_SWITCH".equals(d.code())));
+    }
+
+    @Test
+    void coreFallthroughCaseInSwitchRuleDoesNotEmitDiagnosticForLastCaseWithoutFollowingRule() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreFallthroughCaseInSwitchInspection(), """
+            class Example {
+                void run(int value) {
+                    switch (value) {
+                        case 1:
+                            System.out.println("one");
+                    }
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_FALLTHROUGH_CASE_IN_SWITCH".equals(d.code())));
     }
 
     @Test

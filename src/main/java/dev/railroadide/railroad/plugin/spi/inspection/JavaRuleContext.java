@@ -190,9 +190,11 @@ public final class JavaRuleContext {
      *
      * @param block block node to inspect
      * @return {@code true} when the block has no nested syntax children
-     * @throws NullPointerException if {@code block} is {@code null}
      */
     public boolean isEmptyBlock(SyntaxNode block) {
+        if(block == null)
+            return true;
+
         for (SyntaxNode child : block.children()) {
             if (!(child instanceof SyntaxToken))
                 return false;

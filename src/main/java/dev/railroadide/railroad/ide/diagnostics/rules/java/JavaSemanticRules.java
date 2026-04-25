@@ -291,6 +291,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "'%s' implements 'AutoCloseable' but is not used in a try-with-resources statement"
     );
+    public static final JavaSemanticRule FALLTHROUGH_CASE_IN_SWITCH = new JavaSemanticRule(
+        "SEM_FALLTHROUGH_CASE_IN_SWITCH",
+        SemanticDiagnostic.Severity.WARNING,
+        "Case '%s' in 'switch' statement falls through to the next case without a break or return statement"
+    );
 
     private JavaSemanticRules() {
     }

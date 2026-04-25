@@ -197,12 +197,12 @@ Inspectopedia label in the sections below.
 - [ ] [starter] `Conditional expression with identical branches` - Detect ternaries that produce the same result on both
   sides.
 - [ ] [easy] `Conditional expression with negated condition` - Simplify negated ternary conditions.
-- [-] [medium] `Constant conditional expression` - Detect conditions known at compile/data-flow time.
+- [x] [medium] `Constant conditional expression` - Detect conditions known at compile/data-flow time.
 - [ ] [starter] `Double negation` - Simplify `!!expr` style logic.
 - [ ] [easy] `Duplicate condition` - Find repeated boolean conditions in the same decision logic.
 - [ ] [medium] `Enum 'switch' statement that misses case` - Detect non-exhaustive enum switches.
 - [ ] [medium] `Expression can be factorized` - Identify algebraically factorable expressions.
-- [ ] [medium] `Fallthrough in 'switch' statement` - Report implicit or suspicious fallthrough between cases.
+- [x] [medium] `Fallthrough in 'switch' statement` - Report implicit or suspicious fallthrough between cases.
 - [ ] [hard] `Idempotent loop body` - Detect loops whose later iterations do no additional useful work.
 - [ ] [medium] `Infinite loop statement` - Flag loops that only terminate by exception or external exit.
 - [ ] [starter] `Labeled statement` - Detect labels that make flow harder to reason about.
@@ -438,7 +438,7 @@ Inspectopedia label in the sections below.
 ## Resource management
 
 - [ ] [hard] `'Channel' opened but not safely closed` - Detect leaked `Channel` resources.
-- [-] [medium] `AutoCloseable used without 'try'-with-resources` - Require TWR for closeable resources.
+- [x] [medium] `AutoCloseable used without 'try'-with-resources` - Require TWR for closeable resources.
 - [ ] [hard] `Hibernate resource opened but not safely closed` - Detect leaked Hibernate sessions where applicable.
 - [ ] [hard] `I/O resource opened but not safely closed` - Detect leaked stream/reader/writer resources.
 - [ ] [hard] `JDBC resource opened but not safely closed` - Detect leaked DB resources.
@@ -588,7 +588,7 @@ Inspectopedia label in the sections below.
 - [ ] [medium] `Copy constructor misses field` - Find copy constructors that omit part of object state.
 - [ ] [easy] `Covariant 'equals()'` - Detect `equals(T)` without proper `equals(Object)`.
 - [ ] [starter] `Expression is compared to itself` - Flag `x == x`-style accidental self-comparisons.
-- [-] [hard] `Infinite recursion` - Detect self-calls that never bottom out.
+- [x] [hard] `Infinite recursion` - Detect self-calls that never bottom out.
 - [ ] [medium] `Invalid method reference used for 'Comparator'` - Flag method references that violate comparator
   contract expectations.
 - [ ] [medium] `Loop executes zero or billions of times` - Detect loops that do not terminate as intended due to
@@ -598,7 +598,7 @@ Inspectopedia label in the sections below.
   bugs.
 - [ ] [easy] `Number comparison using '==', instead of 'equals()'` - Detect boxed-number reference comparison.
 - [ ] [easy] `Object comparison using '==', instead of 'equals()'` - Detect accidental reference equality.
-- [-] [medium] `Optional.get() is called without isPresent() check` - Detect unsafe optional extraction.
+- [x] [medium] `Optional.get() is called without isPresent() check` - Detect unsafe optional extraction.
 - [ ] [medium] `Result of method call ignored` - Flag ignored return values from meaningful methods.
 - [ ] [starter] `Result of object allocation ignored` - Detect `new` expressions whose result is unused.
 - [ ] [medium] `Sorted collection with non-comparable elements` - Detect natural-order sorted collections whose element
