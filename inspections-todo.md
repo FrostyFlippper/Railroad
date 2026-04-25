@@ -413,7 +413,7 @@ Inspectopedia label in the sections below.
 - [ ] [medium] `Division by zero` - Detect definite divide-by-zero or modulo-by-zero.
 - [ ] [easy] `Floating-point equality comparison` - Flag direct `==`/`!=` on floating-point values.
 - [ ] [medium] `Implicit numeric conversion` - Detect silent widening/narrowing conversions.
-- [ ] [easy] `Integer division in floating-point context` - Flag truncated integer division feeding float/double usage.
+- [-] [hard] `Integer division in floating-point context` - Flag truncated integer division feeding float/double usage. (WIP)
 - [x] [medium] `Negative int hexadecimal constant in long context` - Detect surprising sign behaviour with hex literals.
 - [ ] [medium] `Non-reproducible call to 'Math'` - Flag math calls whose results are not guaranteed bit-for-bit
   reproducible.

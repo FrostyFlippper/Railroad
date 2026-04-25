@@ -296,6 +296,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Case '%s' in 'switch' statement falls through to the next case without a break or return statement"
     );
+    public static final JavaSemanticRule INTEGER_DIVISION_IN_FLOATING_POINT_CONTEXT = new JavaSemanticRule(
+        "SEM_INTEGER_DIVISION_IN_FLOATING_POINT_CONTEXT",
+        SemanticDiagnostic.Severity.WARNING,
+        "Integer division in floating-point context may lead to loss of precision"
+    );
 
     private JavaSemanticRules() {
     }

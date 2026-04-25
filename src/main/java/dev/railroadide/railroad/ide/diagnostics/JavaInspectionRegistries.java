@@ -51,6 +51,7 @@ public final class JavaInspectionRegistries {
     public static final CoreInfiniteRecursionInspection CORE_INFINITE_RECURSION_INSPECTION = new CoreInfiniteRecursionInspection();
     public static final CoreAutoCloseableWithoutTryWithResourcesInspection CORE_AUTO_CLOSEABLE_WITHOUT_TRY_WITH_RESOURCES_INSPECTION = new CoreAutoCloseableWithoutTryWithResourcesInspection();
     public static final CoreFallthroughCaseInSwitchInspection CORE_FALLTHROUGH_CASE_IN_SWITCH_INSPECTION = new CoreFallthroughCaseInSwitchInspection();
+    public static final CoreIntegerDivisionInFloatingPointContextInspection CORE_INTEGER_DIVISION_IN_FLOATING_POINT_CONTEXT_INSPECTION = new CoreIntegerDivisionInFloatingPointContextInspection();
 
     public static final Registry<JavaInspection> JAVA_INSPECTION_REGISTRY =
         RegistryManager.createRegistry("railroad:java_inspection", JavaInspection.class);
@@ -97,6 +98,7 @@ public final class JavaInspectionRegistries {
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreInfiniteRecursionInspection.ID, CORE_INFINITE_RECURSION_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreAutoCloseableWithoutTryWithResourcesInspection.ID, CORE_AUTO_CLOSEABLE_WITHOUT_TRY_WITH_RESOURCES_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreFallthroughCaseInSwitchInspection.ID, CORE_FALLTHROUGH_CASE_IN_SWITCH_INSPECTION);
+        JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreIntegerDivisionInFloatingPointContextInspection.ID, CORE_INTEGER_DIVISION_IN_FLOATING_POINT_CONTEXT_INSPECTION);
     }
 
     private JavaInspectionRegistries() {
@@ -142,7 +144,8 @@ public final class JavaInspectionRegistries {
             CORE_OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK_INSPECTION,
             CORE_INFINITE_RECURSION_INSPECTION,
             CORE_AUTO_CLOSEABLE_WITHOUT_TRY_WITH_RESOURCES_INSPECTION,
-            CORE_FALLTHROUGH_CASE_IN_SWITCH_INSPECTION
+            CORE_FALLTHROUGH_CASE_IN_SWITCH_INSPECTION,
+            CORE_INTEGER_DIVISION_IN_FLOATING_POINT_CONTEXT_INSPECTION
         );
     }
 }
