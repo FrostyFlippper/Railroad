@@ -286,6 +286,11 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Method '%s' is recursively called without a base case, leading to infinite recursion"
     );
+    public static final JavaSemanticRule AUTO_CLOSEABLE_WITHOUT_TRY_WITH_RESOURCES = new JavaSemanticRule(
+        "SEM_AUTO_CLOSEABLE_WITHOUT_TRY_WITH_RESOURCES",
+        SemanticDiagnostic.Severity.WARNING,
+        "'%s' implements 'AutoCloseable' but is not used in a try-with-resources statement"
+    );
 
     private JavaSemanticRules() {
     }

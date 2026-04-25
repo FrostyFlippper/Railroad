@@ -438,7 +438,7 @@ Inspectopedia label in the sections below.
 ## Resource management
 
 - [ ] [hard] `'Channel' opened but not safely closed` - Detect leaked `Channel` resources.
-- [ ] [medium] `AutoCloseable used without 'try'-with-resources` - Require TWR for closeable resources.
+- [-] [medium] `AutoCloseable used without 'try'-with-resources` - Require TWR for closeable resources.
 - [ ] [hard] `Hibernate resource opened but not safely closed` - Detect leaked Hibernate sessions where applicable.
 - [ ] [hard] `I/O resource opened but not safely closed` - Detect leaked stream/reader/writer resources.
 - [ ] [hard] `JDBC resource opened but not safely closed` - Detect leaked DB resources.
