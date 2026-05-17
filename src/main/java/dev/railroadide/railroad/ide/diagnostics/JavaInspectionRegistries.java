@@ -46,6 +46,8 @@ public final class JavaInspectionRegistries {
     public static final CoreAssertionWithSideEffectsInspection CORE_ASSERTION_WITH_SIDE_EFFECTS_INSPECTION = new CoreAssertionWithSideEffectsInspection();
     public static final CoreThisReferenceEscapedObjectConstructionInspection CORE_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION_INSPECTION = new CoreThisReferenceEscapedObjectConstructionInspection();
     public static final CoreNegativeHexIntInLongContextInspection CORE_NEGATIVE_HEX_INT_IN_LONG_CONTEXT_INSPECTION = new CoreNegativeHexIntInLongContextInspection();
+    public static final CoreFieldCanBeLocalVariableInspection CORE_FIELD_CAN_BE_LOCAL_VARIABLE_INSPECTION = new CoreFieldCanBeLocalVariableInspection();
+    public static final CoreFunctionalInterfaceInspection CORE_FUNCTIONAL_INTERFACE_INSPECTION = new CoreFunctionalInterfaceInspection();
     public static final CoreConstantConditionalExpressionInspection CORE_CONSTANT_CONDITIONAL_EXPRESSION_INSPECTION = new CoreConstantConditionalExpressionInspection();
     public static final CoreOptionalGetWithoutIsPresentCheckInspection CORE_OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK_INSPECTION = new CoreOptionalGetWithoutIsPresentCheckInspection();
     public static final CoreInfiniteRecursionInspection CORE_INFINITE_RECURSION_INSPECTION = new CoreInfiniteRecursionInspection();
@@ -93,6 +95,8 @@ public final class JavaInspectionRegistries {
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreAssertionWithSideEffectsInspection.ID, CORE_ASSERTION_WITH_SIDE_EFFECTS_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreThisReferenceEscapedObjectConstructionInspection.ID, CORE_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreNegativeHexIntInLongContextInspection.ID, CORE_NEGATIVE_HEX_INT_IN_LONG_CONTEXT_INSPECTION);
+        JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreFieldCanBeLocalVariableInspection.ID, CORE_FIELD_CAN_BE_LOCAL_VARIABLE_INSPECTION);
+        JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreFunctionalInterfaceInspection.ID, CORE_FUNCTIONAL_INTERFACE_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreConstantConditionalExpressionInspection.ID, CORE_CONSTANT_CONDITIONAL_EXPRESSION_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreOptionalGetWithoutIsPresentCheckInspection.ID, CORE_OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK_INSPECTION);
         JAVA_INSPECTION_RULE_PROVIDER_REGISTRY.register(CoreInfiniteRecursionInspection.ID, CORE_INFINITE_RECURSION_INSPECTION);
@@ -140,6 +144,8 @@ public final class JavaInspectionRegistries {
             CORE_ASSERTION_WITH_SIDE_EFFECTS_INSPECTION,
             CORE_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION_INSPECTION,
             CORE_NEGATIVE_HEX_INT_IN_LONG_CONTEXT_INSPECTION,
+            CORE_FIELD_CAN_BE_LOCAL_VARIABLE_INSPECTION,
+            CORE_FUNCTIONAL_INTERFACE_INSPECTION,
             CORE_CONSTANT_CONDITIONAL_EXPRESSION_INSPECTION,
             CORE_OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK_INSPECTION,
             CORE_INFINITE_RECURSION_INSPECTION,

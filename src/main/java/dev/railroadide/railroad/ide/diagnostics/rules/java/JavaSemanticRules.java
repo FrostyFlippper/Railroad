@@ -261,6 +261,17 @@ public final class JavaSemanticRules {
         SemanticDiagnostic.Severity.WARNING,
         "Negative hexadecimal integer literal '%s' in long context may be misinterpreted as a negative integer literal"
     );
+    public static final JavaSemanticRule FIELD_CAN_BE_LOCAL_VARIABLE = new JavaSemanticRule(
+        "SEM_FIELD_CAN_BE_LOCAL_VARIABLE",
+        SemanticDiagnostic.Severity.WARNING,
+        "Field '%s' can be converted to a local variable"
+    );
+    public static final JavaSemanticRule INTERFACE_SHOULD_BE_FUNCTIONAL = new JavaSemanticRule(
+        "SEM_INTERFACE_SHOULD_BE_FUNCTIONAL",
+        SemanticDiagnostic.Severity.INFO,
+        "Interface '%s' may be annotated as '@FunctionalInterface'"
+    );
+
     public static final JavaSemanticRule CONSTANT_CONDITIONAL_EXPRESSION_HARDCODED_LITERAL = new JavaSemanticRule(
         "SEM_CONSTANT_CONDITIONAL_EXPRESSION_HARDCODED_LITERAL",
         SemanticDiagnostic.Severity.WARNING,
