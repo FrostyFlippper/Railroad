@@ -364,7 +364,7 @@ Inspectopedia label in the sections below.
 - [ ] [medium] `Parameter type prevents overriding` - Find visually similar but package-different parameter types that
   break overriding.
 - [ ] [easy] `Public constructor in abstract class` - Flag instantiation-oriented constructors on abstract types.
-- [ ] [medium] `Redundant interface declaration` - Remove interfaces already inherited through a superclass or
+- [x] [medium] `Redundant interface declaration` - Remove interfaces already inherited through a superclass or
   superinterface.
 - [ ] [easy] `Static inheritance` - Detect interfaces used only to inherit constants.
 - [ ] [easy] `Type parameter extends 'final' class` - Flag generic bounds that cannot vary beyond a final type.
@@ -402,7 +402,7 @@ Inspectopedia label in the sections below.
 ## Numeric issues
 
 - [ ] [easy] `'char' expression used in arithmetic context` - Flag `char` arithmetic that can be surprising.
-- [ ] [easy] `'equals()' called on 'BigDecimal'` - Detect scale-sensitive `BigDecimal.equals()` comparisons.
+- [x] [easy] `'equals()' called on 'BigDecimal'` - Detect scale-sensitive `BigDecimal.equals()` comparisons.
 - [ ] [starter] `'long' literal ending with 'l' instead of 'L'` - Prefer uppercase `L` to avoid confusion with `1`.
 - [ ] [medium] `Call to 'BigDecimal' method without a rounding mode argument` - Require explicit rounding where
   division/scale operations need it.
@@ -473,7 +473,7 @@ Inspectopedia label in the sections below.
   objects.
 - [ ] [easy] `Non-serializable object passed to 'ObjectOutputStream'` - Flag direct attempts to write non-serializable
   objects.
-- [ ] [medium] `Serializable class with unconstructable ancestor` - Detect serializable types whose non-serializable
+- [x] [medium] `Serializable class with unconstructable ancestor` - Detect serializable types whose non-serializable
   ancestor lacks a no-arg constructor.
 - [ ] [hard] `Serializable class without 'readObject()' and 'writeObject()'` - Track serializable classes missing
   explicit custom protocol hooks where required by policy.

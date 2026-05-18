@@ -4,10 +4,10 @@ import dev.railroadide.railroad.ide.diagnostics.JavaInspectionRuleEngine;
 import dev.railroadide.railroad.ide.diagnostics.JavaInspectionRuleSettings;
 import dev.railroadide.railroad.ide.sst.impl.java.JavaSemanticAnalyzer;
 import dev.railroadide.railroad.ide.sst.semantic.api.SemanticDiagnostic;
-import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionContext;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionReporter;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRule;
 import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRuleProvider;
+import dev.railroadide.railroad.plugin.spi.inspection.JavaRuleContext;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -30,18 +30,18 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreCallResolutionInspection(), Set.of("SEM_UNRESOLVED_CALL"));
         assertRuleIds(new CoreAccessibilityInspection(), Set.of("SEM_INACCESSIBLE_TYPE", "SEM_INACCESSIBLE_MEMBER", "SEM_INACCESSIBLE_CALL"));
         assertRuleIds(new CoreInheritanceInspection(), Set.of(
-                "SEM_INVALID_INHERITANCE",
-                "SEM_MISSING_IMPLEMENTATION",
-                "SEM_INVALID_OVERRIDE",
-                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD",
-                "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE"));
+            "SEM_INVALID_INHERITANCE",
+            "SEM_MISSING_IMPLEMENTATION",
+            "SEM_INVALID_OVERRIDE",
+            "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD",
+            "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE"));
         assertRuleIds(new CoreModifierInspection(), Set.of("SEM_ILLEGAL_MODIFIER"));
         assertRuleIds(new CoreControlFlowInspection(), Set.of("SEM_INVALID_CONTROL_FLOW", "SEM_MISSING_RETURN"));
         assertRuleIds(new CoreExceptionInspection(), Set.of(
-                "SEM_UNCAUGHT_CHECKED_EXCEPTION",
-                "SEM_UNREACHABLE_CATCH",
-                "SEM_INVALID_EXCEPTION_TYPE",
-                "SEM_DISALLOWED_EXCEPTION_IN_METHOD_SIGNATURE"));
+            "SEM_UNCAUGHT_CHECKED_EXCEPTION",
+            "SEM_UNREACHABLE_CATCH",
+            "SEM_INVALID_EXCEPTION_TYPE",
+            "SEM_DISALLOWED_EXCEPTION_IN_METHOD_SIGNATURE"));
         assertRuleIds(new CoreDefiniteAssignmentInspection(), Set.of("SEM_UNASSIGNED_VARIABLE", "SEM_ILLEGAL_FINAL_ASSIGNMENT", "SEM_UNINITIALIZED_FINAL_FIELD"));
         assertRuleIds(new CoreAssignmentInspection(), Set.of("SEM_INCOMPATIBLE_ASSIGNMENT"));
         assertRuleIds(new CoreNegativeHexIntInLongContextInspection(), Set.of("SEM_NEGATIVE_HEX_INT_IN_LONG_CONTEXT"));
@@ -65,14 +65,17 @@ class CoreInspectionRulesTest {
         assertRuleIds(new CoreAssertionWithSideEffectsInspection(), Set.of("SEM_ASSERTION_WITH_SIDE_EFFECTS"));
         assertRuleIds(new CoreFeatureEnvyInspection(), Set.of("SEM_FEATURE_ENVY_MANIPULATE", "SEM_FEATURE_ENVY_TIGHTLY_COUPLED"));
         assertRuleIds(new CoreInitializationInspection(), Set.of(
-                "SEM_OVERRIDABLE_METHOD_DURING_CONSTRUCTION",
-                "SEM_OVERRIDDEN_METHOD_DURING_CONSTRUCTION"));
+            "SEM_OVERRIDABLE_METHOD_DURING_CONSTRUCTION",
+            "SEM_OVERRIDDEN_METHOD_DURING_CONSTRUCTION"));
         assertRuleIds(new CoreThisReferenceEscapedObjectConstructionInspection(), Set.of("SEM_THIS_REFERENCE_ESCAPED_OBJECT_CONSTRUCTION"));
         assertRuleIds(new CoreFieldCanBeLocalVariableInspection(), Set.of("SEM_FIELD_CAN_BE_LOCAL_VARIABLE"));
         assertRuleIds(new CoreFunctionalInterfaceInspection(), Set.of("SEM_INTERFACE_SHOULD_BE_FUNCTIONAL"));
         assertRuleIds(new CoreOptionalGetWithoutIsPresentCheckInspection(), Set.of("SEM_OPTIONAL_GET_WITHOUT_IS_PRESENT_CHECK"));
         assertRuleIds(new CoreAutoCloseableWithoutTryWithResourcesInspection(), Set.of("SEM_AUTO_CLOSEABLE_WITHOUT_TRY_WITH_RESOURCES"));
         assertRuleIds(new CoreInfiniteRecursionInspection(), Set.of("SEM_INFINITE_RECURSION"));
+        assertRuleIds(new CoreBigDecimalEqualsInspection(), Set.of("SEM_BIG_DECIMAL_EQUALS"));
+        assertRuleIds(new CoreSerializableClassWithUnconstructableAncestorInspection(), Set.of("SEM_SERIALIZABLE_CLASS_WITH_UNCONSTRUCTABLE_ANCESTOR"));
+        assertRuleIds(new CoreRedundantInterfaceDeclarationInspection(), Set.of("SEM_REDUNDANT_INTERFACE_DECLARATION"));
     }
 
     @Test
@@ -970,8 +973,8 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())
-                        && d.message().contains("clone()")));
+            "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())
+                && d.message().contains("clone()")));
     }
 
     @Test
@@ -983,7 +986,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())));
+            "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())));
     }
 
     @Test
@@ -995,8 +998,8 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())
-                        && d.message().contains("finalize()")));
+            "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())
+                && d.message().contains("finalize()")));
     }
 
     @Test
@@ -1008,7 +1011,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())));
+            "SEM_INTERFACE_METHOD_CLASHES_WITH_OBJECT_METHOD".equals(d.code())));
     }
 
     @Test
@@ -1024,9 +1027,9 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_OVERLY_STRONG_TYPE_CAST".equals(d.code())
-                        && d.message().contains("ArrayList")
-                        && d.message().contains("List")));
+            "SEM_OVERLY_STRONG_TYPE_CAST".equals(d.code())
+                && d.message().contains("ArrayList")
+                && d.message().contains("List")));
     }
 
     @Test
@@ -1042,7 +1045,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_OVERLY_STRONG_TYPE_CAST".equals(d.code())));
+            "SEM_OVERLY_STRONG_TYPE_CAST".equals(d.code())));
     }
 
     @Test
@@ -1062,8 +1065,8 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE".equals(d.code())
-                        && d.message().contains("reset()")));
+            "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE".equals(d.code())
+                && d.message().contains("reset()")));
     }
 
     @Test
@@ -1084,7 +1087,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE".equals(d.code())));
+            "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE".equals(d.code())));
     }
 
     @Test
@@ -1109,7 +1112,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE".equals(d.code())));
+            "SEM_PUBLIC_METHOD_NOT_EXPOSED_BY_INTERFACE".equals(d.code())));
     }
 
     @Test
@@ -1125,9 +1128,9 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
-                        && d.message().contains("Integer")
-                        && d.message().contains("String")));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                && d.message().contains("Integer")
+                && d.message().contains("String")));
     }
 
     @Test
@@ -1143,7 +1146,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1159,7 +1162,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1175,7 +1178,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1191,7 +1194,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1207,7 +1210,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1227,7 +1230,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1244,7 +1247,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1262,7 +1265,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1279,7 +1282,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1295,9 +1298,9 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
-                        && d.message().contains("Integer")
-                        && d.message().contains("String")));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                && d.message().contains("Integer")
+                && d.message().contains("String")));
     }
 
     @Test
@@ -1313,7 +1316,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1331,9 +1334,9 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
-                        && d.message().contains("Integer")
-                        && d.message().contains("String")));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                && d.message().contains("Integer")
+                && d.message().contains("String")));
     }
 
     @Test
@@ -1350,9 +1353,9 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
-                        && d.message().contains("Integer")
-                        && d.message().contains("String")));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                && d.message().contains("Integer")
+                && d.message().contains("String")));
     }
 
     @Test
@@ -1369,9 +1372,9 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
-                        && d.message().contains("Integer")
-                        && d.message().contains("String")));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                && d.message().contains("Integer")
+                && d.message().contains("String")));
     }
 
     @Test
@@ -1387,7 +1390,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1403,7 +1406,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1421,9 +1424,9 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
-                        && d.message().contains("Integer")
-                        && d.message().contains("String")));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                && d.message().contains("Integer")
+                && d.message().contains("String")));
     }
 
     @Test
@@ -1439,9 +1442,9 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
-                        && d.message().contains("Integer")
-                        && d.message().contains("String")));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                && d.message().contains("Integer")
+                && d.message().contains("String")));
     }
 
     @Test
@@ -1457,9 +1460,9 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
-                        && d.message().contains("Integer")
-                        && d.message().contains("String")));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                && d.message().contains("Integer")
+                && d.message().contains("String")));
     }
 
     @Test
@@ -1475,7 +1478,7 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())));
     }
 
     @Test
@@ -1493,9 +1496,9 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
-                        && d.message().contains("Integer")
-                        && d.message().contains("String")));
+            "SEM_CAST_CONFLICTING_WITH_INSTANCEOF".equals(d.code())
+                && d.message().contains("Integer")
+                && d.message().contains("String")));
     }
 
     @Test
@@ -2597,8 +2600,8 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_INTERFACE_SHOULD_BE_FUNCTIONAL".equals(d.code())
-                        && d.message().contains("Child")));
+            "SEM_INTERFACE_SHOULD_BE_FUNCTIONAL".equals(d.code())
+                && d.message().contains("Child")));
     }
 
     @Test
@@ -2614,8 +2617,8 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_INTERFACE_SHOULD_BE_FUNCTIONAL".equals(d.code())
-                        && d.message().contains("Child")));
+            "SEM_INTERFACE_SHOULD_BE_FUNCTIONAL".equals(d.code())
+                && d.message().contains("Child")));
     }
 
     @Test
@@ -2634,8 +2637,8 @@ class CoreInspectionRulesTest {
             """);
 
         assertTrue(diagnostics.stream().anyMatch(d ->
-                "SEM_INTERFACE_SHOULD_BE_FUNCTIONAL".equals(d.code())
-                        && d.message().contains("Child")));
+            "SEM_INTERFACE_SHOULD_BE_FUNCTIONAL".equals(d.code())
+                && d.message().contains("Child")));
     }
 
     @Test
@@ -2652,8 +2655,8 @@ class CoreInspectionRulesTest {
             """);
 
         assertFalse(diagnostics.stream().anyMatch(d ->
-                "SEM_INTERFACE_SHOULD_BE_FUNCTIONAL".equals(d.code())
-                        && d.message().contains("Child")));
+            "SEM_INTERFACE_SHOULD_BE_FUNCTIONAL".equals(d.code())
+                && d.message().contains("Child")));
     }
 
     @Test
@@ -3558,6 +3561,308 @@ class CoreInspectionRulesTest {
         assertFalse(diagnostics.stream().anyMatch(d -> "SEM_INFINITE_RECURSION".equals(d.code())));
     }
 
+    @Test
+    void coreBigDecimalEqualsRuleEmitsDiagnosticForBigDecimalEqualsCall() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreBigDecimalEqualsInspection(), """
+            class Example {
+                boolean same(java.math.BigDecimal left, java.math.BigDecimal right) {
+                    return left.equals(right);
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_BIG_DECIMAL_EQUALS".equals(d.code())));
+    }
+
+    @Test
+    void coreBigDecimalEqualsRuleEmitsDiagnosticForImportedBigDecimalEqualsCall() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreBigDecimalEqualsInspection(), """
+            import java.math.BigDecimal;
+
+            class Example {
+                boolean same(BigDecimal left, BigDecimal right) {
+                    return left.equals(right);
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_BIG_DECIMAL_EQUALS".equals(d.code())));
+    }
+
+    @Test
+    void coreBigDecimalEqualsRuleEmitsDiagnosticForBigDecimalLiteralEqualsCall() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreBigDecimalEqualsInspection(), """
+            class Example {
+                boolean same() {
+                    return new java.math.BigDecimal("1.0").equals(new java.math.BigDecimal("1.00"));
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_BIG_DECIMAL_EQUALS".equals(d.code())));
+    }
+
+    @Test
+    void coreBigDecimalEqualsRuleDoesNotEmitDiagnosticForCompareToEqualityCheck() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreBigDecimalEqualsInspection(), """
+            class Example {
+                boolean same(java.math.BigDecimal left, java.math.BigDecimal right) {
+                    return left.compareTo(right) == 0;
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_BIG_DECIMAL_EQUALS".equals(d.code())));
+    }
+
+    @Test
+    void coreBigDecimalEqualsRuleDoesNotEmitDiagnosticForNonBigDecimalEqualsCall() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreBigDecimalEqualsInspection(), """
+            class Example {
+                boolean same(String left, String right) {
+                    return left.equals(right);
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_BIG_DECIMAL_EQUALS".equals(d.code())));
+    }
+
+    @Test
+    void coreBigDecimalEqualsRuleEmitsDiagnosticWhenArgumentIsBigDecimalSubtype() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreBigDecimalEqualsInspection(), """
+            class CustomBigDecimal extends java.math.BigDecimal {
+                CustomBigDecimal(String value) {
+                    super(value);
+                }
+            }
+
+            class Example {
+                boolean same(java.math.BigDecimal left, CustomBigDecimal right) {
+                    return left.equals(right);
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_BIG_DECIMAL_EQUALS".equals(d.code())));
+    }
+
+    @Test
+    void coreBigDecimalEqualsRuleDoesNotEmitDiagnosticWhenArgumentIsNotBigDecimal() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreBigDecimalEqualsInspection(), """
+            class Example {
+                boolean same(java.math.BigDecimal value, Object other) {
+                    return value.equals(other);
+                }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_BIG_DECIMAL_EQUALS".equals(d.code())));
+    }
+
+    @Test
+    void coreBigDecimalEqualsRuleEmitsDiagnosticForParenthesizedBigDecimalEqualsCall() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreBigDecimalEqualsInspection(), """
+            class Example {
+                boolean same(java.math.BigDecimal left, java.math.BigDecimal right) {
+                    return (left).equals((right));
+                }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_BIG_DECIMAL_EQUALS".equals(d.code())));
+    }
+
+    @Test
+    void coreSerializationRuleEmitsDiagnosticForDirectAncestorWithoutNoArgConstructor() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreSerializableClassWithUnconstructableAncestorInspection(), """
+            import java.io.Serializable;
+
+            class Base {
+                Base(int value) {}
+            }
+
+            class Child extends Base implements Serializable {
+                Child() { super(1); }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+            "SEM_SERIALIZABLE_CLASS_WITH_UNCONSTRUCTABLE_ANCESTOR".equals(d.code())));
+    }
+
+    @Test
+    void coreSerializationRuleEmitsDiagnosticForIndirectNonSerializableAncestor() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreSerializableClassWithUnconstructableAncestorInspection(), """
+            import java.io.Serializable;
+
+            class Base {
+                Base(String value) {}
+            }
+
+            class Mid extends Base implements Serializable {
+                Mid() { super("x"); }
+            }
+
+            class Leaf extends Mid implements Serializable {
+                Leaf() {}
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+            "SEM_SERIALIZABLE_CLASS_WITH_UNCONSTRUCTABLE_ANCESTOR".equals(d.code())));
+    }
+
+    @Test
+    void coreSerializationRuleEmitsDiagnosticForPrivateNoArgConstructor() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreSerializableClassWithUnconstructableAncestorInspection(), """
+            import java.io.Serializable;
+
+            class Base {
+                private Base() {}
+            }
+
+            class Child extends Base implements Serializable {
+                Child() { super(); }
+            }
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d ->
+            "SEM_SERIALIZABLE_CLASS_WITH_UNCONSTRUCTABLE_ANCESTOR".equals(d.code())));
+    }
+
+    @Test
+    void coreSerializationRuleDoesNotEmitDiagnosticForImplicitDefaultConstructor() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreSerializableClassWithUnconstructableAncestorInspection(), """
+            import java.io.Serializable;
+
+            class Base {
+            }
+
+            class Child extends Base implements Serializable {
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+            "SEM_SERIALIZABLE_CLASS_WITH_UNCONSTRUCTABLE_ANCESTOR".equals(d.code())));
+    }
+
+    @Test
+    void coreSerializationRuleDoesNotEmitDiagnosticForAccessibleProtectedNoArgConstructor() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreSerializableClassWithUnconstructableAncestorInspection(), """
+            import java.io.Serializable;
+
+            class Base {
+                protected Base() {}
+            }
+
+            class Child extends Base implements Serializable {
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+            "SEM_SERIALIZABLE_CLASS_WITH_UNCONSTRUCTABLE_ANCESTOR".equals(d.code())));
+    }
+
+    @Test
+    void coreSerializationRuleDoesNotEmitDiagnosticForNestedAncestorImplicitPackagePrivateNoArgConstructor() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreSerializableClassWithUnconstructableAncestorInspection(), """
+            import java.io.Serializable;
+
+            class Outer {
+                static class Base {
+                }
+            }
+
+            class Child extends Outer.Base implements Serializable {
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+            "SEM_SERIALIZABLE_CLASS_WITH_UNCONSTRUCTABLE_ANCESTOR".equals(d.code())));
+    }
+
+    @Test
+    void coreSerializationRuleDoesNotEmitDiagnosticForNonSerializableClass() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreSerializableClassWithUnconstructableAncestorInspection(), """
+            class Base {
+                Base(int value) {}
+            }
+
+            class Child extends Base {
+                Child() { super(1); }
+            }
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d ->
+            "SEM_SERIALIZABLE_CLASS_WITH_UNCONSTRUCTABLE_ANCESTOR".equals(d.code())));
+    }
+
+    @Test
+    void coreInheritanceRuleEmitsDiagnosticForInterfaceRedundantThroughSuperclass() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreRedundantInterfaceDeclarationInspection(), """
+            interface Worker {}
+            class Base implements Worker {}
+            class Child extends Base implements Worker {}
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_REDUNDANT_INTERFACE_DECLARATION".equals(d.code())));
+    }
+
+    @Test
+    void coreInheritanceRuleEmitsDiagnosticForInterfaceRedundantThroughSiblingInterface() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreRedundantInterfaceDeclarationInspection(), """
+            interface Base {}
+            interface Derived extends Base {}
+            class Example implements Base, Derived {}
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_REDUNDANT_INTERFACE_DECLARATION".equals(d.code())));
+    }
+
+    @Test
+    void coreInheritanceRuleEmitsDiagnosticForSuperinterfaceRedundantThroughAnotherSuperinterface() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreRedundantInterfaceDeclarationInspection(), """
+            interface Base {}
+            interface Derived extends Base {}
+            interface Example extends Base, Derived {}
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_REDUNDANT_INTERFACE_DECLARATION".equals(d.code())));
+    }
+
+    @Test
+    void coreInheritanceRuleEmitsDiagnosticForDuplicateImplementedInterface() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreRedundantInterfaceDeclarationInspection(), """
+            interface Worker {}
+            class Example implements Worker, Worker {}
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_REDUNDANT_INTERFACE_DECLARATION".equals(d.code())));
+    }
+
+    @Test
+    void coreInheritanceRuleEmitsDiagnosticForDuplicateExtendedInterface() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreRedundantInterfaceDeclarationInspection(), """
+            interface Worker {}
+            interface Example extends Worker, Worker {}
+            """);
+
+        assertTrue(diagnostics.stream().anyMatch(d -> "SEM_REDUNDANT_INTERFACE_DECLARATION".equals(d.code())));
+    }
+
+
+    @Test
+    void coreInheritanceRuleDoesNotEmitDiagnosticForIndependentInterfaces() {
+        List<SemanticDiagnostic> diagnostics = runProvider(new CoreRedundantInterfaceDeclarationInspection(), """
+            interface Left {}
+            interface Right {}
+            class Example implements Left, Right {}
+            """);
+
+        assertFalse(diagnostics.stream().anyMatch(d -> "SEM_REDUNDANT_INTERFACE_DECLARATION".equals(d.code())));
+    }
+
     private static List<SemanticDiagnostic> runProvider(JavaInspectionRuleProvider provider, String document) {
         return runProvider(provider, Path.of("Example.java"), document);
     }
@@ -3565,7 +3870,7 @@ class CoreInspectionRulesTest {
     private static List<SemanticDiagnostic> runProvider(JavaInspectionRuleProvider provider, Path filePath, String document) {
         JavaInspectionRuleSettings.resetAll();
         var model = JavaSemanticAnalyzer.analyzeFacts(document);
-        JavaInspectionContext context = new JavaInspectionContext(filePath, document, model);
+        JavaRuleContext context = new JavaRuleContext(filePath, document, model);
         List<SemanticDiagnostic> diagnostics = new ArrayList<>();
         JavaInspectionReporter reporter = diagnostics::add;
         JavaInspectionRuleEngine.runRules(provider, context, reporter);

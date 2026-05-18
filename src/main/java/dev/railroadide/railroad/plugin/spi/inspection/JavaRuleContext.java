@@ -85,20 +85,11 @@ public final class JavaRuleContext {
     private volatile @Nullable ImportIndex cachedImportIndex;
     private volatile @Nullable Set<String> cachedAvailableTypeNames;
     private volatile @Nullable String cachedCurrentPackageName;
+    private volatile @Nullable Map<String, SyntaxNode> cachedLocalTypeDeclarations;
     private volatile @Nullable Map<String, Symbol> cachedLocalTypeSymbolsByQualifiedName;
     private volatile @Nullable Map<String, List<String>> cachedDirectSuperTypesByQualifiedName;
     private volatile @Nullable Map<String, List<FieldDescriptor>> cachedDeclaredFieldsByOwner;
     private volatile @Nullable Map<String, List<MethodDescriptor>> cachedDeclaredMethodsByOwner;
-
-    /**
-     * Creates a rule context from the legacy inspection context wrapper.
-     *
-     * @param context legacy inspection context
-     * @throws NullPointerException if {@code context} is {@code null}
-     */
-    public JavaRuleContext(JavaInspectionContext context) {
-        this(context.filePath(), context.documentText(), context.semanticModel());
-    }
 
     /**
      * Creates a rule context from raw file and semantic analysis inputs.
@@ -112,6 +103,23 @@ public final class JavaRuleContext {
         this.filePath = Objects.requireNonNull(filePath, "filePath");
         this.documentText = Objects.requireNonNull(documentText, "documentText");
         this.semanticModel = Objects.requireNonNull(semanticModel, "semanticModel");
+    }
+
+    public Map<String, SyntaxNode> localTypeDeclarations() {
+        Map<String, SyntaxNode> cached = cachedLocalTypeDeclarations;
+        if (cached != null)
+            return cached;
+
+        Map<String, SyntaxNode> result = new LinkedHashMap<>();
+        traverse(node -> declaredSymbol(node).ifPresent(symbol -> {
+            String qualifiedName = symbol.qualifiedName().orElse(null);
+            if (qualifiedName != null && isTypeSymbol(symbol.kind()))
+                result.putIfAbsent(qualifiedName, node);
+        }));
+
+        Map<String, SyntaxNode> copy = Map.copyOf(result);
+        cachedLocalTypeDeclarations = copy;
+        return copy;
     }
 
     public @Nullable SyntaxNode forBodyOf(SyntaxNode forNode) {
@@ -192,7 +200,7 @@ public final class JavaRuleContext {
      * @return {@code true} when the block has no nested syntax children
      */
     public boolean isEmptyBlock(SyntaxNode block) {
-        if(block == null)
+        if (block == null)
             return true;
 
         for (SyntaxNode child : block.children()) {
