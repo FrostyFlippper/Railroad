@@ -3916,7 +3916,7 @@ class CoreInspectionRulesTest {
     }
 
     @Test
-    void coreTernaryWithSameBranch() {
+    void coreCoreConditionalExpressionWithIdenticalBranchesEmitsDiagnosticWhenTernaryHasSameBranch() {
         List<SemanticDiagnostic> diagnostics = runProvider(new CoreConditionalExpressionWithIdenticalBranches(), """
             class Example {
                 int run(boolean flag, int value) {
@@ -3929,7 +3929,7 @@ class CoreInspectionRulesTest {
     }
 
     @Test
-    void coreTernaryWithDifferentBranch() {
+    void coreCoreConditionalExpressionWithIdenticalBranchesDoesNotEmitsDiagnosticWhenTernaryHasDifferentBranch() {
         List<SemanticDiagnostic> diagnostics = runProvider(new CoreConditionalExpressionWithIdenticalBranches(), """
             class Example {
                 int run(boolean flag, int valueA, int valueB) {
