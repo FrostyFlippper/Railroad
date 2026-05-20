@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @RegisteredInspection
-public class CoreConditionalExpressionWithIdenticalBranches implements JavaInspectionRuleProvider {
+public class CoreConditionalExpressionWithIdenticalBranchesInspection implements JavaInspectionRuleProvider {
     public static final String ID = "railroad:core-conditional-expression-with-identical-branches";
 
     private static final List<JavaInspectionRule> RULES = List.of(
@@ -26,7 +26,7 @@ public class CoreConditionalExpressionWithIdenticalBranches implements JavaInspe
             JavaSemanticRules.CONDITIONAL_EXPRESSION_WITH_IDENTICAL_BRANCHES.defaultSeverity(),
             JavaSemanticRules.CONDITIONAL_EXPRESSION_WITH_IDENTICAL_BRANCHES.messageTemplate(),
             Set.of("core", "control-flow"),
-            CoreConditionalExpressionWithIdenticalBranches::reportConditionalExpressionWithIdenticalBranches
+            CoreConditionalExpressionWithIdenticalBranchesInspection::reportConditionalExpressionWithIdenticalBranches
         )
     );
 
