@@ -46,9 +46,8 @@ public class CoreDoubleNegationInspection implements JavaInspectionRuleProvider 
             SyntaxNode parent = syntaxNode.parent().orElse(null);
             if (parent != null
                 && Objects.equals(parent.kind().id(), JavaSyntaxKinds.UNARY_EXPRESSION.id())
-                && context.hasOperatorToken(parent, JavaTokenType.EXCLAMATION_MARK)) {
+                && context.hasOperatorToken(parent, JavaTokenType.EXCLAMATION_MARK))
                 continue;
-            }
 
             JavaRuleContext.NegationUnwrapResult negationUnwrapResult = context.unwrapLeadingNegations(syntaxNode);
             if (negationUnwrapResult != null && negationUnwrapResult.negationCount() >= 2) {
