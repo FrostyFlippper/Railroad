@@ -1,5 +1,6 @@
 package dev.railroadide.railroad.ide.diagnostics.inspections;
 
+import dev.railroadide.railroad.ide.diagnostics.RegisteredInspection;
 import dev.railroadide.railroad.ide.diagnostics.rules.java.JavaSemanticRules;
 import dev.railroadide.railroad.ide.sst.impl.java.JavaSemanticAnalyzer;
 import dev.railroadide.railroad.ide.sst.impl.java.JavaSyntaxKinds;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+@RegisteredInspection
 public class CoreConditionalExpressionWithIdenticalBranches implements JavaInspectionRuleProvider {
     public static final String ID = "railroad:core-conditional-expression-with-identical-branches";
 
