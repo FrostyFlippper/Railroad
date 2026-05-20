@@ -47,7 +47,6 @@ public class CoreDoubleNegationInspection implements JavaInspectionRuleProvider 
             if (parent != null
                 && Objects.equals(parent.kind().id(), JavaSyntaxKinds.UNARY_EXPRESSION.id())
                 && context.hasOperatorToken(parent, JavaTokenType.EXCLAMATION_MARK)) {
-                reporter.report(syntaxNode);
                 continue;
             }
 
