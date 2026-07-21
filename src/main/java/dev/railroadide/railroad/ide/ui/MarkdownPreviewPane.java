@@ -1,11 +1,12 @@
 package dev.railroadide.railroad.ide.ui;
 
-import dev.railroadide.core.ui.RRButton;
-import dev.railroadide.core.ui.RRHBox;
-import dev.railroadide.core.ui.RRVBox;
 import dev.railroadide.railroad.Railroad;
+import dev.railroadide.railroad.ide.ui.codeeditor.TextEditorPane;
 import dev.railroadide.railroad.settings.Settings;
 import dev.railroadide.railroad.theme.ThemeManager;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRHBox;
+import dev.railroadide.railroad.ui.RRVBox;
 import io.github.raghultech.markdown.javafx.preview.MarkdownWebView;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -16,6 +17,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
+import lombok.Getter;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.fontawesome6.FontAwesomeBrands;
 import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
@@ -26,6 +28,7 @@ import java.nio.file.Path;
 
 public class MarkdownPreviewPane extends RRVBox {
     private final MarkdownWebView preview;
+    @Getter
     private final Path markdownFile;
 
     private TextEditorPane textEditorPane;
@@ -59,11 +62,15 @@ public class MarkdownPreviewPane extends RRVBox {
         showContent(splitView(), topRow);
     }
 
+    public Path getMarkdownFile() {
+        return markdownFile;
+    }
+
     private TextEditorPane codeView() {
         if (textEditorPane != null)
             return textEditorPane;
 
-        textEditorPane = new TextEditorPane(markdownFile);
+        textEditorPane = new TextEditorPane(markdownFile, "markdown");
         textEditorPane.textProperty().addListener(
             (observable, oldValue, newValue) -> preview.setContent(newValue));
 
@@ -93,7 +100,7 @@ public class MarkdownPreviewPane extends RRVBox {
             textEditorPane.scrollToPixel(0, 0);
     }
 
-    private HBox createViewButtons(){
+    private HBox createViewButtons() {
         Button codeView = createButton(FontAwesomeSolid.CODE);
         Button splitView = createButton(FontAwesomeSolid.COLUMNS);
         Button previewView = createButton(FontAwesomeBrands.MARKDOWN);
@@ -120,7 +127,7 @@ public class MarkdownPreviewPane extends RRVBox {
         return switchButtons;
     }
 
-    private HBox createMarkdownButtons(){
+    private HBox createMarkdownButtons() {
         Button headingButton = createButton(FontAwesomeSolid.HEADING);
 
         var headingMenu = new ContextMenu();
@@ -185,23 +192,23 @@ public class MarkdownPreviewPane extends RRVBox {
         return item;
     }
 
-    private Button createButton(Ikon icon){
+    private Button createButton(Ikon icon) {
         var button = new RRButton("", icon);
         button.setSquare(true);
         button.setRounded(false);
         return button;
     }
 
-    private void setButtonOnAction(Button button, String prefix){
+    private void setButtonOnAction(Button button, String prefix) {
         button.setOnAction($ -> {
-            if (textEditorPane != null){
+            if (textEditorPane != null) {
                 textEditorPane.insertText(textEditorPane.getCaretPosition(), prefix + " ");
                 textEditorPane.requestFocus();
             }
         });
     }
 
-    private void setButtonOnAction(Button button, String prefix, String postfix){
+    private void setButtonOnAction(Button button, String prefix, String postfix) {
         button.setOnAction($ -> {
             if (textEditorPane != null) {
                 int caretPosition = textEditorPane.getCaretPosition();

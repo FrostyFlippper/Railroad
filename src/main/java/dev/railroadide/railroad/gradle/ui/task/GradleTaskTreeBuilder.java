@@ -1,16 +1,15 @@
 package dev.railroadide.railroad.gradle.ui.task;
 
 import dev.railroadide.railroad.gradle.ui.GradleTreeBuilder;
-import dev.railroadide.railroad.gradle.ui.tree.GradleProjectElement;
+import dev.railroadide.railroad.gradle.ui.tree.GradleModuleElement;
 import dev.railroadide.railroad.gradle.ui.tree.GradleTaskElement;
 import dev.railroadide.railroad.gradle.ui.tree.GradleTaskGroupElement;
 import dev.railroadide.railroad.gradle.ui.tree.GradleTreeElement;
-import dev.railroadide.railroad.project.Project;
+import dev.railroadide.railroad.plugin.spi.dto.Project;
 import dev.railroadide.railroad.utility.StringUtils;
 import dev.railroadide.railroadplugin.dto.RailroadGradleTask;
 import dev.railroadide.railroadplugin.dto.RailroadModule;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 
 import java.util.Comparator;
@@ -23,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class GradleTaskTreeBuilder implements GradleTreeBuilder<RailroadGradleTask> {
     @Override
-    public TreeItem<GradleTreeElement> buildTree(Project project, ObservableList<RailroadGradleTask> elements) {
+    public TreeItem<GradleTreeElement> buildTree(Project project, List<RailroadGradleTask> elements) {
         TreeItem<GradleTreeElement> root = new TreeItem<>();
 
         Map<RailroadModule, List<RailroadGradleTask>> tasksByProject = elements.stream()
@@ -68,7 +67,7 @@ public class GradleTaskTreeBuilder implements GradleTreeBuilder<RailroadGradleTa
             }
 
             TreeItem<GradleTreeElement> node =
-                new TreeItem<>(new GradleProjectElement(project, module));
+                new TreeItem<>(new GradleModuleElement(project, module));
             parentNode.getChildren().add(node);
             return node;
         });
@@ -123,7 +122,7 @@ public class GradleTaskTreeBuilder implements GradleTreeBuilder<RailroadGradleTa
         if (element instanceof GradleTaskGroupElement)
             return 1;
 
-        if (element instanceof GradleProjectElement)
+        if (element instanceof GradleModuleElement)
             return 2;
 
         return Integer.MAX_VALUE;

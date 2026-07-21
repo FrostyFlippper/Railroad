@@ -6,7 +6,7 @@ import dev.railroadide.railroad.gradle.GradleEnvironment;
 import dev.railroadide.railroad.gradle.model.GradleBuildModel;
 import dev.railroadide.railroad.gradle.model.GradleModelListener;
 import dev.railroadide.railroad.gradle.service.GradleModelService;
-import dev.railroadide.railroad.project.Project;
+import dev.railroadide.railroad.plugin.spi.dto.Project;
 import dev.railroadide.railroad.utility.function.ThrowingSupplier;
 import dev.railroadide.railroadplugin.dto.FabricDataModel;
 import dev.railroadide.railroadplugin.dto.RailroadProject;
@@ -72,13 +72,13 @@ public class ToolingGradleModelService implements GradleModelService {
             GradleBuild gradleBuild = connection.model(GradleBuild.class)
                 .withArguments(initScriptArgs)
                 .get();
-            RailroadProject railroadProject = requestOptionalModel(connection, RailroadProject.class, initScriptArgs);
+            RailroadProject gradleProject = requestOptionalModel(connection, RailroadProject.class, initScriptArgs);
             FabricDataModel fabricDataModel = requestOptionalModel(connection, FabricDataModel.class, initScriptArgs);
 
             String gradleVersion = buildEnvironment.getGradle().getGradleVersion();
             Path rootDir = gradleBuild.getRootProject().getProjectDirectory().toPath();
 
-            return new GradleBuildModel(gradleVersion, rootDir, fabricDataModel, railroadProject);
+            return new GradleBuildModel(gradleVersion, rootDir, fabricDataModel, gradleProject);
         } catch (Exception exception) {
             throw new RuntimeException("Failed to load Gradle model", exception);
         } finally {
@@ -158,6 +158,7 @@ public class ToolingGradleModelService implements GradleModelService {
 
     @Override
     public CompletableFuture<GradleBuildModel> refreshModel(boolean force) {
+        CompletableFuture<GradleBuildModel> refresh;
         synchronized (lock) {
             if (!force) {
                 GradleBuildModel existingModel = cachedModel.get();
@@ -165,33 +166,63 @@ public class ToolingGradleModelService implements GradleModelService {
                     return CompletableFuture.completedFuture(existingModel);
             }
 
-            if (ongoingRefresh != null && !ongoingRefresh.isDone())
+            if (ongoingRefresh != null)
                 return ongoingRefresh;
 
-            listeners.forEach(GradleModelListener::modelReloadStarted);
-
-            ongoingRefresh = CompletableFuture.supplyAsync(
+            refresh = CompletableFuture.supplyAsync(
                     safely(() -> ToolingGradleModelService.loadModel(this.project, this.environment)),
                     executor)
-                .orTimeout(modelTimeout.toMillis(), TimeUnit.MILLISECONDS)
-                .whenComplete((model, throwable) -> {
-                    synchronized (lock) {
-                        if (throwable == null && model != null) {
-                            cachedModel.set(model);
-                            listeners.forEach(listener -> listener.modelReloadSucceeded(model));
-                        } else {
-                            listeners.forEach(listener ->
-                                listener.modelReloadFailed(throwable != null ?
-                                    throwable :
-                                    new IllegalStateException("Failed to load model"))
-                            );
-                        }
+                .orTimeout(modelTimeout.toMillis(), TimeUnit.MILLISECONDS);
+            ongoingRefresh = refresh;
+        }
 
-                        ongoingRefresh = null;
-                    }
-                });
+        notifyReloadStarted();
+        refresh.whenComplete((model, throwable) -> completeRefresh(refresh, model, throwable));
+        return refresh;
+    }
 
-            return ongoingRefresh;
+    private void completeRefresh(CompletableFuture<GradleBuildModel> refresh,
+                                 GradleBuildModel model,
+                                 Throwable throwable) {
+        synchronized (lock) {
+            if (throwable == null && model != null) {
+                cachedModel.set(model);
+            }
+        }
+
+        try {
+            if (throwable == null && model != null) {
+                listeners.forEach(listener -> notifyListener(
+                    () -> listener.modelReloadSucceeded(model),
+                    "success"
+                ));
+            } else {
+                Throwable error = throwable != null
+                    ? throwable
+                    : new IllegalStateException("Failed to load model");
+                listeners.forEach(listener -> notifyListener(
+                    () -> listener.modelReloadFailed(error),
+                    "failure"
+                ));
+            }
+        } finally {
+            synchronized (lock) {
+                if (ongoingRefresh == refresh) {
+                    ongoingRefresh = null;
+                }
+            }
+        }
+    }
+
+    private void notifyReloadStarted() {
+        listeners.forEach(listener -> notifyListener(listener::modelReloadStarted, "start"));
+    }
+
+    private void notifyListener(Runnable callback, String phase) {
+        try {
+            callback.run();
+        } catch (Throwable error) {
+            Railroad.LOGGER.error("Gradle model listener failed during {} notification", phase, error);
         }
     }
 

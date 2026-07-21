@@ -4,17 +4,20 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.codecentric.centerdevice.javafxsvg.SvgImageLoaderFactory;
 import de.codecentric.centerdevice.javafxsvg.dimension.PrimitiveDimensionProvider;
-import dev.railroadide.core.utility.ServiceLocator;
 import dev.railroadide.logger.Logger;
 import dev.railroadide.logger.LoggerManager;
 import dev.railroadide.logger.LoggerService;
 import dev.railroadide.railroad.config.ConfigHandler;
+import dev.railroadide.railroad.ide.language.LanguageSupports;
 import dev.railroadide.railroad.ide.runconfig.RunConfigurationTypes;
 import dev.railroadide.railroad.java.JDKManager;
 import dev.railroadide.railroad.localization.L18n;
 import dev.railroadide.railroad.localization.Languages;
 import dev.railroadide.railroad.plugin.PluginManager;
 import dev.railroadide.railroad.plugin.defaults.DefaultEventBus;
+import dev.railroadide.railroad.plugin.spi.event.EventBus;
+import dev.railroadide.railroad.plugin.spi.events.ApplicationStartEvent;
+import dev.railroadide.railroad.plugin.spi.events.ApplicationStopEvent;
 import dev.railroadide.railroad.project.LicenseRegistry;
 import dev.railroadide.railroad.project.MappingChannelRegistry;
 import dev.railroadide.railroad.project.ProjectManager;
@@ -26,16 +29,15 @@ import dev.railroadide.railroad.settings.handler.SettingsHandler;
 import dev.railroadide.railroad.settings.keybinds.Keybinds;
 import dev.railroadide.railroad.switchboard.SwitchboardRepositories;
 import dev.railroadide.railroad.theme.ThemeManager;
-import dev.railroadide.railroad.utility.json.LocalDateTimeTypeAdapter;
 import dev.railroadide.railroad.utility.ShutdownHooks;
+import dev.railroadide.railroad.utility.json.LocalDateTimeTypeAdapter;
 import dev.railroadide.railroad.utility.json.PathTypeAdapter;
 import dev.railroadide.railroad.vcs.RepositoryManager;
+import dev.railroadide.railroad.vcs.git.GitLog;
+import dev.railroadide.railroad.vcs.git.util.GitUtils;
 import dev.railroadide.railroad.welcome.WelcomePane;
 import dev.railroadide.railroad.window.WindowBuilder;
 import dev.railroadide.railroad.window.WindowManager;
-import dev.railroadide.railroadpluginapi.event.EventBus;
-import dev.railroadide.railroadpluginapi.events.ApplicationStartEvent;
-import dev.railroadide.railroadpluginapi.events.ApplicationStopEvent;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
@@ -102,15 +104,18 @@ public class Railroad extends Application {
 
         List<InitializationStep> steps = List.of(
             new InitializationStep("Initializing logger", LoggerManager::init),
+            new InitializationStep("Initializing Git logger", GitLog::initialize),
             new InitializationStep("Initializing run configuration types", RunConfigurationTypes::initialize),
             new InitializationStep("Loading configuration", ConfigHandler::initConfig),
             new InitializationStep("Scanning plugins", () -> PluginManager.loadPlugins(ConfigHandler.getConfigDirectory().resolve("plugins"))),
             new InitializationStep("Registering keybinds", Keybinds::initialize),
             new InitializationStep("Scanning language files", Languages::initialize),
             new InitializationStep("Loading settings", Settings::initialize),
+            new InitializationStep("Registering language supports", LanguageSupports::initialize),
+            new InitializationStep("Registering language indexers", LanguageSupports::initializeLanguageIndexers),
+            new InitializationStep("Registering language index persistence", LanguageSupports::initializeLanguagePersistence),
             new InitializationStep("Preparing settings handler", SettingsHandler::init),
             new InitializationStep("Preparing themes", ThemeManager::init),
-            new InitializationStep("Binding service locator", () -> ServiceLocator.setServiceProvider(Services::getService)),
             new InitializationStep("Finding Java versions", JDKManager::refreshJDKs),
             new InitializationStep("Loading language", () -> L18n.loadLanguage(SettingsHandler.getValue(Settings.LANGUAGE))),
             new InitializationStep("Initializing repositories", SwitchboardRepositories::initialize),
@@ -120,11 +125,12 @@ public class Railroad extends Application {
             new InitializationStep("Enabling plugins", PluginManager::enableEnabledPlugins),
             new InitializationStep("Activating ready plugins", PluginManager::loadReadyPlugins),
             new InitializationStep("Restoring settings", SettingsHandler::loadSettings),
+            new InitializationStep("Locating git executable", GitUtils::loadGitExecutableIntoSettings),
             new InitializationStep("Registering shutdown hooks", () -> ShutdownHooks.addHook(() -> {
                 try (ExecutorService executorService = HTTP_CLIENT.dispatcher().executorService()) {
                     executorService.shutdown();
                 }
-
+        
                 HTTP_CLIENT.connectionPool().evictAll();
             }))
         );

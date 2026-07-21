@@ -1,13 +1,13 @@
 package dev.railroadide.railroad.window;
 
-import dev.railroadide.core.ui.RRButton;
-import dev.railroadide.core.ui.RRHBox;
-import dev.railroadide.core.ui.RRStackPane;
-import dev.railroadide.core.ui.RRVBox;
-import dev.railroadide.core.ui.localized.LocalizedLabel;
-import dev.railroadide.core.ui.localized.LocalizedText;
-import dev.railroadide.core.ui.styling.ButtonVariant;
 import dev.railroadide.railroad.AppResources;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRHBox;
+import dev.railroadide.railroad.ui.RRStackPane;
+import dev.railroadide.railroad.ui.RRVBox;
+import dev.railroadide.railroad.ui.localized.LocalizedLabel;
+import dev.railroadide.railroad.ui.localized.LocalizedText;
+import dev.railroadide.railroad.ui.styling.ButtonVariant;
 import io.github.palexdev.mfxresources.fonts.MFXFontIcon;
 import io.github.palexdev.mfxresources.fonts.fontawesome.FontAwesomeSolid;
 import javafx.animation.FadeTransition;
@@ -43,6 +43,7 @@ public class AlertBuilder<T extends AlertBuilder<?>> {
     protected Runnable onClose = () -> {
     };
     protected AlertType alertType = AlertType.INFO;
+    protected boolean submitOnEnter = true;
 
     public static AlertBuilder<?> create() {
         return new AlertBuilder<>();
@@ -89,24 +90,26 @@ public class AlertBuilder<T extends AlertBuilder<?>> {
         return (T) this;
     }
 
+    public T submitOnEnter(boolean submitOnEnter) {
+        this.submitOnEnter = submitOnEnter;
+        return (T) this;
+    }
+
     public Scene buildScene() {
         var overlay = new RRStackPane();
         overlay.getStyleClass().add("alert-overlay");
-        overlay.setPadding(new Insets(24));
 
-        var card = new RRVBox(18);
+        var card = new RRVBox();
         card.setAlignment(Pos.TOP_LEFT);
-        card.setPadding(new Insets(24));
         card.getStyleClass().addAll("alert-card", "alert-" + alertType.name().toLowerCase());
 
-        var header = new RRHBox(12);
+        var header = new RRHBox();
         header.setAlignment(Pos.CENTER_LEFT);
+        header.getStyleClass().add("alert-header");
 
         var iconWrap = new RRStackPane();
-        iconWrap.setMinSize(32, 32);
-        iconWrap.setPrefSize(32, 32);
         iconWrap.getStyleClass().add("alert-icon-wrap");
-        var iconBg = new Circle(16);
+        var iconBg = new Circle();
         iconBg.getStyleClass().add("alert-icon-bg");
 
         var fontIcon = new MFXFontIcon(switch (alertType) {
@@ -145,7 +148,7 @@ public class AlertBuilder<T extends AlertBuilder<?>> {
             case WARNING -> "railroad.generic.proceed";
         });
         primary.setVariant(ButtonVariant.PRIMARY);
-        primary.setDefaultButton(true);
+        primary.setDefaultButton(submitOnEnter);
 
         buttons.getChildren().addAll(secondary, primary);
 
@@ -182,7 +185,7 @@ public class AlertBuilder<T extends AlertBuilder<?>> {
             if (event.getCode() == KeyCode.ESCAPE) {
                 event.consume();
                 close.run();
-            } else if (event.getCode() == KeyCode.ENTER) {
+            } else if (submitOnEnter && event.getCode() == KeyCode.ENTER) {
                 event.consume();
                 primary.fire();
             }

@@ -1,13 +1,13 @@
 package dev.railroadide.railroad.theme.ui;
 
-import dev.railroadide.core.ui.RRButton;
-import dev.railroadide.core.ui.RRFormSection;
-import dev.railroadide.core.ui.styling.ButtonSize;
-import dev.railroadide.core.ui.styling.ButtonVariant;
 import dev.railroadide.railroad.settings.Settings;
 import dev.railroadide.railroad.settings.handler.SettingsHandler;
 import dev.railroadide.railroad.theme.ThemeDownloadManager;
 import dev.railroadide.railroad.theme.ThemeManager;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRFormSection;
+import dev.railroadide.railroad.ui.styling.ButtonSize;
+import dev.railroadide.railroad.ui.styling.ButtonVariant;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
@@ -37,8 +37,8 @@ public class ThemeSelector extends VBox {
     public ThemeSelector(String currentTheme) {
         selectedThemeProperty = new SimpleStringProperty(currentTheme);
 
-        setSpacing(16);
         setAlignment(Pos.TOP_LEFT);
+        getStyleClass().add("theme-selector");
 
         var contentSection = createContentSection();
         getChildren().add(contentSection);
@@ -51,7 +51,6 @@ public class ThemeSelector extends VBox {
         section.setLocalizedHeaderText("railroad.home.settings.appearance.selecttheme");
 
         themeComboBox = new ComboBox<>();
-        themeComboBox.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(themeComboBox, Priority.ALWAYS);
         themeComboBox.getStyleClass().add("theme-selector-combo");
 
@@ -61,8 +60,9 @@ public class ThemeSelector extends VBox {
         previewButton.setVariant(ButtonVariant.GHOST);
         previewButton.setOnAction(e -> previewSelectedTheme());
 
-        var selectionRow = new HBox(12);
+        var selectionRow = new HBox();
         selectionRow.setAlignment(Pos.CENTER_LEFT);
+        selectionRow.getStyleClass().add("theme-selector-selection-row");
         selectionRow.getChildren().addAll(themeComboBox, previewButton);
 
         section.addContent(selectionRow);
@@ -95,7 +95,7 @@ public class ThemeSelector extends VBox {
         ThemeManager.getCurrentThemeProperty().addListener((observable, oldValue, newValue) -> {
             themeComboBox.setValue(newValue);
         });
-        
+
         themeComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
             selectedThemeProperty.set(newValue);
         });

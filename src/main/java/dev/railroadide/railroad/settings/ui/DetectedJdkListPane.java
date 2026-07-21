@@ -1,18 +1,18 @@
 package dev.railroadide.railroad.settings.ui;
 
-import dev.railroadide.core.ui.RRButton;
-import dev.railroadide.core.ui.RRHBox;
-import dev.railroadide.core.ui.RRListView;
-import dev.railroadide.core.ui.RRVBox;
-import dev.railroadide.core.ui.localized.LocalizedLabel;
-import dev.railroadide.core.ui.localized.LocalizedTooltip;
-import dev.railroadide.core.ui.styling.ButtonSize;
-import dev.railroadide.core.ui.styling.ButtonVariant;
 import dev.railroadide.railroad.AppResources;
 import dev.railroadide.railroad.Railroad;
 import dev.railroadide.railroad.java.JDK;
 import dev.railroadide.railroad.java.JDKManager;
 import dev.railroadide.railroad.localization.L18n;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRHBox;
+import dev.railroadide.railroad.ui.RRListView;
+import dev.railroadide.railroad.ui.RRVBox;
+import dev.railroadide.railroad.ui.localized.LocalizedLabel;
+import dev.railroadide.railroad.ui.localized.LocalizedTooltip;
+import dev.railroadide.railroad.ui.styling.ButtonSize;
+import dev.railroadide.railroad.ui.styling.ButtonVariant;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -40,11 +40,11 @@ public class DetectedJdkListPane extends RRVBox {
     private final LocalizedLabel countLabel = new LocalizedLabel("railroad.settings.ide.jdk_management.detected.count", 0);
 
     public DetectedJdkListPane() {
-        setSpacing(12);
         setFillWidth(true);
         getStyleClass().add("detected-jdk-list-pane");
 
-        var header = new RRHBox(8);
+        var header = new RRHBox();
+        header.getStyleClass().add("detected-jdk-list-header");
         header.setFillHeight(true);
         var title = new LocalizedLabel("railroad.settings.ide.jdk_management.detected.title");
         title.getStyleClass().add("section-label");
@@ -59,9 +59,7 @@ public class DetectedJdkListPane extends RRVBox {
 
         listView.setItems(items);
         listView.setFocusTraversable(false);
-        listView.setMinHeight(160);
-        listView.setPrefHeight(220);
-        listView.setMaxHeight(220);
+        listView.getStyleClass().add("detected-jdk-list-view");
         listView.setCellFactory(view -> new JdkCell());
         listView.setPlaceholder(new LocalizedLabel("railroad.settings.ide.jdk_management.detected.empty"));
 
@@ -79,8 +77,8 @@ public class DetectedJdkListPane extends RRVBox {
     }
 
     public static class JdkCell extends ListCell<JDK> {
-        private final HBox container = new HBox(12);
-        private final VBox textContainer = new VBox(2);
+        private final HBox container = new HBox();
+        private final VBox textContainer = new VBox();
         private final LocalizedLabel versionLabel = new LocalizedLabel("");
         private final LocalizedLabel nameLabel = new LocalizedLabel("");
         private final LocalizedLabel pathLabel = new LocalizedLabel("");
@@ -93,6 +91,7 @@ public class DetectedJdkListPane extends RRVBox {
             nameLabel.getStyleClass().add("detected-jdk-name");
             pathLabel.getStyleClass().add("detected-jdk-path");
 
+            textContainer.getStyleClass().add("detected-jdk-text-container");
             textContainer.getChildren().addAll(versionLabel, nameLabel, pathLabel);
             HBox.setHgrow(textContainer, Priority.ALWAYS);
         }

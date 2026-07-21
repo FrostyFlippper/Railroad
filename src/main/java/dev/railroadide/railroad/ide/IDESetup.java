@@ -2,32 +2,40 @@ package dev.railroadide.railroad.ide;
 
 import com.kodedu.terminalfx.Terminal;
 import com.panemu.tiwulfx.control.dock.DetachableTabPane;
-import dev.railroadide.core.settings.keybinds.KeybindContexts;
-import dev.railroadide.core.ui.RRBorderPane;
-import dev.railroadide.core.ui.RRHBox;
-import dev.railroadide.core.ui.RRVBox;
 import dev.railroadide.railroad.Railroad;
 import dev.railroadide.railroad.Services;
 import dev.railroadide.railroad.gradle.ui.GradleToolsPane;
 import dev.railroadide.railroad.ide.projectexplorer.ProjectExplorerPane;
 import dev.railroadide.railroad.ide.runconfig.RunConfiguration;
 import dev.railroadide.railroad.ide.runconfig.ui.RunConfigurationEditorPane;
-import dev.railroadide.railroad.ide.ui.ConsolePane;
-import dev.railroadide.railroad.ide.ui.IDEWelcomePane;
-import dev.railroadide.railroad.ide.ui.ImageViewerPane;
-import dev.railroadide.railroad.ide.ui.StatusBarPane;
+import dev.railroadide.railroad.ide.ui.*;
+import dev.railroadide.railroad.ide.ui.codeeditor.TextEditorPane;
+import dev.railroadide.railroad.ide.ui.git.branches.GitBranchesPane;
+import dev.railroadide.railroad.ide.ui.git.commit.GitCommitPane;
+import dev.railroadide.railroad.ide.ui.git.commit.details.GitCommitDetailsPane;
+import dev.railroadide.railroad.ide.ui.git.commit.list.GitCommitListPane;
+import dev.railroadide.railroad.ide.ui.git.diff.GitDiffPane;
+import dev.railroadide.railroad.ide.ui.git.overview.GitOverviewPane;
+import dev.railroadide.railroad.ide.ui.git.remote.GitRemotesPane;
+import dev.railroadide.railroad.ide.ui.git.stash.GitStashPane;
+import dev.railroadide.railroad.ide.ui.git.sync.GitSyncPane;
 import dev.railroadide.railroad.ide.ui.setup.IDEMenuBarFactory;
 import dev.railroadide.railroad.ide.ui.setup.PaneIconBarFactory;
 import dev.railroadide.railroad.ide.ui.setup.RunControlsPane;
 import dev.railroadide.railroad.ide.ui.setup.TerminalFactory;
+import dev.railroadide.railroad.plugin.spi.dto.Project;
+import dev.railroadide.railroad.plugin.spi.events.ProjectEvent;
 import dev.railroadide.railroad.project.FacetDetectedEvent;
-import dev.railroadide.railroad.project.Project;
 import dev.railroadide.railroad.project.facet.Facet;
 import dev.railroadide.railroad.project.facet.FacetManager;
+import dev.railroadide.railroad.settings.keybinds.KeybindContexts;
 import dev.railroadide.railroad.settings.keybinds.KeybindHandler;
+import dev.railroadide.railroad.theme.ThemeManager;
+import dev.railroadide.railroad.ui.RRBorderPane;
+import dev.railroadide.railroad.ui.RRHBox;
+import dev.railroadide.railroad.ui.RRVBox;
 import dev.railroadide.railroad.utility.icon.RailroadBrandsIcon;
 import dev.railroadide.railroad.window.WindowBuilder;
-import dev.railroadide.railroadpluginapi.events.ProjectEvent;
 import javafx.application.Platform;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
@@ -42,6 +50,7 @@ import javafx.stage.Stage;
 import org.fxmisc.richtext.CodeArea;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.kordamp.ikonli.fontawesome6.FontAwesomeBrands;
 import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
 
 import java.util.Map;
@@ -66,11 +75,26 @@ public class IDESetup {
 
         var leftPane = new DetachableTabPane();
         leftPane.addTab("Project", new ProjectExplorerPane(project, root));
+        leftPane.addTab("Git Commit", new GitCommitPane(project));
+        leftPane.addTab("Git Overview", new GitOverviewPane(project));
+        leftPane.addTab("Git Commit List", new GitCommitListPane(project));
+        leftPane.addTab("Git Branches", new GitBranchesPane(project));
+        leftPane.addTab("Git Remotes", new GitRemotesPane(project));
+        leftPane.addTab("Git Sync", new GitSyncPane(project));
+        leftPane.addTab("Git Stash", new GitStashPane(project));
 
         var rightPane = new DetachableTabPane();
 
         var editorPane = new DetachableTabPane();
         editorPane.addTab("Welcome", new IDEWelcomePane());
+
+        var gitDiffPane = new GitDiffPane(project);
+        var gitDiffTab = editorPane.addTab("Git Diff", gitDiffPane);
+        gitDiffTab.textProperty().bind(gitDiffPane.titleProperty());
+
+        var gitCommitDetailsPane = new GitCommitDetailsPane(project);
+        var gitCommitDetailsTab = editorPane.addTab("Git Commit Details", gitCommitDetailsPane);
+        gitCommitDetailsTab.textProperty().bind(gitCommitDetailsPane.titleProperty());
 
         var consolePane = new DetachableTabPane();
         consolePane.addTab("Console", new ConsolePane());
@@ -101,8 +125,15 @@ public class IDESetup {
             mainSplit,
             Orientation.VERTICAL,
             0,
-            Map.of("Project", FontAwesomeSolid.FOLDER.getDescription())
-        ));
+            Map.of("Project", FontAwesomeSolid.FOLDER.getDescription(),
+                "Git Commit", FontAwesomeBrands.USB.getDescription(),
+                "Git Overview", FontAwesomeSolid.HOME.getDescription(),
+                "Git Commit List", FontAwesomeSolid.LIST.getDescription(),
+                "Git Branches", FontAwesomeSolid.CODE_BRANCH.getDescription(),
+                "Git Remotes", FontAwesomeSolid.GLOBE.getDescription(),
+                "Git Sync", FontAwesomeSolid.SYNC.getDescription(),
+                "Git Stash", FontAwesomeSolid.BOX.getDescription()
+            )));
 
         var bottomBar = new RRVBox();
         var bottomIcons = PaneIconBarFactory.create(
@@ -173,6 +204,7 @@ public class IDESetup {
             try {
                 Scene ideScene = IDESetup.createIDEScene(project);
                 Stage ideStage = Railroad.WINDOW_MANAGER.getPrimaryStage();
+                ThemeManager.prepareSceneTransition(ideStage.getScene(), ideScene);
                 ideStage.setTitle(Services.APPLICATION_INFO.getName() + " " + Services.APPLICATION_INFO.getVersion() + " - " + project.getAlias());
                 ideStage.setScene(ideScene);
                 ideStage.setResizable(true);
@@ -195,21 +227,26 @@ public class IDESetup {
 
     /**
      * Find the best tab pane for files (CodeArea) in the given parent.
-     * If a welcome tab is found, it will be returned to replace it.
-     * If no welcome tab is found, it will look for a tab pane with a CodeArea.
+     * If a tab pane with a CodeArea is found, it will be returned.
+     * If no tab pane with a CodeArea is found, it will look for a welcome tab to replace.
      * If no tab pane with a CodeArea is found, the first tab pane found will be returned.
      *
      * @param parent The parent to search in
      * @return The best tab pane for files
      */
     public static Optional<DetachableTabPane> findBestPaneForFiles(Parent parent) {
-        // First, try to find a pane with a welcome tab to replace it
+        // Prefer panes that already contain editors so code tabs stay grouped together.
+        var codePane = findBestPaneForFiles(parent, tab -> tab.getContent() instanceof CodeArea);
+        if (codePane.isPresent())
+            return codePane;
+
+        // Fall back to replacing a welcome tab when no editor pane exists yet.
         var welcomePane = findBestPaneForFiles(parent, tab -> tab.getContent() instanceof IDEWelcomePane);
         if (welcomePane.isPresent())
             return welcomePane;
 
-        // If no welcome tab found, fall back to the original behavior
-        return findBestPaneForFiles(parent, tab -> tab.getContent() instanceof CodeArea);
+        // If no welcome tab exists, reuse a pane that already hosts file-like content.
+        return findBestPaneForFiles(parent, tab -> tab.getContent() instanceof TextEditorPane || tab.getContent() instanceof CodeArea || tab.getContent() instanceof ImageViewerPane || tab.getContent() instanceof MarkdownPreviewPane);
     }
 
     /**
@@ -282,5 +319,4 @@ public class IDESetup {
 
         return Optional.empty();
     }
-
 }

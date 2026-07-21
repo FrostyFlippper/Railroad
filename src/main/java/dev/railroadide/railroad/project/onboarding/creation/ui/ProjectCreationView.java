@@ -1,12 +1,12 @@
 package dev.railroadide.railroad.project.onboarding.creation.ui;
 
-import dev.railroadide.core.project.ProjectData;
-import dev.railroadide.core.ui.*;
-import dev.railroadide.core.ui.localized.LocalizedLabel;
-import dev.railroadide.core.ui.localized.LocalizedTitledPane;
-import dev.railroadide.core.ui.localized.LocalizedTooltip;
-import dev.railroadide.core.ui.styling.ButtonVariant;
 import dev.railroadide.railroad.localization.L18n;
+import dev.railroadide.railroad.project.ProjectData;
+import dev.railroadide.railroad.ui.*;
+import dev.railroadide.railroad.ui.localized.LocalizedLabel;
+import dev.railroadide.railroad.ui.localized.LocalizedTitledPane;
+import dev.railroadide.railroad.ui.localized.LocalizedTooltip;
+import dev.railroadide.railroad.ui.styling.ButtonVariant;
 import io.github.palexdev.materialfx.controls.MFXProgressSpinner;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
@@ -16,7 +16,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Service;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -38,7 +37,7 @@ public class ProjectCreationView extends RRBorderPane {
     private final StackPane progressStack = new RRStackPane();
     private final MFXProgressSpinner spinner = new MFXProgressSpinner();
 
-    private final HBox chipRow = new RRHBox(10);
+    private final HBox chipRow = new RRHBox();
     private final Label taskChip = chip("…");
     private final Label timeChip = chip("00:00");
 
@@ -55,10 +54,9 @@ public class ProjectCreationView extends RRBorderPane {
         StackPane bg = fancyBackground();
         setCenter(bg);
 
-        var card = new RRVBox(18);
-        card.setPadding(new Insets(24));
+        var card = new RRVBox();
         card.setAlignment(Pos.CENTER);
-        card.setMaxWidth(760);
+        card.getStyleClass().add("project-creation-card");
 
         var title = new LocalizedLabel("railroad.project.creation.status.creating.title");
 
@@ -67,8 +65,9 @@ public class ProjectCreationView extends RRBorderPane {
             data.getAsString(ProjectData.DefaultKeys.NAME)
         );
 
-        var header = new RRVBox(6);
+        var header = new RRVBox();
         header.setAlignment(Pos.CENTER);
+        header.getStyleClass().add("project-creation-header");
         header.getChildren().addAll(title, subtitle);
 
         spinner.setRadius(64);
@@ -77,6 +76,7 @@ public class ProjectCreationView extends RRBorderPane {
         progressStack.getChildren().addAll(spinner);
 
         chipRow.setAlignment(Pos.CENTER);
+        chipRow.getStyleClass().add("project-creation-chip-row");
         chipRow.getChildren().addAll(taskChip, timeChip);
 
         logArea.setEditable(false);
@@ -96,8 +96,9 @@ public class ProjectCreationView extends RRBorderPane {
 
         cancelBtn.setVariant(ButtonVariant.SECONDARY);
         cancelBtn.setTooltip(new LocalizedTooltip("railroad.project.creation.cancel.tooltip"));
-        var footer = new RRHBox(12);
+        var footer = new RRHBox();
         footer.setAlignment(Pos.CENTER);
+        footer.getStyleClass().add("project-creation-footer");
         footer.getChildren().add(cancelBtn);
 
         card.getChildren().addAll(
@@ -124,6 +125,14 @@ public class ProjectCreationView extends RRBorderPane {
         setOnKeyPressed(event -> {
             if (Objects.requireNonNull(event.getCode()) == KeyCode.ESCAPE) {
                 logsPane.setExpanded(!logsPane.isExpanded());
+            }
+        });
+
+        sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) {
+                stopTicker();
+            } else if (elapsedTicker != null && startInstant.get() != null) {
+                elapsedTicker.play();
             }
         });
     }
@@ -176,7 +185,9 @@ public class ProjectCreationView extends RRBorderPane {
             timeChip.setText(txt);
         }));
         elapsedTicker.setCycleCount(Timeline.INDEFINITE);
-        elapsedTicker.playFromStart();
+        if (getScene() != null) {
+            elapsedTicker.playFromStart();
+        }
     }
 
     private void stopTicker() {
@@ -186,7 +197,6 @@ public class ProjectCreationView extends RRBorderPane {
     private static Label chip(String text) {
         var l = new Label(text);
         l.getStyleClass().add("rr-chip");
-        l.setPadding(new Insets(6, 12, 6, 12));
         return l;
     }
 

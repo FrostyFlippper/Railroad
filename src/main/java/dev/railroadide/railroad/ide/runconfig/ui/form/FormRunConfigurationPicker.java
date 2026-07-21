@@ -1,18 +1,18 @@
 package dev.railroadide.railroad.ide.runconfig.ui.form;
 
-import dev.railroadide.core.form.HasSetValue;
-import dev.railroadide.core.form.ui.InformativeLabeledHBox;
-import dev.railroadide.core.ui.RRButton;
-import dev.railroadide.core.ui.styling.ButtonSize;
-import dev.railroadide.core.ui.styling.ButtonVariant;
-import dev.railroadide.core.ui.RRHBox;
-import dev.railroadide.core.ui.RRListView;
-import dev.railroadide.core.ui.RRVBox;
-import dev.railroadide.core.ui.localized.LocalizedLabel;
-import dev.railroadide.core.ui.localized.LocalizedTooltip;
+import dev.railroadide.railroad.form.HasSetValue;
+import dev.railroadide.railroad.form.ui.InformativeLabeledHBox;
 import dev.railroadide.railroad.ide.runconfig.RunConfiguration;
 import dev.railroadide.railroad.ide.runconfig.RunConfigurationType;
 import dev.railroadide.railroad.localization.L18n;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRHBox;
+import dev.railroadide.railroad.ui.RRListView;
+import dev.railroadide.railroad.ui.RRVBox;
+import dev.railroadide.railroad.ui.localized.LocalizedLabel;
+import dev.railroadide.railroad.ui.localized.LocalizedTooltip;
+import dev.railroadide.railroad.ui.styling.ButtonSize;
+import dev.railroadide.railroad.ui.styling.ButtonVariant;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -92,7 +92,7 @@ public class FormRunConfigurationPicker extends InformativeLabeledHBox<RRVBox> i
         this.selectableConfigurations = new FilteredList<>(availableConfigurations);
 
         selectedListView = new RRListView<>(selectedConfigurations);
-        selectedListView.setPrefHeight(200);
+        selectedListView.getStyleClass().add("runconfig-picker-list");
         selectedListView.setCellFactory(listView -> new ListCell<>() {
             @Override
             protected void updateItem(RunConfiguration<?> item, boolean empty) {
@@ -103,7 +103,7 @@ public class FormRunConfigurationPicker extends InformativeLabeledHBox<RRVBox> i
         selectedListView.setPlaceholder(new LocalizedLabel("railroad.runconfig.compound.configuration.configurations.empty"));
         RRVBox.setVgrow(selectedListView, Priority.ALWAYS);
 
-        var toolbar = new RRHBox(6);
+        var toolbar = new RRHBox();
         toolbar.getStyleClass().add("runconfig-picker-toolbar");
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
@@ -142,7 +142,8 @@ public class FormRunConfigurationPicker extends InformativeLabeledHBox<RRVBox> i
         moveDownButton.setOnAction($ -> moveSelection(1));
         toolbar.getChildren().add(moveDownButton);
 
-        var container = new RRVBox(8, toolbar, selectedListView);
+        var container = new RRVBox(toolbar, selectedListView);
+        container.getStyleClass().add("runconfig-picker");
 
         availableConfigurations.addListener((ListChangeListener<? super RunConfiguration<?>>) change -> {
             while (change.next()) {

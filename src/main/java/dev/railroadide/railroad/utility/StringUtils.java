@@ -3,85 +3,19 @@ package dev.railroadide.railroad.utility;
 import io.github.palexdev.mfxcore.utils.ExceptionUtils;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.*;
 import java.util.HashMap;
 import java.util.Map;
 
 public final class StringUtils {
+    /**
+     * A regular expression pattern for validating and matching URLs.
+     * This pattern supports both HTTP and HTTPS protocols and includes
+     * various URL components such as domain, path, query parameters, etc.
+     */
+    public static final String URL_REGEX = "(?:http(s)?:\\/\\/)?[\\w.-]+(?:\\.[\\w\\.-]+)+[\\w\\-\\._~:/?#\\[\\]@!\\$&'\\(\\)\\*\\+,;=.]+$";
+
     private StringUtils() {
         // Utility class, no instantiation
-    }
-
-    /**
-     * Formats a given epoch time in milliseconds into a human-readable string that indicates
-     * how long ago that time was from the current time.
-     * <p>
-     * TODO: Probably just delete this, because it doesn't (and can't) support localization
-     *
-     * @param epochMillis The epoch time in milliseconds to format.
-     * @return A human-readable string indicating the elapsed time, or "never" if the input is -1.
-     */
-    public static String formatElapsed(long epochMillis) {
-        if (epochMillis == -1) {
-            return "never";
-        }
-
-        Instant then = Instant.ofEpochMilli(epochMillis);
-        Instant now = Instant.now();
-        if (then.isAfter(now)) {
-            return "in the future";
-        }
-
-        // for calendar-accurate months/years
-        ZoneId zone = ZoneId.systemDefault();
-        LocalDate thenDate = then.atZone(zone).toLocalDate();
-        LocalDate nowDate = LocalDate.now(zone);
-        Period period = Period.between(thenDate, nowDate);
-
-        if (period.getYears() > 10) {
-            return "more than 10 years ago";
-        }
-
-        Duration dur = Duration.between(then, now);
-        long seconds = dur.getSeconds();
-
-        if (seconds < 5) {
-            return "just now";
-        }
-
-        // define the thresholds in descending order
-        if (period.getYears() > 0) {
-            return formatTime(period.getYears(), "year");
-        }
-
-        if (period.getMonths() > 0) {
-            return formatTime(period.getMonths(), "month");
-        }
-
-        if (period.getDays() >= 7) {
-            long weeks = period.getDays() / 7;
-            return formatTime(weeks, "week");
-        }
-
-        if (period.getDays() > 0) {
-            return formatTime(period.getDays(), "day");
-        }
-
-        long hours = dur.toHours();
-        if (hours > 0) {
-            return formatTime(hours, "hour");
-        }
-
-        long minutes = dur.toMinutes();
-        if (minutes > 0) {
-            return formatTime(minutes, "minute");
-        }
-
-        return formatTime(seconds, "second");
-    }
-
-    private static String formatTime(long count, String unit) {
-        return count + " " + unit + (count == 1 ? "" : "s") + " ago";
     }
 
     /**
@@ -231,5 +165,37 @@ public final class StringUtils {
         }
 
         return capitalized.toString().trim();
+    }
+
+    /**
+     * Calculates the Levenshtein distance between two strings.
+     * The Levenshtein distance is a measure of the minimum number of
+     * single-character edits (insertions, deletions, or substitutions)
+     * required to change one string into the other.
+     *
+     * @param a The first string to compare.
+     * @param b The second string to compare.
+     * @return The Levenshtein distance between the two strings.
+     */
+    public static int levenshtein(String a, String b) {
+        int[][] dp = new int[a.length() + 1][b.length() + 1];
+
+        // Initialize the first row and column of the DP table.
+        for (int i = 0; i <= a.length(); i++) dp[i][0] = i;
+        for (int j = 0; j <= b.length(); j++) dp[0][j] = j;
+
+        // Fill the DP table with the minimum edit distances.
+        for (int i = 1; i <= a.length(); i++) {
+            for (int j = 1; j <= b.length(); j++) {
+                int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
+                dp[i][j] = Math.min(
+                    Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1),
+                    dp[i - 1][j - 1] + cost
+                );
+            }
+        }
+
+        // Return the final computed Levenshtein distance.
+        return dp[a.length()][b.length()];
     }
 }

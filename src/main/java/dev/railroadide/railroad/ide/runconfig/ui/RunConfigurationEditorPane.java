@@ -1,23 +1,22 @@
 package dev.railroadide.railroad.ide.runconfig.ui;
 
-import dev.railroadide.core.form.Form;
-import dev.railroadide.core.form.FormData;
-import dev.railroadide.core.ui.RRButton;
-import dev.railroadide.core.ui.RRHBox;
-import dev.railroadide.core.ui.RRVBox;
-import dev.railroadide.core.ui.localized.LocalizedLabel;
-import dev.railroadide.core.ui.styling.ButtonSize;
-import dev.railroadide.core.ui.styling.ButtonVariant;
+import dev.railroadide.railroad.form.Form;
+import dev.railroadide.railroad.form.FormData;
 import dev.railroadide.railroad.ide.runconfig.RunConfiguration;
 import dev.railroadide.railroad.ide.runconfig.RunConfigurationType;
 import dev.railroadide.railroad.localization.L18n;
-import dev.railroadide.railroad.project.Project;
+import dev.railroadide.railroad.plugin.spi.dto.Project;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRHBox;
+import dev.railroadide.railroad.ui.RRVBox;
+import dev.railroadide.railroad.ui.localized.LocalizedLabel;
+import dev.railroadide.railroad.ui.styling.ButtonSize;
+import dev.railroadide.railroad.ui.styling.ButtonVariant;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Node;
@@ -112,9 +111,8 @@ public class RunConfigurationEditorPane extends RRVBox {
     }
 
     private VBox createEmptyStatePane() {
-        var container = new RRVBox(8);
+        var container = new RRVBox();
         container.setAlignment(Pos.CENTER);
-        container.setPadding(new Insets(20));
         container.getStyleClass().add("run-configuration-editor-empty-state");
 
         var title = new LocalizedLabel("railroad.runconfig.details.empty.title");
@@ -123,7 +121,6 @@ public class RunConfigurationEditorPane extends RRVBox {
         var description = new LocalizedLabel("railroad.runconfig.details.empty.description");
         description.getStyleClass().add("run-configuration-editor-empty-state-description");
         description.setWrapText(true);
-        description.setMaxWidth(320);
 
         container.getChildren().addAll(title, description);
         return container;
@@ -139,9 +136,8 @@ public class RunConfigurationEditorPane extends RRVBox {
     }
 
     private HBox createTopButtonBar(Project project) {
-        var topButtonBar = new RRHBox(5);
+        var topButtonBar = new RRHBox();
         topButtonBar.setAlignment(Pos.CENTER_LEFT);
-        topButtonBar.setPadding(new Insets(5));
         topButtonBar.getStyleClass().add("run-configuration-editor-top-bar");
 
         var addButton = createTopBarButton(FontAwesomeSolid.PLUS);
@@ -209,10 +205,9 @@ public class RunConfigurationEditorPane extends RRVBox {
     }
 
     private HBox createBottomButtonBar(Project project) {
-        var bottomButtonBar = new RRHBox(5);
+        var bottomButtonBar = new RRHBox();
         bottomButtonBar.setAlignment(Pos.CENTER_RIGHT);
-        bottomButtonBar.setPrefHeight(HBox.USE_COMPUTED_SIZE);
-        bottomButtonBar.setPadding(new Insets(5, 10, 5, 10));
+        bottomButtonBar.getStyleClass().add("run-configuration-editor-bottom-bar");
 
         var okButton = new RRButton("railroad.generic.ok", FontAwesomeSolid.CHECK);
         okButton.setVariant(ButtonVariant.PRIMARY);

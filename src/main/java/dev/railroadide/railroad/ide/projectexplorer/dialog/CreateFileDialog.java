@@ -1,12 +1,12 @@
 package dev.railroadide.railroad.ide.projectexplorer.dialog;
 
-import dev.railroadide.core.ui.RRGridPane;
-import dev.railroadide.core.ui.RRListView;
-import dev.railroadide.core.ui.localized.LocalizedButton;
-import dev.railroadide.core.ui.localized.LocalizedLabel;
+import dev.railroadide.railroad.AppResources;
 import dev.railroadide.railroad.Railroad;
 import dev.railroadide.railroad.ide.projectexplorer.FileCreateType;
-import javafx.geometry.Insets;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRGridPane;
+import dev.railroadide.railroad.ui.RRListView;
+import dev.railroadide.railroad.ui.localized.LocalizedLabel;
 import javafx.scene.Scene;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.TextField;
@@ -37,9 +37,7 @@ public class CreateFileDialog {
         });
 
         var root = new RRGridPane();
-        root.setPadding(new Insets(30));
-        root.setHgap(5);
-        root.setVgap(10);
+        root.getStyleClass().add("create-file-dialog");
 
         var title = new LocalizedLabel(switch (type) {
             case FILE -> "railroad.dialog.create_file.title.file";
@@ -76,7 +74,7 @@ public class CreateFileDialog {
 
         listView.getSelectionModel().selectFirst();
 
-        var okButton = new LocalizedButton("railroad.generic.ok");
+        var okButton = new RRButton("railroad.generic.ok");
         okButton.setOnAction(event -> {
             dialog.hide();
 
@@ -111,7 +109,7 @@ public class CreateFileDialog {
             }
         });
 
-        var cancelButton = new LocalizedButton("railroad.generic.cancel");
+        var cancelButton = new RRButton("railroad.generic.cancel");
         cancelButton.setOnAction(event -> dialog.hide());
 
         root.add(title, 0, 0, 2, 1);
@@ -123,7 +121,12 @@ public class CreateFileDialog {
             root.addRow(2, okButton, cancelButton);
         }
 
-        dialog.setScene(new Scene(root));
+        var scene = new Scene(root);
+        var stylesheet = AppResources.getResource("styles/components/dialog.css");
+        if (stylesheet != null) {
+            scene.getStylesheets().add(stylesheet.toExternalForm());
+        }
+        dialog.setScene(scene);
         dialog.showAndWait();
     }
 

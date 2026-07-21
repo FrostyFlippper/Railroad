@@ -3,13 +3,14 @@ package dev.railroadide.railroad.plugin;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.railroadide.railroad.Railroad;
+import dev.railroadide.railroad.config.ConfigHandler;
+import dev.railroadide.railroad.ide.diagnostics.JavaInspectionRegistries;
 import dev.railroadide.railroad.localization.L18n;
 import dev.railroadide.railroad.plugin.defaults.DefaultPluginContext;
-import dev.railroadide.railroad.settings.Settings;
-import dev.railroadide.railroad.settings.handler.SettingsHandler;
+import dev.railroadide.railroad.plugin.spi.Plugin;
+import dev.railroadide.railroad.plugin.spi.PluginDescriptor;
+import dev.railroadide.railroad.plugin.spi.inspection.JavaInspectionRuleProvider;
 import dev.railroadide.railroad.utility.ShutdownHooks;
-import dev.railroadide.railroadpluginapi.Plugin;
-import dev.railroadide.railroadpluginapi.PluginDescriptor;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.jetbrains.annotations.NotNull;
@@ -21,8 +22,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.ServiceLoader;
 
 /**
  * PluginManager is responsible for loading, enabling, and disabling plugins in the Railroad application.
@@ -78,7 +82,7 @@ public class PluginManager {
                     if (firstLoad) {
                         readyToLoad.add(descriptor);
                     } else {
-                        addPluginToSettings(descriptor);
+                        addPluginToConfig(descriptor);
                     }
                 } catch (Exception exception) {
                     Railroad.LOGGER.error("Failed to load plugin from {}", entry.toAbsolutePath(), exception);
@@ -90,7 +94,7 @@ public class PluginManager {
     }
 
     /**
-     * Enables all plugins that are currently marked as enabled in the settings.
+     * Enables all plugins that are currently marked as enabled in config.
      * This method iterates through the enabled plugins and calls enablePlugin for each one.
      * It logs any errors encountered during the enabling process.
      */
@@ -105,7 +109,7 @@ public class PluginManager {
             .map(Map.Entry::getKey)
             .toList()) {
             if (PluginManager.isPluginEnabledForce(descriptor))
-                continue; // Skip if already enabled
+                continue;
 
             try {
                 enablePlugin(descriptor);
@@ -128,9 +132,9 @@ public class PluginManager {
 
         for (PluginDescriptor descriptor : readyToLoad) {
             try {
-                addPluginToSettings(descriptor);
+                addPluginToConfig(descriptor);
             } catch (Exception exception) {
-                Railroad.LOGGER.error("Failed to add plugin to settings: {}", descriptor.getName(), exception);
+                Railroad.LOGGER.error("Failed to add plugin to config: {}", descriptor.getName(), exception);
             }
         }
 
@@ -138,17 +142,20 @@ public class PluginManager {
     }
 
     /**
-     * Adds a plugin descriptor to the settings for tracking enabled plugins.
-     * This method ensures that the plugin is registered in the settings even if it is not enabled.
+     * Adds a plugin descriptor to config for tracking enabled plugins.
+     * This ensures every discovered plugin has a persisted enabled/disabled flag.
      *
      * @param descriptor The PluginDescriptor of the plugin to add.
      */
-    private static void addPluginToSettings(PluginDescriptor descriptor) {
-        Map<PluginDescriptor, Boolean> enabledPlugins = getEnabledPlugins();
-        if (!enabledPlugins.containsKey(descriptor)) {
-            enabledPlugins.put(descriptor, false);
-            SettingsHandler.setValue(Settings.ENABLED_PLUGINS, enabledPlugins);
-            SettingsHandler.saveSettings();
+    private static void addPluginToConfig(PluginDescriptor descriptor) {
+        if (descriptor == null || descriptor.getId() == null || descriptor.getId().isBlank())
+            return;
+
+        Map<String, Boolean> enabledPluginsById = ConfigHandler.getConfig().getEnabledPlugins();
+        if (!enabledPluginsById.containsKey(descriptor.getId())) {
+            enabledPluginsById.put(descriptor.getId(), false);
+            ConfigHandler.getConfig().setEnabledPlugins(enabledPluginsById);
+            ConfigHandler.saveConfig();
         }
     }
 
@@ -178,36 +185,65 @@ public class PluginManager {
             .orElseThrow(() -> new IllegalArgumentException("Plugin not found: " + descriptor.getName()));
 
         Path pluginPath = loadResult.pluginPath();
+        PluginClassLoader classLoader = null;
+        Plugin plugin = null;
+        DefaultPluginContext context = new DefaultPluginContext(descriptor, Railroad.EVENT_BUS);
+        boolean pluginEnabled = false;
+        List<String> registeredProviderIds = List.of();
+
         try {
-            var classLoader = new PluginClassLoader(pluginPath, descriptor.getDependencies());
+            classLoader = new PluginClassLoader(pluginPath, descriptor.getDependencies());
             Class<?> pluginClass = classLoader.loadClass(descriptor.getMainClass());
             if (!Plugin.class.isAssignableFrom(pluginClass))
                 throw new IllegalArgumentException("Main class does not implement Plugin interface: " + descriptor.getMainClass());
 
-            Plugin plugin = (Plugin) pluginClass.getDeclaredConstructor().newInstance();
-
-            var context = new DefaultPluginContext(descriptor, Railroad.EVENT_BUS);
-
+            plugin = (Plugin) pluginClass.getDeclaredConstructor().newInstance();
             plugin.onEnable(context);
+            pluginEnabled = true;
+
+            registeredProviderIds = registerJavaInspectionRuleProviders(descriptor, loadJavaInspectionRuleProviders(classLoader));
+
             loadResult.setPlugin(plugin, classLoader);
+            loadResult.setJavaInspectionRuleProviderRegistrationIds(registeredProviderIds);
+            Plugin enabledPlugin = plugin;
             ShutdownHooks.addHook(() -> {
                 try {
-                    classLoader.close();
-                    loadResult.setPlugin(null, null);
+                    enabledPlugin.onDisable(context);
+                    unloadPluginRuntime(loadResult);
                 } catch (Exception exception) {
-                    Railroad.LOGGER.error("Error during plugin {} onDisable", descriptor.getName(), exception);
+                    Railroad.LOGGER.error("Error during plugin {} shutdown cleanup", descriptor.getName(), exception);
                 }
             });
 
-            Map<PluginDescriptor, Boolean> enabledPlugins = getEnabledPlugins();
-            enabledPlugins.put(descriptor, true);
-            SettingsHandler.setValue(Settings.ENABLED_PLUGINS, enabledPlugins);
-            SettingsHandler.saveSettings();
+            Map<String, Boolean> enabledPluginsById = ConfigHandler.getConfig().getEnabledPlugins();
+            enabledPluginsById.put(descriptor.getId(), true);
+            ConfigHandler.getConfig().setEnabledPlugins(enabledPluginsById);
+            ConfigHandler.saveConfig();
 
             L18n.onPluginEnabled(descriptor);
 
             Railroad.LOGGER.info("Enabled plugin: {}", descriptor.getName());
         } catch (Exception exception) {
+            unregisterJavaInspectionRuleProviders(registeredProviderIds);
+            loadResult.clearJavaInspectionRuleProviderRegistrationIds();
+            loadResult.setPlugin(null, null);
+
+            if (pluginEnabled && plugin != null) {
+                try {
+                    plugin.onDisable(context);
+                } catch (Exception disableException) {
+                    exception.addSuppressed(disableException);
+                }
+            }
+
+            if (classLoader != null) {
+                try {
+                    classLoader.close();
+                } catch (Exception closeException) {
+                    exception.addSuppressed(closeException);
+                }
+            }
+
             throw new RuntimeException("Failed to instantiate plugin: " + descriptor.getName(), exception);
         }
     }
@@ -233,32 +269,42 @@ public class PluginManager {
             return;
         }
 
-        try {
-            Plugin plugin = loadResult.pluginInstance();
-            if (plugin != null) {
+        RuntimeException failure = null;
+        Plugin plugin = loadResult.pluginInstance();
+        if (plugin != null) {
+            try {
                 var context = new DefaultPluginContext(descriptor, Railroad.EVENT_BUS);
                 plugin.onDisable(context);
-
-                loadResult.classLoader().close();
-                loadResult.setPlugin(null, null);
-            } else {
-                Railroad.LOGGER.warn("Plugin instance for {} is null, skipping onDisable", descriptor.getName());
+            } catch (Exception exception) {
+                failure = new RuntimeException("Plugin onDisable failed: " + descriptor.getName(), exception);
             }
-
-            Map<PluginDescriptor, Boolean> enabledPlugins = getEnabledPlugins();
-            enabledPlugins.put(descriptor, false);
-            SettingsHandler.setValue(Settings.ENABLED_PLUGINS, enabledPlugins);
-            SettingsHandler.saveSettings();
-
-            Railroad.LOGGER.info("Disabled plugin: {}", descriptor.getName());
-        } catch (Exception exception) {
-            throw new RuntimeException("Failed to disable plugin: " + descriptor.getName(), exception);
+        } else {
+            Railroad.LOGGER.warn("Plugin instance for {} is null, skipping onDisable", descriptor.getName());
         }
+
+        try {
+            unloadPluginRuntime(loadResult);
+        } catch (Exception exception) {
+            if (failure == null) {
+                failure = new RuntimeException("Failed to clean up plugin: " + descriptor.getName(), exception);
+            } else {
+                failure.addSuppressed(exception);
+            }
+        }
+
+        Map<String, Boolean> enabledPluginsById = ConfigHandler.getConfig().getEnabledPlugins();
+        enabledPluginsById.put(descriptor.getId(), false);
+        ConfigHandler.getConfig().setEnabledPlugins(enabledPluginsById);
+        ConfigHandler.saveConfig();
+
+        Railroad.LOGGER.info("Disabled plugin: {}", descriptor.getName());
+
+        if (failure != null)
+            throw failure;
     }
 
     /**
-     * Checks if a plugin is enabled based on the settings.
-     * This method retrieves the enabled plugins from the settings and checks if the specified plugin is enabled.
+     * Checks if a plugin is enabled based on persisted config.
      *
      * @param descriptor The PluginDescriptor of the plugin to check.
      * @return true if the plugin is enabled, false otherwise.
@@ -268,16 +314,13 @@ public class PluginManager {
         if (descriptor == null)
             throw new IllegalArgumentException("PluginDescriptor cannot be null");
 
-        Map<PluginDescriptor, Boolean> enabledPlugins = SettingsHandler.getValue(Settings.ENABLED_PLUGINS);
-        if (enabledPlugins == null)
-            return false;
-
-        return enabledPlugins.getOrDefault(descriptor, false);
+        Map<String, Boolean> enabledPluginsById = ConfigHandler.getConfig().getEnabledPlugins();
+        return enabledPluginsById.getOrDefault(descriptor.getId(), false);
     }
 
     /**
      * Checks if a plugin is enabled, forcing the check against the loaded plugins list.
-     * This method does not rely on the settings and checks directly against the loaded plugins.
+     * This method does not rely on persisted config and checks directly against loaded plugin instances.
      *
      * @param descriptor The PluginDescriptor of the plugin to check.
      * @return true if the plugin is enabled, false otherwise.
@@ -295,15 +338,20 @@ public class PluginManager {
     }
 
     /**
-     * Retrieves the currently enabled plugins from the settings.
-     * If no plugins are enabled, it returns an empty map.
+     * Retrieves the enabled state for all loaded plugins from config.
      *
      * @return A map of PluginDescriptor to their enabled status (true for enabled, false for disabled).
      */
     public static Map<PluginDescriptor, Boolean> getEnabledPlugins() {
-        Map<PluginDescriptor, Boolean> enabledPlugins = SettingsHandler.getValue(Settings.ENABLED_PLUGINS);
-        if (enabledPlugins == null) {
-            enabledPlugins = new HashMap<>();
+        Map<String, Boolean> enabledPluginsById = ConfigHandler.getConfig().getEnabledPlugins();
+        Map<PluginDescriptor, Boolean> enabledPlugins = new HashMap<>();
+
+        for (PluginLoadResult loadResult : LOADED_PLUGINS) {
+            PluginDescriptor descriptor = loadResult.descriptor();
+            if (descriptor == null || descriptor.getId() == null || descriptor.getId().isBlank())
+                continue;
+
+            enabledPlugins.put(descriptor, enabledPluginsById.getOrDefault(descriptor.getId(), false));
         }
 
         return enabledPlugins;
@@ -311,7 +359,7 @@ public class PluginManager {
 
     /**
      * Sets the enabled status of multiple plugins.
-     * This method updates the settings with the provided map of PluginDescriptor to their enabled status.
+     * This method updates plugin runtime/config state with the provided map of PluginDescriptor to enabled status.
      *
      * @param enabledPlugins A map of PluginDescriptor to their enabled status (true for enabled, false for disabled).
      * @throws IllegalArgumentException if the enabledPlugins map is null.
@@ -439,5 +487,90 @@ public class PluginManager {
         }
 
         return resources;
+    }
+
+    static List<JavaInspectionRuleProvider> loadJavaInspectionRuleProviders(ClassLoader classLoader) {
+        Objects.requireNonNull(classLoader, "classLoader");
+
+        List<JavaInspectionRuleProvider> providers = new ArrayList<>();
+        for (JavaInspectionRuleProvider provider : ServiceLoader.load(JavaInspectionRuleProvider.class, classLoader)) {
+            if (provider == null)
+                continue;
+            if (provider.getClass().getClassLoader() != classLoader)
+                continue;
+            providers.add(provider);
+        }
+        return List.copyOf(providers);
+    }
+
+    static List<String> registerJavaInspectionRuleProviders(
+            PluginDescriptor descriptor,
+            List<JavaInspectionRuleProvider> providers
+    ) {
+        Objects.requireNonNull(descriptor, "descriptor");
+        if (providers == null || providers.isEmpty())
+            return List.of();
+
+        LinkedHashSet<String> registrationIds = new LinkedHashSet<>();
+        try {
+            for (JavaInspectionRuleProvider provider : providers) {
+                if (provider == null)
+                    continue;
+
+                String registrationId = javaInspectionRuleProviderRegistrationId(descriptor, provider);
+                if (!registrationIds.add(registrationId))
+                    throw new IllegalArgumentException("Duplicate Java inspection rule provider registration id: " + registrationId);
+
+                JavaInspectionRegistries.registerRuleProvider(registrationId, provider);
+            }
+            return List.copyOf(registrationIds);
+        } catch (Exception exception) {
+            unregisterJavaInspectionRuleProviders(List.copyOf(registrationIds));
+            throw exception;
+        }
+    }
+
+    static void unregisterJavaInspectionRuleProviders(PluginLoadResult loadResult) {
+        Objects.requireNonNull(loadResult, "loadResult");
+        unregisterJavaInspectionRuleProviders(loadResult.javaInspectionRuleProviderRegistrationIds());
+        loadResult.clearJavaInspectionRuleProviderRegistrationIds();
+    }
+
+    static String javaInspectionRuleProviderRegistrationId(
+            PluginDescriptor descriptor,
+            JavaInspectionRuleProvider provider
+    ) {
+        Objects.requireNonNull(descriptor, "descriptor");
+        Objects.requireNonNull(provider, "provider");
+
+        String pluginId = Objects.requireNonNull(descriptor.getId(), "descriptor.id");
+        String providerId = Objects.requireNonNull(provider.id(), "provider.id");
+        if (pluginId.isBlank())
+            throw new IllegalArgumentException("Plugin descriptor id cannot be blank");
+        if (providerId.isBlank())
+            throw new IllegalArgumentException("Java inspection rule provider id cannot be blank");
+
+        return pluginId + ":" + providerId;
+    }
+
+    private static void unregisterJavaInspectionRuleProviders(List<String> registrationIds) {
+        if (registrationIds == null || registrationIds.isEmpty())
+            return;
+
+        for (String registrationId : registrationIds) {
+            if (registrationId == null || registrationId.isBlank())
+                continue;
+            if (JavaInspectionRegistries.containsRuleProvider(registrationId))
+                JavaInspectionRegistries.unregisterRuleProvider(registrationId);
+        }
+    }
+
+    private static void unloadPluginRuntime(PluginLoadResult loadResult) throws IOException {
+        unregisterJavaInspectionRuleProviders(loadResult);
+
+        PluginClassLoader classLoader = loadResult.classLoader();
+        loadResult.setPlugin(null, null);
+        if (classLoader != null)
+            classLoader.close();
     }
 }

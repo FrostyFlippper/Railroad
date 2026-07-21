@@ -2,13 +2,13 @@ package dev.railroadide.railroad.settings.ui;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import dev.railroadide.core.ui.RRButton;
-import dev.railroadide.core.ui.RRHBox;
-import dev.railroadide.core.ui.RRListView;
-import dev.railroadide.core.ui.RRVBox;
-import dev.railroadide.core.ui.localized.LocalizedLabel;
-import dev.railroadide.core.ui.styling.ButtonSize;
-import dev.railroadide.core.ui.styling.ButtonVariant;
+import dev.railroadide.railroad.ui.RRButton;
+import dev.railroadide.railroad.ui.RRHBox;
+import dev.railroadide.railroad.ui.RRListView;
+import dev.railroadide.railroad.ui.RRVBox;
+import dev.railroadide.railroad.ui.localized.LocalizedLabel;
+import dev.railroadide.railroad.ui.styling.ButtonSize;
+import dev.railroadide.railroad.ui.styling.ButtonVariant;
 import dev.railroadide.railroad.localization.L18n;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,7 +17,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
@@ -39,13 +38,12 @@ public abstract class AbstractPathListPane extends RRVBox {
                                    String placeholderKey,
                                    String addTooltipKey,
                                    String removeTooltipKey) {
-        setSpacing(12);
         setFillWidth(true);
         getStyleClass().add("path-list-pane");
 
         listView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         listView.setPlaceholder(new LocalizedLabel(placeholderKey));
-        listView.setMinHeight(200);
+        listView.getStyleClass().add("path-list-view");
         listView.setCellFactory(view -> new ListCell<>() {
             @Override
             protected void updateItem(Path item, boolean empty) {
@@ -55,7 +53,8 @@ public abstract class AbstractPathListPane extends RRVBox {
         });
         VBox.setVgrow(listView, Priority.NEVER);
 
-        var controls = new RRHBox(8);
+        var controls = new RRHBox();
+        controls.getStyleClass().add("path-list-controls");
 
         var addButton = new RRButton(null, FontAwesomeSolid.PLUS);
         addButton.setButtonSize(ButtonSize.SMALL);
