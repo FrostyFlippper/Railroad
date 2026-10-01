@@ -38,8 +38,9 @@ public class IDEStatusBarPane extends RRHBox {
         getChildren().add(text);
 
         sceneProperty().addListener((_, _, scene) -> {
-            if (scene != null && !editorListenerInstalled)
+            if (scene != null && !editorListenerInstalled) {
                 Platform.runLater(this::installEditorListener);
+            }
         });
 
         Services.UI_MANAGER.assignWhileAttached(UIIds.IDE.IDE_STATUS_BAR, this);
@@ -63,14 +64,13 @@ public class IDEStatusBarPane extends RRHBox {
             observedEditor.caretPositionProperty().removeListener(caretListener);
         }
 
-        if(content instanceof TextEditorPane editor){
+        if (content instanceof TextEditorPane editor) {
             observedEditor = editor;
             observedEditor.caretPositionProperty().addListener(caretListener);
             update();
-        } else if(content instanceof MarkdownPreviewPane markdownPane) {
+        } else if (content instanceof MarkdownPreviewPane markdownPane) {
             markdownPane.editorProperty().addListener(
-                (_, _, newEditor) -> observe(newEditor)
-            );
+                (_, _, newEditor) -> observe(newEditor));
 
             observe(markdownPane.getMarkdownEditorPane());
         } else {
@@ -84,7 +84,8 @@ public class IDEStatusBarPane extends RRHBox {
 
         int lineNumber = observedEditor.getCurrentParagraph() + 1;
         int column = observedEditor.getCaretColumn() + 1;
-        text.setText(Objects.equals(Settings.CARET_POSITION_FORMAT.getValue(), CaretPositionFormat.COLON) ?
-            lineNumber + ":" + column : "Ln " + lineNumber + ", Col " + column);
+        text.setText(Objects.equals(Settings.CARET_POSITION_FORMAT.getValue(), CaretPositionFormat.COLON)
+            ? lineNumber + ":" + column
+            : "Ln " + lineNumber + ", Col " + column);
     }
 }

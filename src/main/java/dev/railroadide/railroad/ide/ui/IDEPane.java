@@ -1349,7 +1349,7 @@ public final class IDEPane extends RRBorderPane implements AutoCloseable, IDEWor
             Orientation.VERTICAL,
             0);
     }
-    
+
     private static RRHBox createBottomBar(DetachableTabPane consolePane, SplitPane centerBottomSplit) {
         var bottomBar = new RRHBox();
         var bottomIcons = PaneIconBarFactory.create(

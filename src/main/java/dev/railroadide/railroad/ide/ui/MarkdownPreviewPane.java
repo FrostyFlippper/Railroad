@@ -84,8 +84,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
 
     private int scrollAmount;
 
-    private final ObjectProperty<TextEditorPane> editor =
-        new SimpleObjectProperty<>();
+    private final ObjectProperty<TextEditorPane> editor = new SimpleObjectProperty<>();
 
     public ObjectProperty<TextEditorPane> editorProperty() {
         return editor;
@@ -144,7 +143,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
         showContent(pane, topRow);
     }
 
-    public TextEditorPane getMarkdownEditorPane(){
+    public TextEditorPane getMarkdownEditorPane() {
         return editorProperty().get();
     }
 
