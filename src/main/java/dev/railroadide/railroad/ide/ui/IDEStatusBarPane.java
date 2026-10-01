@@ -85,6 +85,6 @@ public class IDEStatusBarPane extends RRHBox {
         int lineNumber = observedEditor.getCurrentParagraph() + 1;
         int column = observedEditor.getCaretColumn() + 1;
         text.setText(Objects.equals(Settings.CARET_POSITION_FORMAT.getValue(), CaretPositionFormat.COLON) ?
-            lineNumber + ":" + column : "ln " + lineNumber + ", col " + column);
+            lineNumber + ":" + column : "Ln " + lineNumber + ", Col " + column);
     }
 }
