@@ -3,6 +3,7 @@ package dev.railroadide.railroad.ide.ui;
 import dev.railroadide.railroad.Services;
 import dev.railroadide.railroad.ide.ui.codeeditor.TextEditorPane;
 import dev.railroadide.railroad.settings.CaretPositionFormat;
+import dev.railroadide.railroad.settings.Setting;
 import dev.railroadide.railroad.settings.Settings;
 import dev.railroadide.railroad.ui.RRHBox;
 import dev.railroadide.railroad.ui.id.UIIds;
@@ -16,6 +17,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
 
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 /**
  * Provides the registered status-bar container for the active IDE workspace.
@@ -37,9 +39,26 @@ public class IDEStatusBarPane extends RRHBox {
         HBox.setHgrow(this, Priority.ALWAYS);
         getChildren().add(text);
 
+        Setting<CaretPositionFormat> caretPositionFormat = Settings.CARET_POSITION_FORMAT;
+
+        // Call update() when the format setting changes
+        BiConsumer<CaretPositionFormat, CaretPositionFormat> settingListener = (_, _) -> update();
+
+        // Controls when the setting listener is active
+        // - When the pane attaches, start listening and refresh the text.
+        // - When it detaches, stop listening.
+        // - When it attaches again, start listening again.
         sceneProperty().addListener((_, _, scene) -> {
-            if (scene != null && !editorListenerInstalled) {
-                Platform.runLater(this::installEditorListener);
+            if (scene != null) {
+                caretPositionFormat.addListener(settingListener);
+
+                update();
+
+                if(!editorListenerInstalled){
+                    Platform.runLater(this::installEditorListener);
+                }
+            } else {
+                caretPositionFormat.removeListener(settingListener);
             }
         });
 
