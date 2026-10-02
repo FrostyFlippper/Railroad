@@ -31,6 +31,9 @@ public class IDEStatusBarPane extends RRHBox {
     private TextEditorPane observedEditor;
     private boolean editorListenerInstalled;
 
+    private ChangeListener<TextEditorPane> markdownListener;
+    private MarkdownPreviewPane markdownPreviewPane;
+
     public IDEStatusBarPane() {
         text = new Text("1:1");
         text.getStyleClass().add("column-number");
@@ -73,7 +76,13 @@ public class IDEStatusBarPane extends RRHBox {
                 .selectedItemProperty()
                 .flatMap(Tab::contentProperty);
 
-            selectedContent.addListener((_, _, content) -> observe(content));
+            selectedContent.addListener((_, _, content) -> {
+                if(markdownPreviewPane != null){
+                    markdownPreviewPane.editorProperty().removeListener(markdownListener);
+                    markdownPreviewPane = null;
+                }
+                observe(content);
+            });
             observe(selectedContent.getValue());
         });
     }
@@ -88,8 +97,10 @@ public class IDEStatusBarPane extends RRHBox {
             observedEditor.caretPositionProperty().addListener(caretListener);
             update();
         } else if (content instanceof MarkdownPreviewPane markdownPane) {
-            markdownPane.editorProperty().addListener(
-                (_, _, newEditor) -> observe(newEditor));
+            markdownListener = (_, _, newEditor) -> observe(newEditor);
+
+            markdownPane.editorProperty().addListener(markdownListener);
+            markdownPreviewPane = markdownPane;
 
             observe(markdownPane.getMarkdownEditorPane());
         } else {
