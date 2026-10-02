@@ -34,6 +34,11 @@ public class IDEStatusBarPane extends RRHBox {
     private ChangeListener<TextEditorPane> markdownListener;
     private MarkdownPreviewPane markdownPreviewPane;
 
+    /**
+     * Creates a status bar that displays the active editor's one-based line and
+     * column using the configured caret position format.
+     * Registers the pane with the UI manager while attached to a scene.
+     */
     public IDEStatusBarPane() {
         text = new Text("1:1");
         text.getStyleClass().add("column-number");

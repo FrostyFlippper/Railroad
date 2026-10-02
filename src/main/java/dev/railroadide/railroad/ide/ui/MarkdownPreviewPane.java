@@ -86,6 +86,13 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
 
     private final ObjectProperty<TextEditorPane> editor = new SimpleObjectProperty<>();
 
+    /**
+     * Returns the property holding the Markdown source editor.
+     * The value is {@code null} until the editor is created and is cleared
+     * when this pane is closed.
+     *
+     * @return the non-null property holding the Markdown source editor
+     */
     public ObjectProperty<TextEditorPane> editorProperty() {
         return editor;
     }
