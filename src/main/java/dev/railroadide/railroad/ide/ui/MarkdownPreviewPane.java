@@ -406,8 +406,9 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
         altTextField.getStyleClass().add("markdown-image-dialog-field");
         uriTextField.getStyleClass().add("markdown-image-dialog-field");
 
-        if (editorProperty() != null && !editorProperty().get().getSelectedText().isBlank()) {
-            altTextField.setText(editorProperty().get().getSelectedText());
+        TextEditorPane currentEditor = editorProperty().get();
+        if (currentEditor != null && !currentEditor.getSelectedText().isBlank()) {
+            altTextField.setText(currentEditor.getSelectedText());
         }
 
         var form = new RRVBox(22, altTextField, uriTextField);
