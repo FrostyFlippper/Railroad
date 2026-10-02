@@ -57,7 +57,7 @@ public class IDEStatusBarPane extends RRHBox {
 
                 update();
 
-                if(!editorListenerInstalled){
+                if (!editorListenerInstalled) {
                     Platform.runLater(this::installEditorListener);
                 }
             } else {
@@ -77,7 +77,7 @@ public class IDEStatusBarPane extends RRHBox {
                 .flatMap(Tab::contentProperty);
 
             selectedContent.addListener((_, _, content) -> {
-                if(markdownPreviewPane != null){
+                if (markdownPreviewPane != null) {
                     markdownPreviewPane.editorProperty().removeListener(markdownListener);
                     markdownPreviewPane = null;
                 }

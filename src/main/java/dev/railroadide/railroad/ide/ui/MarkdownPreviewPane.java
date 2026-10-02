@@ -145,6 +145,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
 
     /**
      * Returns the markdown editor pane property
+     *
      * @return markdown editor pane (TextEditorPane)
      */
     public TextEditorPane getMarkdownEditorPane() {

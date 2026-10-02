@@ -461,6 +461,8 @@ railroad.settings.ide.status_bar.title=Status Bar
 railroad.settings.ide.status_bar.description=Configure the information displayed in the IDE status bar.
 railroad.settings.ide.status_bar.caret_position_format.title=Caret Position Format
 railroad.settings.ide.status_bar.caret_position_format.description=Choose how the caret position is displayed in the status bar.
+railroad.settings.ide.status_bar.caret_position_format.text=Ln {line}, Col {column}
+railroad.settings.ide.status_bar.caret_position_format.colon={line}:{column}
 
 # VCS Settings
 settings.tree.vcs=VCS
