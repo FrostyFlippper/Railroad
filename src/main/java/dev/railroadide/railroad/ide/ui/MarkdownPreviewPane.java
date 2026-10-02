@@ -391,7 +391,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
     }
 
     private TextEditorPane editorForInsertion() {
-        return editorProperty() == null ? codeView() : editorProperty().get();
+        return editorProperty().get() == null ? codeView() : editorProperty().get();
     }
 
     /**
