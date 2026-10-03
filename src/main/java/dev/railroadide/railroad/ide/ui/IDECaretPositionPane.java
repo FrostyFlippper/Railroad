@@ -2,6 +2,7 @@ package dev.railroadide.railroad.ide.ui;
 
 import dev.railroadide.railroad.Services;
 import dev.railroadide.railroad.ide.ui.codeeditor.TextEditorPane;
+import dev.railroadide.railroad.localization.L18n;
 import dev.railroadide.railroad.settings.CaretPositionFormat;
 import dev.railroadide.railroad.settings.Setting;
 import dev.railroadide.railroad.settings.Settings;
@@ -13,7 +14,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.text.Text;
 
-import java.util.Objects;
 import java.util.function.BiConsumer;
 
 /**
@@ -108,8 +108,10 @@ public class IDECaretPositionPane extends RRHBox {
 
         int lineNumber = observedEditor.getCurrentParagraph() + 1;
         int column = observedEditor.getCaretColumn() + 1;
-        text.setText(Objects.equals(Settings.CARET_POSITION_FORMAT.getValue(), CaretPositionFormat.COLON)
-            ? lineNumber + ":" + column
-            : "Ln " + lineNumber + ", Col " + column);
+        switch(Settings.CARET_POSITION_FORMAT.getValue()){
+            case TEXT -> text.setText(L18n.localize("railroad.ide.status_bar.caret_position_format.text", lineNumber, column));
+            case COLON -> text.setText(L18n.localize("railroad.ide.status_bar.caret_position_format.colon", lineNumber, column));
+            case null -> text.setText("");
+        }
     }
 }

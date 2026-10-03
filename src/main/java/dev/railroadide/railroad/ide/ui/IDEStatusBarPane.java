@@ -3,6 +3,7 @@ package dev.railroadide.railroad.ide.ui;
 import dev.railroadide.railroad.Services;
 import dev.railroadide.railroad.ui.RRHBox;
 import dev.railroadide.railroad.ui.id.UIIds;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -22,6 +23,7 @@ public class IDEStatusBarPane extends RRHBox {
 
         setAlignment(Pos.CENTER_RIGHT);
         HBox.setHgrow(this, Priority.ALWAYS);
+        setMargin(this, new Insets(8));
         this.getChildren().add(ideCaretPositionPane);
     }
 }
