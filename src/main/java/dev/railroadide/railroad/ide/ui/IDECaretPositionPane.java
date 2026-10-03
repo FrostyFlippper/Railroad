@@ -4,7 +4,6 @@ import dev.railroadide.railroad.Services;
 import dev.railroadide.railroad.ide.ui.codeeditor.TextEditorPane;
 import dev.railroadide.railroad.localization.L18n;
 import dev.railroadide.railroad.settings.CaretPositionFormat;
-import dev.railroadide.railroad.settings.Setting;
 import dev.railroadide.railroad.settings.Settings;
 import dev.railroadide.railroad.ui.RRHBox;
 import dev.railroadide.railroad.ui.id.UIIds;
@@ -38,8 +37,6 @@ public class IDECaretPositionPane extends RRHBox {
 
         getChildren().add(text);
 
-        Setting<CaretPositionFormat> caretPositionFormat = Settings.CARET_POSITION_FORMAT;
-
         // Call update() when the format setting changes
         BiConsumer<CaretPositionFormat, CaretPositionFormat> settingListener = (_, _) -> update();
 
@@ -49,7 +46,7 @@ public class IDECaretPositionPane extends RRHBox {
         // - When it attaches again, start listening again.
         sceneProperty().addListener((_, _, scene) -> {
             if (scene != null) {
-                caretPositionFormat.addListener(settingListener);
+                Settings.CARET_POSITION_FORMAT.addListener(settingListener);
 
                 update();
 
@@ -57,7 +54,7 @@ public class IDECaretPositionPane extends RRHBox {
                     Platform.runLater(this::installEditorListener);
                 }
             } else {
-                caretPositionFormat.removeListener(settingListener);
+                Settings.CARET_POSITION_FORMAT.removeListener(settingListener);
             }
         });
     }
