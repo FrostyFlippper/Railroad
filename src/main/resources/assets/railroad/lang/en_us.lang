@@ -496,6 +496,10 @@ railroad.ide.welcome.getting_started.tutorials=Tutorials
 
 railroad.ide.project_explorer.search_field=Search files...
 
+railroad.ide.status_bar.caret_position_format.text=Ln %s, Col %s
+railroad.ide.status_bar.caret_position_format.colon=%s:%s
+
+
 # =============================================================================
 # DIALOGS
 # =============================================================================

@@ -99,8 +99,9 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
 
     @Override
     public void close() {
-        if (editorProperty().get() != null) {
-            editorProperty().get().close();
+        TextEditorPane textEditorPane = editorProperty().get();
+        if (textEditorPane != null) {
+            textEditorPane.close();
             editorProperty().setValue(null);
         }
         Settings.THEME.removeListener(themeListener);
