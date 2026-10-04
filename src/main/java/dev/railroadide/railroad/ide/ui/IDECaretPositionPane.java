@@ -106,8 +106,8 @@ public class IDECaretPositionPane extends RRHBox {
         int lineNumber = observedEditor.getCurrentParagraph() + 1;
         int column = observedEditor.getCaretColumn() + 1;
         switch(Settings.CARET_POSITION_FORMAT.getValue()){
-            case TEXT -> text.setText(L18n.localize("railroad.ide.status_bar.caret_position_format.text", lineNumber, column));
-            case COLON -> text.setText(L18n.localize("railroad.ide.status_bar.caret_position_format.colon", lineNumber, column));
+            case TEXT -> text.setText(L18n.localize(CaretPositionFormat.TEXT.getTranslationKey(), lineNumber, column));
+            case COLON -> text.setText(L18n.localize(CaretPositionFormat.COLON.getTranslationKey(), lineNumber, column));
             case null -> text.setText("");
         }
     }
