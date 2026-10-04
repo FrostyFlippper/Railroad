@@ -20,7 +20,7 @@ public enum CaretPositionFormat {
     @Getter
     private final String translationKey;
 
-    CaretPositionFormat(String translationKey){
+    CaretPositionFormat(String translationKey) {
         this.translationKey = translationKey;
     }
 }
