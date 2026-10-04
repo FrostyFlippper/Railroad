@@ -161,56 +161,60 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
     }
 
     private TextEditorPane codeView() {
-        if (editorProperty().get() != null) {
+        TextEditorPane textEditorPane = editorProperty().get();
+        if (textEditorPane != null) {
             restoreEditorScroll();
-            return editorProperty().get();
+            return textEditorPane;
         }
 
         editorProperty().setValue(new TextEditorPane(markdownFile, "markdown"));
-        editorProperty().get().textProperty().addListener(
+
+        TextEditorPane newTextEditorPane = editorProperty().get();
+
+        newTextEditorPane.textProperty().addListener(
             (_, _, newValue) -> preview.setContent(newValue));
 
-        editorProperty().get().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+        newTextEditorPane.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode().equals(KeyCode.ENTER)) {
-                int caret = editorProperty().get().getCaretPosition();
-                String upToCaret = editorProperty().get().getText(0, caret);
+                int caret = newTextEditorPane.getCaretPosition();
+                String upToCaret = newTextEditorPane.getText(0, caret);
                 String lastLine = upToCaret.substring(upToCaret.lastIndexOf("\n") + 1);
 
                 if (NUMBERED_LIST_PATTERN.matcher(lastLine).matches()) {
                     event.consume();
 
                     int previousLineNumber = Integer.parseInt(lastLine.split("\\.")[0]);
-                    editorProperty().get().insertText(caret, "\n" + (previousLineNumber + 1) + ". ");
+                    newTextEditorPane.insertText(caret, "\n" + (previousLineNumber + 1) + ". ");
                 }
 
                 if (BULLET_LIST_PATTERN.matcher(lastLine).matches()) {
                     event.consume();
 
-                    editorProperty().get().insertText(caret, "\n* ");
+                    newTextEditorPane.insertText(caret, "\n* ");
                 }
 
                 if (DASH_LIST_PATTERN.matcher(lastLine).matches()) {
                     event.consume();
 
-                    editorProperty().get().insertText(caret, "\n- ");
+                    newTextEditorPane.insertText(caret, "\n- ");
                 }
 
                 if (HTML_LIST_ITEM_PATTERN.matcher(lastLine).matches()) {
                     event.consume();
 
                     String item = "\n<li></li>";
-                    editorProperty().get().insertText(caret, item);
-                    editorProperty().get().moveTo(caret + "\n<li>".length());
+                    newTextEditorPane.insertText(caret, item);
+                    newTextEditorPane.moveTo(caret + "\n<li>".length());
                 }
             }
         });
 
-        editorProperty().get().addEventFilter(ScrollEvent.SCROLL,
-            _ -> scrollAmount = (int) editorProperty().get().getEstimatedScrollY());
+        newTextEditorPane.addEventFilter(ScrollEvent.SCROLL,
+            _ -> scrollAmount = (int) newTextEditorPane.getEstimatedScrollY());
 
         restoreEditorScroll();
 
-        return editorProperty().get();
+        return newTextEditorPane;
     }
 
     private SplitPane splitView() {
