@@ -256,8 +256,9 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
     }
 
     private void restoreEditorScroll() {
-        if (editorProperty().get() != null) {
-            Platform.runLater(() -> editorProperty().get().scrollToPixel(0, scrollAmount));
+        TextEditorPane textEditorPane = editorProperty().get();
+        if (textEditorPane != null) {
+            Platform.runLater(() -> textEditorPane.scrollToPixel(0, scrollAmount));
         }
     }
 
