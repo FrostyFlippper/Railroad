@@ -7,11 +7,11 @@ import dev.railroadide.railroad.settings.CaretPositionFormat;
 import dev.railroadide.railroad.settings.Settings;
 import dev.railroadide.railroad.ui.RRHBox;
 import dev.railroadide.railroad.ui.id.UIIds;
+import dev.railroadide.railroad.ui.localized.LocalizedText;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
 import javafx.scene.control.Tab;
-import javafx.scene.text.Text;
 
 import java.util.function.BiConsumer;
 
@@ -19,7 +19,7 @@ import java.util.function.BiConsumer;
  * Provides the registered caret position pane for the active IDE workspace.
  */
 public class IDECaretPositionPane extends RRHBox {
-    private final Text text;
+    private final LocalizedText text;
     private final ChangeListener<Number> caretListener = (_, _, _) -> update();
     private TextEditorPane observedEditor;
     private boolean editorListenerInstalled;
@@ -32,7 +32,7 @@ public class IDECaretPositionPane extends RRHBox {
      * the configured caret position format.
      */
     public IDECaretPositionPane() {
-        text = new Text("");
+        text = new LocalizedText("");
         text.getStyleClass().add("column-number");
 
         getChildren().add(text);
