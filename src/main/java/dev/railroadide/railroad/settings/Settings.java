@@ -385,14 +385,10 @@ public final class Settings {
                 CaretPositionFormat.class,
                 CaretPositionFormat::name,
                 CaretPositionFormat::valueOf,
-                new ComboBoxConverter<>(caretPositionFormat -> switch (caretPositionFormat) {
-                    case TEXT -> L18n.localize("railroad.settings.ide.status_bar.caret_position_format.text");
-                    case COLON -> L18n.localize("railroad.settings.ide.status_bar.caret_position_format.colon");
-                }, name -> {
-                    return name.equals("railroad.settings.ide.status_bar.caret_position_format.text")
-                        ? CaretPositionFormat.TEXT
-                        : CaretPositionFormat.COLON;
-                })))
+                new ComboBoxConverter<>(CaretPositionFormat::getSettingTranslationKey,
+                name -> name.equals(CaretPositionFormat.TEXT.getSettingTranslationKey())
+                    ? CaretPositionFormat.TEXT
+                    : CaretPositionFormat.COLON)))
             .build());
 
     /** Triggers class initialization so all built-in settings are registered. */
