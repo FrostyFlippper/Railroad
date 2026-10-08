@@ -99,7 +99,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
 
     @Override
     public void close() {
-        TextEditorPane textEditorPane = editorProperty().get();
+        TextEditorPane textEditorPane = getMarkdownEditorPane();
         if (textEditorPane != null) {
             textEditorPane.close();
             editorProperty().setValue(null);
@@ -161,7 +161,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
     }
 
     private TextEditorPane codeView() {
-        TextEditorPane textEditorPane = editorProperty().get();
+        TextEditorPane textEditorPane = getMarkdownEditorPane();
         if (textEditorPane != null) {
             restoreEditorScroll();
             return textEditorPane;
@@ -169,7 +169,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
 
         editorProperty().setValue(new TextEditorPane(markdownFile, "markdown"));
 
-        TextEditorPane newTextEditorPane = editorProperty().get();
+        TextEditorPane newTextEditorPane = getMarkdownEditorPane();
 
         newTextEditorPane.textProperty().addListener(
             (_, _, newValue) -> preview.setContent(newValue));
@@ -256,7 +256,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
     }
 
     private void restoreEditorScroll() {
-        TextEditorPane textEditorPane = editorProperty().get();
+        TextEditorPane textEditorPane = getMarkdownEditorPane();
         if (textEditorPane != null) {
             Platform.runLater(() -> textEditorPane.scrollToPixel(0, scrollAmount));
         }
@@ -405,7 +405,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
     }
 
     private TextEditorPane editorForInsertion() {
-        return editorProperty().get() == null ? codeView() : editorProperty().get();
+        return getMarkdownEditorPane() == null ? codeView() : getMarkdownEditorPane();
     }
 
     /**
@@ -420,7 +420,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
         altTextField.getStyleClass().add("markdown-image-dialog-field");
         uriTextField.getStyleClass().add("markdown-image-dialog-field");
 
-        TextEditorPane currentEditor = editorProperty().get();
+        TextEditorPane currentEditor = getMarkdownEditorPane();
         if (currentEditor != null && !currentEditor.getSelectedText().isBlank()) {
             altTextField.setText(currentEditor.getSelectedText());
         }
