@@ -385,10 +385,11 @@ public final class Settings {
                 CaretPositionFormat.class,
                 CaretPositionFormat::name,
                 CaretPositionFormat::valueOf,
-                new ComboBoxConverter<>(CaretPositionFormat::getSettingTranslationKey,
-                name -> name.equals(CaretPositionFormat.TEXT.getSettingTranslationKey())
-                    ? CaretPositionFormat.TEXT
-                    : CaretPositionFormat.COLON)))
+                new ComboBoxConverter<>(
+                    format -> L18n.localize(format.getSettingTranslationKey()),
+                    name -> name.equals(L18n.localize(CaretPositionFormat.TEXT.getSettingTranslationKey()))
+                        ? CaretPositionFormat.TEXT
+                        : CaretPositionFormat.COLON)))
             .build());
 
     /** Triggers class initialization so all built-in settings are registered. */
