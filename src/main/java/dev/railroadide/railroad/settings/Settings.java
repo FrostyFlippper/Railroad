@@ -12,7 +12,6 @@ import dev.railroadide.railroad.plugin.spi.PluginDescriptor;
 import dev.railroadide.railroad.settings.keybinds.KeybindData;
 import dev.railroadide.railroad.settings.keybinds.KeybindHandler;
 import dev.railroadide.railroad.theme.ThemeManager;
-import dev.railroadide.railroad.utility.javafx.ComboBoxConverter;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -381,15 +380,7 @@ public final class Settings {
         Setting.builder(CaretPositionFormat.class, "railroad:caret_position_format")
             .treePath("ide")
             .category(SettingCategory.simple("railroad:ide.status_bar"))
-            .codec(DefaultSettingCodecs.ofEnum("railroad:caret_position_format",
-                CaretPositionFormat.class,
-                CaretPositionFormat::name,
-                CaretPositionFormat::valueOf,
-                new ComboBoxConverter<>(
-                    format -> L18n.localize(format.getSettingTranslationKey()),
-                    name -> name.equals(L18n.localize(CaretPositionFormat.TEXT.getSettingTranslationKey()))
-                        ? CaretPositionFormat.TEXT
-                        : CaretPositionFormat.COLON)))
+            .codec(SettingCodecs.CARET_POSITION_FORMAT)
             .build());
 
     /** Triggers class initialization so all built-in settings are registered. */
