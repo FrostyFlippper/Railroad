@@ -95,6 +95,7 @@ public class IDECaretPositionPane extends RRHBox {
             observe(markdownPane.getMarkdownEditorPane());
         } else {
             text.setText("");
+            observedEditor = null;
         }
     }
 
