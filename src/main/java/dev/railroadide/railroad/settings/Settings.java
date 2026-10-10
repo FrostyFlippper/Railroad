@@ -381,6 +381,7 @@ public final class Settings {
             .treePath("ide")
             .category(SettingCategory.simple("railroad:ide.status_bar"))
             .codec(SettingCodecs.CARET_POSITION_FORMAT)
+            .defaultValue(CaretPositionFormat.COLON)
             .build());
 
     /** Triggers class initialization so all built-in settings are registered. */
