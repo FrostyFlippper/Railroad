@@ -27,6 +27,7 @@ import dev.railroadide.railroad.ui.styling.ButtonVariant;
 import dev.railroadide.railroad.utility.FileUtils;
 import dev.railroadide.railroad.utility.ShutdownHooks;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -43,8 +44,8 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
 import org.kordamp.ikonli.fontawesome6.FontAwesomeRegular;
+import org.kordamp.ikonli.fontawesome6.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.File;
@@ -53,13 +54,8 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.function.BiConsumer;
-import javafx.beans.binding.Bindings;
 
 /**
  * Project filesystem browser with search, file operations, watching, and editor navigation.

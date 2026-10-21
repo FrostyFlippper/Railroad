@@ -86,6 +86,10 @@ public class IDECaretPositionPane extends RRHBox {
             observedEditor = editor;
             observedEditor.caretPositionProperty().addListener(caretListener);
             update();
+        } else if (content instanceof EditorHostPane editor) {
+            observedEditor = editor.getTextEditorPane();
+            observedEditor.caretPositionProperty().addListener(caretListener);
+            update();
         } else if (content instanceof MarkdownPreviewPane markdownPane) {
             markdownListener = (_, _, newEditor) -> observe(newEditor);
 
