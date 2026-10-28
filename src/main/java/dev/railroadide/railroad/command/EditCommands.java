@@ -2,6 +2,7 @@ package dev.railroadide.railroad.command;
 
 import dev.railroadide.railroad.Services;
 import dev.railroadide.railroad.ide.projectexplorer.ProjectExplorerPane;
+import dev.railroadide.railroad.ide.ui.EditorHostPane;
 import dev.railroadide.railroad.ide.ui.codeeditor.TextEditorPane;
 import dev.railroadide.railroad.settings.keybinds.KeybindData;
 import javafx.scene.Node;
@@ -39,6 +40,10 @@ public final class EditCommands {
      * Pastes into the focused input.
      */
     public static final Command<Void> PASTE = register("paste", KeyCode.V);
+    /**
+     *     Finds text in the current document
+     */
+    public static final Command<Void> FIND = register("find", KeyCode.F);
 
     private static Node target(CommandContext<?> context) {
         Node focus = context.source() == null || context.source().getScene() == null
@@ -80,6 +85,7 @@ public final class EditCommands {
                 case "copy" -> text.getSelection().getLength() > 0;
                 case "cut" -> text.isEditable() && text.getSelection().getLength() > 0;
                 case "paste" -> text.isEditable() && Clipboard.getSystemClipboard().hasString();
+                case "find" -> text.getParent() instanceof EditorHostPane;
                 default -> false;
             };
         return false;
@@ -114,6 +120,11 @@ public final class EditCommands {
                 case "cut" -> text.cut();
                 case "copy" -> text.copy();
                 case "paste" -> text.paste();
+                case "find" -> {
+                    if(text.getParent() instanceof EditorHostPane editorHostPane){
+                        editorHostPane.openFindBar();
+                    }
+                }
             }
         }
     }

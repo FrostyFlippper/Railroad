@@ -115,6 +115,8 @@ public class Keybinds {
      */
     public static final Keybind EDIT_PASTE = registerIDECommand(EditCommands.PASTE);
 
+    public static final Keybind FIND = registerIDECommand(EditCommands.FIND);
+
     /**
      * Configurable shortcut for the new file command.
      */

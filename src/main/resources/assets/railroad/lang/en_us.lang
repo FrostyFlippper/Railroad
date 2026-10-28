@@ -500,6 +500,9 @@ railroad.ide.status_bar.caret_position_format.text=Ln %s, Col %s
 railroad.ide.status_bar.caret_position_format.colon=%s:%s
 
 
+railroad.ide.find_bar.search_field.placeholder=Search...
+
+
 # =============================================================================
 # DIALOGS
 # =============================================================================
