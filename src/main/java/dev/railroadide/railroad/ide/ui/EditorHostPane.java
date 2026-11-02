@@ -1,6 +1,7 @@
 package dev.railroadide.railroad.ide.ui;
 
 import dev.railroadide.railroad.ide.ui.codeeditor.TextEditorPane;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import lombok.Getter;
 
@@ -34,6 +35,15 @@ public class EditorHostPane extends BorderPane {
         this.editorFindBar.getCloseButton().setOnAction(_ -> closeFindBar());
 
         closeFindBar();
+
+        this.editorFindBar.setOnKeyPressed(event -> {
+            if (event.getCode().equals(KeyCode.ESCAPE)) {
+                closeFindBar();
+            }
+        });
+
+        closeFindBar();
+
     }
 
     /**
@@ -45,13 +55,13 @@ public class EditorHostPane extends BorderPane {
         return this.textEditorPane.getFilePath();
     }
 
-    public void openFindBar(){
+    public void openFindBar() {
         this.editorFindBar.setVisible(true);
         this.editorFindBar.setManaged(true);
         this.editorFindBar.getSearchField().requestFocus();
     }
 
-    public void closeFindBar(){
+    public void closeFindBar() {
         this.editorFindBar.setVisible(false);
         this.editorFindBar.setManaged(false);
     }
