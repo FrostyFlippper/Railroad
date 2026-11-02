@@ -33,7 +33,7 @@ public class EditorHostPane extends BorderPane {
 
         this.editorFindBar.getCloseButton().setOnAction(_ -> closeFindBar());
 
-        //closeFindBar();
+        closeFindBar();
     }
 
     /**
