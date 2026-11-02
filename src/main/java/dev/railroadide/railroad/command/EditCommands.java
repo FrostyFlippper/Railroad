@@ -6,6 +6,7 @@ import dev.railroadide.railroad.ide.ui.EditorHostPane;
 import dev.railroadide.railroad.ide.ui.codeeditor.TextEditorPane;
 import dev.railroadide.railroad.settings.keybinds.KeybindData;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
@@ -41,7 +42,7 @@ public final class EditCommands {
      */
     public static final Command<Void> PASTE = register("paste", KeyCode.V);
     /**
-     *     Finds text in the current document
+     * Finds text in the current document
      */
     public static final Command<Void> FIND = register("find", KeyCode.F);
 
@@ -65,6 +66,16 @@ public final class EditCommands {
     }
 
     private static boolean enabled(String action, Node target) {
+        TextEditorPane activeEditorPane;
+        if (action.equals("find")) {
+            activeEditorPane = Services.DOCUMENT_EDITOR_STATE.getActiveEditorPane();
+            if (activeEditorPane == null) {
+                return false;
+            }
+
+            return findEditorHostPane(activeEditorPane) != null;
+        }
+
         if (target instanceof ProjectExplorerPane pane) {
             var command = explorerCommand(action);
             return command != null && command.canExecute(CommandContext.withArgument(null, pane, pane.commandTarget()));
@@ -85,7 +96,6 @@ public final class EditCommands {
                 case "copy" -> text.getSelection().getLength() > 0;
                 case "cut" -> text.isEditable() && text.getSelection().getLength() > 0;
                 case "paste" -> text.isEditable() && Clipboard.getSystemClipboard().hasString();
-                case "find" -> text.getParent() instanceof EditorHostPane;
                 default -> false;
             };
         return false;
@@ -101,6 +111,21 @@ public final class EditCommands {
     }
 
     private static void execute(String action, Node target, CommandContext<Void> context) {
+        TextEditorPane activeEditorPane;
+        if (action.equals("find")) {
+            activeEditorPane = Services.DOCUMENT_EDITOR_STATE.getActiveEditorPane();
+            if (activeEditorPane == null) {
+                return;
+            }
+
+            EditorHostPane editorHostPane = findEditorHostPane(activeEditorPane);
+            if (editorHostPane != null) {
+                editorHostPane.openFindBar();
+            }
+
+            return;
+        }
+
         if (target instanceof ProjectExplorerPane pane) {
             CommandDispatcher.execute(explorerCommand(action),
                 CommandContext.withArgument(context.project(), pane, pane.commandTarget()));
@@ -120,14 +145,19 @@ public final class EditCommands {
                 case "cut" -> text.cut();
                 case "copy" -> text.copy();
                 case "paste" -> text.paste();
-                case "find" -> {
-                    if(text.getParent() instanceof EditorHostPane editorHostPane){
-                        editorHostPane.openFindBar();
-                    }
-                }
             }
         }
     }
+
+    private static EditorHostPane findEditorHostPane(TextEditorPane textEditorPane) {
+        for (Parent parent = textEditorPane.getParent(); parent != null; parent = parent.getParent()) {
+            if (parent instanceof EditorHostPane editorHostPane) {
+                return editorHostPane;
+            }
+        }
+        return null;
+    }
+
 
     /**
      * Initializes the built-in command definitions.
