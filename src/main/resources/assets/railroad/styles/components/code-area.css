@@ -6,7 +6,8 @@
     -fx-background-color: -color-surface-editor;
 }
 
-.code-area .paragraph-box .paragraph-text, .paragraph-text .text {
+.code-area .paragraph-box .paragraph-text,
+.paragraph-text .text {
     -fx-font-family: "JetBrains Mono";
     -fx-font-weight: normal;
     -fx-padding: 0 0 0 3;
@@ -17,10 +18,8 @@
     -fx-font-family: "Fira Code";
     -fx-background-radius: 0;
     -fx-box-border: none;
-
     -fx-background-color: -color-surface-editor;
     -fx-text-fill: -color-fg-subtle;
-
     -fx-padding: 0 35 0 5;
 }
 
@@ -43,8 +42,15 @@
     -fx-stroke: -color-fg-default;
 }
 
-.paragraph-box:has-caret, .has-caret {
+.paragraph-box:has-caret,
+.has-caret {
     -fx-background-color: -color-neutral-subtle;
+}
+
+.code-area .paragraph-text.debug-execution-line {
+    -fx-background-color: -color-warning-subtle;
+    -fx-border-color: -color-warning-emphasis;
+    -fx-border-width: 0 0 0 3;
 }
 
 .code-area .ide-code-editor-grid {
@@ -85,20 +91,32 @@
     -syntax-parameter: ladder(-color-surface-editor, #e1c49e 49%, #795b36 50%);
 }
 
-.code-area .keyword, .code-area .modifier,
-.code-area .package, .code-area .import, .code-area .module,
-.code-area .lambda, .code-area .literal {
+.code-area .keyword,
+.code-area .modifier,
+.code-area .package,
+.code-area .import,
+.code-area .module,
+.code-area .lambda,
+.code-area .literal {
     -fx-fill: -syntax-keyword;
 }
 
-.code-area .class, .code-area .type, .code-area .enum,
-.code-area .record, .code-area .constructor, .code-area .generic {
+.code-area .class,
+.code-area .type,
+.code-area .enum,
+.code-area .record,
+.code-area .constructor,
+.code-area .generic {
     -fx-fill: -syntax-type;
 }
 
-.code-area .name, .code-area .identifier,
-.code-area .object, .code-area .expression, .code-area .label,
-.code-area .block, .code-area .array {
+.code-area .name,
+.code-area .identifier,
+.code-area .object,
+.code-area .expression,
+.code-area .label,
+.code-area .block,
+.code-area .array {
     -fx-fill: -color-fg-default;
 }
 
@@ -122,7 +140,8 @@
     -fx-fill: -syntax-number;
 }
 
-.code-area .variable, .code-area .namespace {
+.code-area .variable,
+.code-area .namespace {
     -fx-fill: -syntax-variable;
 }
 
@@ -130,11 +149,14 @@
     -fx-fill: -syntax-field;
 }
 
-.code-area .parameter, .code-area .doc-parameter {
+.code-area .parameter,
+.code-area .doc-parameter {
     -fx-fill: -syntax-parameter;
 }
 
-.code-area .constant, .code-area .escape, .code-area .doc-tag {
+.code-area .constant,
+.code-area .escape,
+.code-area .doc-tag {
     -fx-fill: -syntax-annotation;
 }
 
@@ -146,7 +168,8 @@
     -fx-fill: -syntax-variable;
 }
 
-.code-area .label, .code-area .doc-link {
+.code-area .label,
+.code-area .doc-link {
     -fx-fill: -syntax-method;
 }
 
@@ -186,4 +209,14 @@
 .signature-param-active {
     -fx-text-fill: #ffffff;
     -fx-font-weight: bold;
+}
+
+.code-area .editor-breakpoint-marker {
+    -fx-fill: -color-danger-emphasis;
+    -fx-stroke: -color-danger-emphasis;
+    -fx-stroke-width: 1.5px;
+}
+
+.code-area .editor-breakpoint-marker:disabled {
+    -fx-fill: transparent;
 }
