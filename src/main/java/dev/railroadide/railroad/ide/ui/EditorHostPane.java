@@ -64,5 +64,6 @@ public class EditorHostPane extends BorderPane {
     public void closeFindBar() {
         this.editorFindBar.setVisible(false);
         this.editorFindBar.setManaged(false);
+        this.textEditorPane.requestFocus();
     }
 }
