@@ -1061,8 +1061,17 @@ public class EditorTabManager {
 
         markRecentlyUsed(editorTab);
         Services.IDE_STATE.setActiveDocument(editorTab.document());
+
+        TextEditorPane activeEditorPane;
+
+        if(editorTab.view().content() instanceof MarkdownPreviewPane markdownPreviewPane){
+            activeEditorPane = markdownPreviewPane.getActiveTextEditor();
+        } else {
+            activeEditorPane = editorTab.view().activeEditor();
+        }
+
         Services.DOCUMENT_EDITOR_STATE.setActiveEditor(
-            editorTab.view().activeEditor(),
+            activeEditorPane,
             editorTab.view().languageId());
         if (Boolean.TRUE.equals(Settings.SYNCHRONIZE_PROJECT_EXPLORER_WITH_ACTIVE_TAB.getValue())) {
             revealInProjectExplorer(editorTab);

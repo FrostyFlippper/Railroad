@@ -1,6 +1,7 @@
 package dev.railroadide.railroad.ide.ui;
 
 import dev.railroadide.railroad.Railroad;
+import dev.railroadide.railroad.Services;
 import dev.railroadide.railroad.command.CommandButtons;
 import dev.railroadide.railroad.command.CommandContext;
 import dev.railroadide.railroad.command.CommandMenuItems;
@@ -85,6 +86,8 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
     private int scrollAmount;
 
     private final ObjectProperty<TextEditorPane> editor = new SimpleObjectProperty<>();
+    private EditorHostPane editorHostPane;
+    private MarkdownLayoutType currentLayout;
 
     /**
      * Returns the property holding the Markdown source editor.
@@ -111,7 +114,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
      * Loads a Markdown file and restores the project preview layout.
      *
      * @param markdownFile Markdown file to load and edit
-     * @param project project whose files and workspace are being displayed
+     * @param project      project whose files and workspace are being displayed
      */
     public MarkdownPreviewPane(Path markdownFile, Project project) {
         this.markdownFile = markdownFile;
@@ -140,6 +143,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
         Optional<MarkdownLayout> markdownLayout = dataStore.readJson(MARKDOWN_LAYOUT_LOCATION, MarkdownLayout.class);
 
         MarkdownLayout layout = markdownLayout.orElseGet(() -> new MarkdownLayout(DEFAULT_MARKDOWN_LAYOUT));
+        this.currentLayout = layout.layoutType();
         markdownButtons.setVisible(layout.layoutType() != MarkdownLayoutType.PREVIEW);
 
         Node pane = switch (layout.layoutType()) {
@@ -160,16 +164,22 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
         return editorProperty().get();
     }
 
-    private TextEditorPane codeView() {
+    public TextEditorPane getActiveTextEditor(){
+        return this.currentLayout == MarkdownLayoutType.PREVIEW ? null : getMarkdownEditorPane();
+    }
+
+    private EditorHostPane codeView() {
         TextEditorPane textEditorPane = getMarkdownEditorPane();
         if (textEditorPane != null) {
             restoreEditorScroll();
-            return textEditorPane;
+            return editorHostPane;
         }
 
         editorProperty().setValue(new TextEditorPane(markdownFile, "markdown"));
 
         TextEditorPane newTextEditorPane = getMarkdownEditorPane();
+
+        this.editorHostPane = new EditorHostPane(newTextEditorPane);
 
         newTextEditorPane.textProperty().addListener(
             (_, _, newValue) -> preview.setContent(newValue));
@@ -214,7 +224,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
 
         restoreEditorScroll();
 
-        return newTextEditorPane;
+        return editorHostPane;
     }
 
     private SplitPane splitView() {
@@ -237,6 +247,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
 
     private void switchLayout(MarkdownLayoutType layoutType) {
         getChildren().clear();
+        this.currentLayout = layoutType;
 
         Node pane = switch (layoutType) {
             case CODE -> codeView();
@@ -290,7 +301,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
         int[] headingFontSizes = {32, 24, 18, 16, 13, 10};
 
         for (int level = 1; level <= 6; level++) {
-            CustomMenuItem item = createMenuItem(level, headingFontSizes, headingMenu);
+            CustomMenuItem item = createMenuItem(level, headingFontSizes);
 
             headingMenu.getItems().add(item);
         }
@@ -341,7 +352,7 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
             codeBlockButton, imageButton);
     }
 
-    private CustomMenuItem createMenuItem(int level, int[] headingFontSizes, ContextMenu headingMenu) {
+    private CustomMenuItem createMenuItem(int level, int[] headingFontSizes) {
         String labelText = "H" + level;
 
         var preview = new Label(labelText);
@@ -386,12 +397,15 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
             case PREVIEW -> previewView();
         }, topRow);
         project.getDataStore().writeJson(MARKDOWN_LAYOUT_LOCATION, new MarkdownLayout(layoutType));
+
+        Services.DOCUMENT_EDITOR_STATE.setActiveEditor(getActiveTextEditor(), "markdown");
+
     }
 
     /**
      * Inserts the syntax used by the existing Markdown formatting toolbar.
      *
-     * @param prefix syntax inserted before the caret
+     * @param prefix  syntax inserted before the caret
      * @param postfix closing syntax, or null for a prefix followed by a space
      */
     public void insertMarkdown(String prefix, String postfix) {
@@ -405,7 +419,10 @@ public class MarkdownPreviewPane extends RRVBox implements AutoCloseable {
     }
 
     private TextEditorPane editorForInsertion() {
-        return getMarkdownEditorPane() == null ? codeView() : getMarkdownEditorPane();
+        if (getMarkdownEditorPane() == null) {
+            codeView();
+        }
+        return getMarkdownEditorPane();
     }
 
     /**
